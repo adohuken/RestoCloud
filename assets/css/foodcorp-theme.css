@@ -21,7 +21,7 @@
     --fc-danger: #ef4444;
     
     /* Layout Constants */
-    --fc-sidebar-w: 280px;
+    --fc-sidebar-w: 300px; /* Expanded for larger logo */
     --fc-sidebar-collapsed-w: 80px;
     --fc-detail-w: 420px;
     --fc-header-h: 70px;
@@ -126,8 +126,8 @@ body {
 
 .sidebar .sidebar-logo,
 .sidebar-header img {
-    max-width: 270px !important; /* Maximized for 280px sidebar */
-    max-height: 270px !important;
+    max-width: 290px !important; /* Maximized for 300px sidebar */
+    max-height: 290px !important;
     width: auto !important;
     height: auto !important;
     object-fit: contain;
