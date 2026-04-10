@@ -1131,10 +1131,10 @@ body {
     backdrop-filter: blur(35px) saturate(160%);
     -webkit-backdrop-filter: blur(35px) saturate(160%);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 80px 60px;
-    border-radius: 60px;
-    width: 95%;
-    max-width: 550px;
+    padding: 70px 60px;
+    border-radius: 50px;
+    width: 100%;
+    max-width: 480px;
     position: relative;
     z-index: 10;
     box-shadow: 
@@ -1147,10 +1147,11 @@ body {
 
 .login-logo {
     width: 100%;
-    max-width: 350px; /* Logo Aún Más Grande */
-    margin-bottom: 40px;
+    max-width: 420px; /* Logo maximizado internamente */
+    margin: 0 auto 40px auto;
     filter: drop-shadow(0 15px 30px rgba(0,0,0,0.6));
     animation: logo-float-premium 5s infinite ease-in-out;
+    display: block;
 }
 
 @keyframes logo-float-premium {
