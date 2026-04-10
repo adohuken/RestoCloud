@@ -1185,17 +1185,101 @@ body {
     font-weight: 800;
 }
 
-/* Base Alerts */
+/* --- PREMIUM ALERTS & NOTIFICATIONS --- */
 .alert {
-    padding: 15px 20px;
-    border-radius: 12px;
-    margin-bottom: 20px;
-    font-weight: 500;
+    padding: 18px 24px;
+    border-radius: 20px;
+    margin-bottom: 25px;
+    font-weight: 600;
     border: 1px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+    animation: alert-slide-down 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.alert-success { background: rgba(16, 185, 129, 0.1); color: #10b981; border-color: rgba(16, 185, 129, 0.2); }
-.alert-warning { background: rgba(245, 158, 11, 0.1); color: #f59e0b; border-color: rgba(245, 158, 11, 0.2); }
+.alert-success { 
+    background: rgba(16, 185, 129, 0.15); 
+    color: #34d399; 
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+
+.alert-danger { 
+    background: rgba(225, 29, 72, 0.15); 
+    color: #fb7185; 
+    border: 1px solid rgba(225, 29, 72, 0.4);
+    box-shadow: 0 0 20px rgba(225, 29, 72, 0.15);
+}
+
+.alert-warning { 
+    background: rgba(245, 158, 11, 0.15); 
+    color: #fbbf24; 
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 0 20px rgba(245, 158, 11, 0.15);
+}
+
+@keyframes alert-slide-down {
+    from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- SWEETALERT 2 GLOBAL PREMIUM OVERRIDES --- */
+.swal2-popup {
+    background: rgba(15, 23, 42, 0.95) !important;
+    backdrop-filter: blur(15px) !important;
+    -webkit-backdrop-filter: blur(15px) !important;
+    border: 1px solid rgba(225, 29, 72, 0.3) !important;
+    border-radius: 28px !important;
+    padding: 30px !important;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(225, 29, 72, 0.1) !important;
+}
+
+.swal2-title {
+    color: var(--fc-text-main) !important;
+    font-size: 1.6rem !important;
+    font-weight: 800 !important;
+}
+
+.swal2-html-container {
+    color: var(--fc-text-sec) !important;
+    font-size: 1.05rem !important;
+    line-height: 1.6 !important;
+}
+
+.swal2-confirm.fc-btn-primary,
+.swal2-confirm {
+    background: linear-gradient(135deg, var(--fc-primary) 0%, #be123c 100%) !important;
+    border-radius: 14px !important;
+    padding: 12px 30px !important;
+    font-weight: 700 !important;
+    box-shadow: 0 10px 20px rgba(225, 29, 72, 0.3) !important;
+    border: none !important;
+}
+
+.swal2-cancel {
+    background: rgba(255, 255, 255, 0.05) !important;
+    border: 1px solid var(--fc-border) !important;
+    border-radius: 14px !important;
+    color: var(--fc-text-main) !important;
+}
+
+.swal2-icon.swal2-success {
+    border-color: #10b981 !important;
+    color: #10b981 !important;
+}
+
+.swal2-icon.swal2-success [class^='swal2-success-line'] {
+    background-color: #10b981 !important;
+}
+
+.swal2-icon.swal2-success .swal2-success-ring {
+    border: 0.25em solid rgba(16, 185, 129, 0.3) !important;
+}
+
 /* --- CASHIER / FINANCE MODULE --- */
 .cash-grid {
     display: grid;
