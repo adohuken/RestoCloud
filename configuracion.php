@@ -316,6 +316,7 @@ if (isset($_POST['update_iva'])) {
 if (isset($_POST['update_general'])) {
     $company_name = $_POST['company_name'];
     $theme_effects_enabled = isset($_POST['theme_effects_enabled']) && $_POST['theme_effects_enabled'] === '1' ? '1' : '0';
+    $show_company_name = isset($_POST['show_company_name']) && $_POST['show_company_name'] === '1' ? '1' : '0';
 
     // Update Company Name
     $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('company_name', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
@@ -324,6 +325,10 @@ if (isset($_POST['update_general'])) {
     // Update Theme Effects
     $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('theme_effects_enabled', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
     $stmt->execute([$theme_effects_enabled, $theme_effects_enabled]);
+
+    // Update Company Name Visibility
+    $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('show_company_name', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
+    $stmt->execute([$show_company_name, $show_company_name]);
 
     // Handle Logo Upload
     if (isset($_FILES['company_logo']) && $_FILES['company_logo']['error'] == 0) {
@@ -524,12 +529,13 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <div class="fc-modal-body">
                         <p style="text-align: center; color: var(--fc-text-sec); margin-bottom: 25px;">Personaliza la identidad visual de tu establecimiento.</p>
                         <?php
-                        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_logo', 'theme_effects_enabled')");
+                        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_logo', 'theme_effects_enabled', 'show_company_name')");
                         $stmt->execute();
                         $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
                         $current_name = $settings['company_name'] ?? 'FoodCorp System';
                         $current_logo = $settings['company_logo'] ?? '';
                         $effects_enabled = $settings['theme_effects_enabled'] ?? '0';
+                        $show_company_name = $settings['show_company_name'] ?? '1'; // Default visible
                         ?>
                         <form method="POST" enctype="multipart/form-data" class="fc-form">
                             <div class="fc-form-group">
@@ -550,14 +556,25 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                 <small style="color: var(--fc-text-sec); margin-top: 5px; display: block;">Formatos aceptados: PNG, JPG, WEBP (Max: 5MB)</small>
                             </div>
 
-                            <div class="fc-form-group" style="background: rgba(225, 29, 72, 0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(225, 29, 72, 0.2); margin-top: 20px;">
-                                <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
-                                    <input type="checkbox" name="theme_effects_enabled" value="1" <?= $effects_enabled == '1' ? 'checked' : '' ?> style="width: 20px; height: 20px; accent-color: var(--fc-primary); margin-top: 2px;">
-                                    <div>
-                                        <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i class='bx bx-party'></i> Activar Efectos Visuales</span>
-                                        <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Habilita animaciones y elementos temáticos (telarañas/arañas) en todo el sistema.</p>
-                                    </div>
-                                </label>
+                            <div style="background: rgba(15, 23, 42, 0.4); padding: 20px; border-radius: 16px; border: 1px solid var(--fc-border); margin-top: 20px;">
+                                <div class="fc-form-group" style="margin-bottom: 15px;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="show_company_name" value="1" <?= $show_company_name == '1' ? 'checked' : '' ?> style="width: 20px; height: 20px; accent-color: var(--fc-primary); margin-top: 2px;">
+                                        <div>
+                                            <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i class='bx bx-text'></i> Mostrar nombre en menú</span>
+                                            <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Permite elegir si el nombre del negocio aparece debajo del logo en la barra lateral.</p>
+                                        </div>
+                                    </label>
+                                </div>
+                                <div class="fc-form-group" style="margin-bottom: 0;">
+                                    <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+                                        <input type="checkbox" name="theme_effects_enabled" value="1" <?= $effects_enabled == '1' ? 'checked' : '' ?> style="width: 20px; height: 20px; accent-color: var(--fc-primary); margin-top: 2px;">
+                                        <div>
+                                            <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i class='bx bx-party'></i> Activar Efectos Visuales</span>
+                                            <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Habilita animaciones y elementos temáticos en todo el sistema.</p>
+                                        </div>
+                                    </label>
+                                </div>
                             </div>
 
                             <button type="submit" name="update_general" class="fc-btn fc-btn-primary fc-w100" style="margin-top: 25px;">

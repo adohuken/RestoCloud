@@ -118,15 +118,16 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0; /* No gap needed as title is hidden */
+    gap: 10px;
     text-align: center;
     max-width: 100%;
+    padding: 0 5px;
 }
 
 .sidebar .sidebar-logo,
 .sidebar-header img {
-    max-width: 250px !important; /* Maximized for 280px sidebar */
-    max-height: 250px !important;
+    max-width: 270px !important; /* Maximized for 280px sidebar */
+    max-height: 270px !important;
     width: auto !important;
     height: auto !important;
     object-fit: contain;
@@ -144,7 +145,15 @@ body {
 }
 
 .sidebar .company-title {
-    display: none; /* Hidden as requested */
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--fc-text-main);
+    line-height: 1.1;
+    max-width: 100%;
+    margin: 5px 0 0;
+    letter-spacing: -0.5px;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    white-space: normal;
 }
 
 .sidebar .sidebar-header h2 {

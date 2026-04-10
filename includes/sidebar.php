@@ -13,7 +13,7 @@ $company_logo = '';
 try {
     $stmt = $pdo->query("SHOW TABLES LIKE 'settings'");
     if ($stmt->rowCount() > 0) {
-        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_logo')");
+        $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_logo', 'show_company_name')");
         $stmt->execute();
         $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
 
@@ -23,6 +23,7 @@ try {
         if (!empty($settings['company_logo'])) {
             $company_logo = $settings['company_logo'];
         }
+        $show_company_name = $settings['show_company_name'] ?? '1';
     }
 } catch (Exception $e) {
     // Silent fail, use defaults
@@ -79,7 +80,9 @@ function getIcon($page)
         <?php if ($company_logo): ?>
             <div class="logo-container">
                 <img src="<?= htmlspecialchars($company_logo) ?>?v=<?= time() ?>" alt="Logo" class="sidebar-logo">
-                <h2 class="company-title"><?= htmlspecialchars($company_name) ?></h2>
+                <?php if ($show_company_name == '1'): ?>
+                    <h2 class="company-title"><?= htmlspecialchars($company_name) ?></h2>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <h2><i class='bx bx-dish' style="color: var(--fc-primary);"></i> <?= htmlspecialchars($company_name) ?></h2>
