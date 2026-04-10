@@ -137,6 +137,8 @@ body {
     background: transparent;
     padding: 0;
     display: block;
+    mix-blend-mode: screen; /* Effectively removes black backgrounds */
+    filter: brightness(1.1) contrast(1.1); /* Enhances logo clarity on dark theme */
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
