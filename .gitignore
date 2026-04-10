@@ -1,0 +1,11 @@
+# XAMPP/PHP
+/backups/
+/uploads/
+debug_log.txt
+*.log
+.DS_Store
+Thumbs.db
+config/db.php.bak
+
+# Exclude large dump files if not needed, but here the user wanted one.
+# We will include database.sql specifically later.
