@@ -29,6 +29,9 @@ if (!isset($page_title)) {
     <meta name="theme-color" content="#0f172a">
     <title><?= htmlspecialchars($page_title) ?></title>
     
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
