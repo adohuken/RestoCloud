@@ -79,26 +79,25 @@ try {
             <?php else: ?>
                 <h1><i class='bx bx-dish' style="color: var(--fc-primary);"></i> <?= htmlspecialchars($company_name) ?></h1>
             <?php endif; ?>
-            <p>Ingrese sus credenciales para continuar</p>
         </div>
 
         <?php if ($error): ?>
-            <div class="error-message">
-                <?php echo htmlspecialchars($error); ?>
+            <div class="alert alert-danger" style="margin-bottom: 30px;">
+                <i class='bx bx-error-circle'></i> <?php echo htmlspecialchars($error); ?>
             </div>
         <?php endif; ?>
 
         <form method="POST" action="">
-            <div class="fc-input-group">
-                <label for="username" class="fc-label">Usuario</label>
-                <input type="text" id="username" name="username" class="fc-input" placeholder="Ingrese su usuario"
-                    required>
+            <div class="login-input-wrapper">
+                <i class='bx bx-user'></i>
+                <input type="text" id="username" name="username" class="fc-input" placeholder="Usuario"
+                    required autocomplete="off">
             </div>
  
-            <div class="fc-input-group">
-                <label for="password" class="fc-label">Contraseña</label>
+            <div class="login-input-wrapper">
+                <i class='bx bx-lock-alt'></i>
                 <input type="password" id="password" name="password" class="fc-input"
-                    placeholder="Ingrese su contraseña" required>
+                    placeholder="Contraseña" required>
             </div>
  
             <button type="submit" class="fc-login-btn">Iniciar Sesión</button>
