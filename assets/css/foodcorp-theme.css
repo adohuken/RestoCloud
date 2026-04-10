@@ -1214,19 +1214,19 @@ body {
 
 .fc-login-btn {
     width: 100%;
-    padding: 20px;
+    padding: 16px;
     background: linear-gradient(135deg, var(--fc-primary) 0%, #9f1239 100%);
     color: white;
     border: none;
-    border-radius: 22px;
-    font-weight: 900;
-    font-size: 1.2rem;
+    border-radius: 18px;
+    font-weight: 800;
+    font-size: 1.1rem;
     cursor: pointer;
     transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    margin-top: 20px;
-    box-shadow: 0 15px 40px rgba(225, 29, 72, 0.45);
+    margin-top: 15px;
+    box-shadow: 0 10px 30px rgba(225, 29, 72, 0.4);
     text-transform: uppercase;
-    letter-spacing: 2px;
+    letter-spacing: 1.5px;
 }
 
 .fc-login-btn:hover {
