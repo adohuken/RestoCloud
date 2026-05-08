@@ -144,10 +144,10 @@ if (isset($_GET['ajax'])) {
                 $notes = !empty($_POST['notes']) ? trim($_POST['notes']) : null;
                 
                 if ($notes === null) {
-                    $stmt = $pdo->prepare('SELECT id, quantity FROM order_details WHERE order_id = ? AND product_id = ? AND item_status = "pending" AND notes IS NULL');
+                    $stmt = $pdo->prepare('SELECT id, quantity FROM order_details WHERE order_id = ? AND product_id = ? AND item_status = "draft" AND notes IS NULL');
                     $stmt->execute([$order_id, $product_id]);
                 } else {
-                    $stmt = $pdo->prepare('SELECT id, quantity FROM order_details WHERE order_id = ? AND product_id = ? AND item_status = "pending" AND notes = ?');
+                    $stmt = $pdo->prepare('SELECT id, quantity FROM order_details WHERE order_id = ? AND product_id = ? AND item_status = "draft" AND notes = ?');
                     $stmt->execute([$order_id, $product_id, $notes]);
                 }
                 
@@ -158,8 +158,8 @@ if (isset($_GET['ajax'])) {
                     $stmt = $pdo->prepare('UPDATE order_details SET quantity = quantity + ? WHERE id = ?');
                     $stmt->execute([$quantity, $existing['id']]);
                 } else {
-                    // Add new item (will be pending by default)
-                    $stmt = $pdo->prepare('INSERT INTO order_details (order_id, product_id, quantity, price, notes) VALUES (?, ?, ?, ?, ?)');
+                    // Add new item (will be draft by default)
+                    $stmt = $pdo->prepare('INSERT INTO order_details (order_id, product_id, quantity, price, notes, item_status) VALUES (?, ?, ?, ?, ?, "draft")');
                     $stmt->execute([$order_id, $product_id, $quantity, $product['price'], $notes]);
                 }
 
@@ -226,10 +226,10 @@ if (isset($_GET['ajax'])) {
         }
         $items = $stmt->fetchAll();
 
-        // Check if there are pending items that need to be sent to kitchen
+        // Check if there are draft items that need to be sent to kitchen
         $has_pending_items = false;
         if ($order) {
-            $stmt = $pdo->prepare('SELECT COUNT(*) FROM order_details WHERE order_id = ? AND item_status = "pending"');
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM order_details WHERE order_id = ? AND item_status = "draft"');
             $stmt->execute([$order['id']]);
             $has_pending_items = $stmt->fetchColumn() > 0;
         }
@@ -264,8 +264,9 @@ if (isset($_GET['ajax'])) {
                 $stmt->execute([$order['id']]);
             }
 
-            // Mark all pending items as "ready to prepare" (change item_status from pending to preparing)
-            // Note: Kitchen will see items with item_status = "pending"
+            // Mark all draft items as pending (this makes them visible to the kitchen)
+            $stmt = $pdo->prepare('UPDATE order_details SET item_status = "pending" WHERE order_id = ? AND item_status = "draft"');
+            $stmt->execute([$order['id']]);
 
             echo json_encode(['success' => true, 'message' => 'Pedido enviado a cocina']);
         } else {
@@ -286,7 +287,7 @@ if (isset($_GET['ajax'])) {
 
             if ($detail) {
                 // Delete the order detail
-                $stmt = $pdo->prepare('DELETE FROM order_details WHERE id = ?');
+                $stmt = $pdo->prepare('DELETE FROM order_details WHERE id = ? AND item_status = "draft"');
                 $stmt->execute([$detail_id]);
 
                 // Recalculate order total
@@ -559,12 +560,12 @@ if (!$clean_mode) {
                     </div>
                 </div>
  
-                <div class="pos-cart-overlay" id="cartOverlay" onclick="toggleMobileCart()"></div>
                 <button class="pos-mobile-cart-btn" onclick="toggleMobileCart()" style="background: var(--fc-primary); box-shadow: 0 10px 30px rgba(225,29,72,0.4);">
                     <i class='bx bx-shopping-bag'></i>
                     <span class="badge" id="mobile-cart-badge"><?= count($order_items) ?></span>
                 </button>
             </div>
+            <div class="pos-cart-overlay" id="cartOverlay" onclick="toggleMobileCart()"></div>
 
         </div>
     </main>
@@ -878,17 +879,58 @@ if (!$clean_mode) {
         font-size: 18px;
         box-shadow: 0 4px 10px rgba(225,29,72,0.2);
     }
- 
+
+    .pos-modern-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: var(--grid-gap);
+        height: 100%;
+        overflow: hidden;
+    }
+
     .order-summary {
-        background: var(--fc-bg);
-        border-left: 1px solid var(--fc-border);
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0.9);
+        width: 500px;
+        height: 650px; /* Altura fija para evitar saltos */
+        max-width: 95vw;
+        max-height: 90vh;
+        background: #0f172a !important;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px;
+        box-shadow: 0 0 0 100vmax rgba(0,0,0,0.7), 0 25px 50px -12px rgba(0, 0, 0, 0.8);
         display: none;
         flex-direction: column;
         overflow: hidden;
+        z-index: 1001;
+        transition: all 0.2s ease-out;
+        opacity: 0;
+        color: white;
     }
- 
+
     .order-summary.active {
         display: flex;
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+
+    /* Overlay para oscurecer el fondo */
+    .pos-cart-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        backdrop-filter: blur(4px);
+        display: none;
+        z-index: 1000;
+    }
+
+    .pos-cart-overlay.active {
+        display: block;
     }
  
     .item-name {
@@ -903,18 +945,16 @@ if (!$clean_mode) {
  
         .order-summary {
             position: fixed;
-            bottom: 0;
+            top: auto;
             left: 0;
             right: 0;
+            bottom: 0;
+            width: 100%;
+            max-width: none;
             height: 80vh;
-            z-index: 1000;
-            transform: translateY(calc(100% - 70px));
-            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateY(100%);
             border-radius: 25px 25px 0 0;
-            border: 1px solid var(--fc-border);
-            border-bottom: none;
-            background: var(--fc-bg) !important;
-            backdrop-filter: blur(20px);
+            opacity: 1;
         }
  
         .order-summary.active {
@@ -1057,18 +1097,35 @@ if (!$clean_mode) {
             const kitchenContainer = document.getElementById('kitchen-items-container');
             const progressWrapper = document.getElementById('order-progress-wrapper');
             
+            if (!data.items) data.items = [];
+
             document.getElementById('item-count').textContent = `${data.items.length} ítems`;
             document.getElementById('mobile-cart-badge').textContent = data.items.length;
             
-            const totalStr = 'C$' + parseFloat(data.total).toFixed(2);
-            document.getElementById('order-total').textContent = totalStr;
-            document.getElementById('bill-subtotal').textContent = totalStr;
+            // Actualizar badge del header desktop si existe
+            const topBadge = document.getElementById('top-cart-badge');
+            if(topBadge) topBadge.textContent = data.items.length;
+            
+            const totalStr = 'C$' + parseFloat(data.total || 0).toFixed(2);
+            const orderTotalElem = document.getElementById('order-total');
+            if (orderTotalElem) orderTotalElem.textContent = totalStr;
+            
+            const billSubtotalElem = document.getElementById('bill-subtotal');
+            if (billSubtotalElem) billSubtotalElem.textContent = totalStr;
 
-            // Group items
-            const newItems = data.items.filter(i => i.item_status === 'pending' && data.order_status === 'draft');
-            const sentItems = data.items.filter(i => (i.item_status !== 'pending' || data.order_status !== 'draft'));
+            // Group items: Lógica limpia usando el nuevo estado 'draft'
+            const newItems = data.items.filter(i => {
+                const s = String(i.item_status || '').trim().toLowerCase();
+                return s === 'draft';
+            });
+            
+            const sentItems = data.items.filter(i => {
+                const s = String(i.item_status || '').trim().toLowerCase();
+                return s !== 'draft';
+            });
 
             // Render Draft Tab
+            draftContainer.innerHTML = ''; 
             if (newItems.length === 0) {
                 draftContainer.innerHTML = `
                     <div class="empty-order" style="text-align: center; padding: 40px 10px;">
@@ -1108,6 +1165,15 @@ if (!$clean_mode) {
                 kitchenContainer.innerHTML = sentItems.map(item => renderOrderItem(item, true)).join('');
             }
         });
+    }
+
+    function getTimeElapsed(timestamp) {
+        if (!timestamp) return '';
+        const created = new Date(timestamp);
+        const now = new Date();
+        const diffMs = now - created;
+        const diffMins = Math.floor(diffMs / 60000);
+        return diffMins + ' min';
     }
 
     function renderOrderItem(item, isSent) {
@@ -1157,11 +1223,16 @@ if (!$clean_mode) {
     document.addEventListener('DOMContentLoaded', updateOrder);
 
     // Auto update timers every minute
+    // Auto update timers every 15 seconds if panel is open or has kitchen items
     setInterval(() => {
-        if (document.getElementById('order-items').querySelectorAll('.sent').length > 0) {
+        const hasKitchenItems = document.getElementById('kitchen-items-container')?.querySelectorAll('.pos-order-item').length > 0;
+        if (hasKitchenItems || document.getElementById('order-summary-panel').classList.contains('active')) {
             updateOrder();
         }
-    }, 30000);
+    }, 15000);
+
+    // Carga inicial
+    updateOrder();
 
     function removeFromOrder(id) {
         Swal.fire({
@@ -1187,6 +1258,7 @@ if (!$clean_mode) {
 
     function sendToKitchen() {
         const btn = document.getElementById('sendToKitchenBtn');
+        if (!btn) return;
         btn.disabled = true;
         btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Enviando...';
         
@@ -1200,9 +1272,16 @@ if (!$clean_mode) {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bx bx-restaurant"></i> Enviar a Cocina';
             } else {
+                showToast(data.message || 'Error al enviar a cocina', 'error');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="bx bx-restaurant"></i> Enviar a Cocina';
             }
+        })
+        .catch(err => {
+            console.error("Error en sendToKitchen:", err);
+            showToast('Error de conexión', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="bx bx-restaurant"></i> Enviar a Cocina';
         });
     }
 

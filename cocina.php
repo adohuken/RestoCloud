@@ -8,97 +8,44 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Check module access (will redirect if not authorized)
-// Check module access (will redirect if not authorized)
 checkModuleAccess($pdo, $_SESSION['role_id'], 'kitchen');
 
-// Auto-fix schema to support 'preparing' status
-try {
-    $pdo->query("SELECT status FROM orders WHERE status = 'preparing' LIMIT 1");
-} catch (Exception $e) {
-    // Should catch if 'preparing' is invalid for ENUM? No, SELECT doesn't error on value mismatch usually, INSERT/UPDATE does.
-    // But we can just try to ALTER it.
-}
-
-try {
-    // Ensure the order status ENUM has all required values
-    $stmt = $pdo->query("SHOW COLUMNS FROM orders LIKE 'status'");
-    $column = $stmt->fetch();
-    if (strpos($column['Type'], 'enum') !== false) {
-        // Extract existing values
-        preg_match_all("/'([^']+)'/", $column['Type'], $matches);
-        $values = $matches[1];
-
-        // Required statuses for the complete order flow
-        $requiredStatuses = ['draft', 'pending', 'preparing', 'ready', 'picked_up', 'delivered', 'completed', 'cancelled'];
-        $needsUpdate = false;
-
-        foreach ($requiredStatuses as $status) {
-            if (!in_array($status, $values)) {
-                $values[] = $status;
-                $needsUpdate = true;
-            }
-        }
-
-        if ($needsUpdate) {
-            $enumList = "'" . implode("','", $values) . "'";
-            $pdo->exec("ALTER TABLE orders MODIFY COLUMN status ENUM($enumList) DEFAULT 'draft'");
-        }
-    }
-} catch (Exception $e) {
-    // Silently fail or log
-}
-
-// Handle order status updates
+// Handle Actions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['start_preparation'])) {
         $order_id = $_POST['order_id'];
-        $stmt = $pdo->prepare('UPDATE orders SET status = "preparing" WHERE id = ?');
-        $stmt->execute([$order_id]);
-        
-        // Mark all items as preparing as well
-        $stmt = $pdo->prepare('UPDATE order_details SET item_status = "preparing" WHERE order_id = ? AND item_status = "pending"');
-        $stmt->execute([$order_id]);
-        header('Location: cocina.php?success=preparing');
+        $pdo->prepare('UPDATE orders SET status = "preparing" WHERE id = ?')->execute([$order_id]);
+        $pdo->prepare('UPDATE order_details SET item_status = "preparing" WHERE order_id = ? AND item_status = "pending"')->execute([$order_id]);
+        header('Location: cocina.php');
         exit();
     }
 
     if (isset($_POST['complete_order'])) {
         $order_id = $_POST['order_id'];
-
-        // Mark all items for this order as ready
-        $stmt = $pdo->prepare('UPDATE order_details SET item_status = "ready" WHERE order_id = ? AND item_status IN ("pending", "preparing")');
-        $stmt->execute([$order_id]);
-
-        // Mark order as ready
-        $stmt = $pdo->prepare('UPDATE orders SET status = "ready" WHERE id = ?');
-        $stmt->execute([$order_id]);
-
+        $pdo->prepare('UPDATE order_details SET item_status = "ready" WHERE order_id = ? AND item_status IN ("pending", "preparing")')->execute([$order_id]);
+        $pdo->prepare('UPDATE orders SET status = "ready" WHERE id = ?')->execute([$order_id]);
         header('Location: cocina.php?success=ready');
         exit();
     }
 }
 
-// Get orders with PENDING or PREPARING items
-// We fetch raw rows to grouping in PHP for better item rendering (icons, notes, etc.)
+// Fetch Active Orders
 $sql = '
-    SELECT o.id as order_id, o.status as order_status, o.date_created, o.total,
+    SELECT o.id as order_id, o.status as order_status, o.date_created,
            t.name as table_name, u.name as waiter_name,
            od.id as detail_id, od.quantity, od.item_status, od.notes,
-           p.name as product_name, p.icon as product_icon, p.image_url
+           p.name as product_name, p.icon as product_icon
     FROM orders o
     JOIN tables t ON o.table_id = t.id
     JOIN users u ON o.user_id = u.id
-    JOIN order_details od ON o.id = od.order_id AND od.item_status = "pending"
+    JOIN order_details od ON o.id = od.order_id AND od.item_status IN ("pending", "preparing")
     JOIN products p ON od.product_id = p.id
     WHERE o.status IN ("pending", "preparing")
     ORDER BY FIELD(o.status, "preparing", "pending"), o.date_created ASC
 ';
-
 $stmt = $pdo->query($sql);
 $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Group by Order ID
 $pending_orders = [];
 foreach ($rows as $row) {
     $oid = $row['order_id'];
@@ -109,7 +56,6 @@ foreach ($rows as $row) {
             'date_created' => $row['date_created'],
             'table_name' => $row['table_name'],
             'waiter_name' => $row['waiter_name'],
-            'total' => $row['total'], // This is order total, simplified
             'items' => []
         ];
     }
@@ -117,21 +63,22 @@ foreach ($rows as $row) {
         'qty' => $row['quantity'],
         'name' => $row['product_name'],
         'icon' => $row['product_icon'],
-        'notes' => $row['notes'] ?? null
+        'notes' => $row['notes'],
+        'status' => $row['item_status']
     ];
 }
 
-// Get completed orders for history (Today)
+// Fetch History Orders (Today)
 $sql_history = '
-    SELECT o.id as order_id, o.status as order_status, o.date_created, o.total,
+    SELECT o.id as order_id, o.status as order_status, o.date_created,
            t.name as table_name, u.name as waiter_name,
-           od.quantity, p.name as product_name, p.icon as product_icon
+           od.quantity, p.name as product_name
     FROM orders o
     JOIN tables t ON o.table_id = t.id
     JOIN users u ON o.user_id = u.id
-    JOIN order_details od ON o.id = od.order_id
+    JOIN order_details od ON o.id = od.order_id AND od.item_status IN ("ready", "served")
     JOIN products p ON od.product_id = p.id
-    WHERE o.status IN ("ready", "picked_up", "delivered")
+    WHERE o.status IN ("ready", "picked_up", "delivered", "completed")
     AND DATE(o.date_created) = CURDATE()
     ORDER BY o.date_created DESC
 ';
@@ -144,30 +91,24 @@ foreach ($rows_hist as $row) {
     if (!isset($history_orders[$oid])) {
         $history_orders[$oid] = [
             'id' => $oid,
-            'status' => $row['order_status'],
-            'date_created' => $row['date_created'],
             'table_name' => $row['table_name'],
             'waiter_name' => $row['waiter_name'],
+            'time' => date('h:i A', strtotime($row['date_created'])),
             'items' => []
         ];
     }
     $history_orders[$oid]['items'][] = [
         'qty' => $row['quantity'],
-        'name' => $row['product_name'],
-        'icon' => $row['product_icon']
+        'name' => $row['product_name']
     ];
 }
 
-// Get user's role name
-$stmt = $pdo->prepare('SELECT name FROM roles WHERE id = ?');
-$stmt->execute([$_SESSION['role_id']]);
-$user_role_name = $stmt->fetchColumn() ?: 'Usuario';
+$user_role_name = 'Cocinero';
 ?>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <div class="dashboard-wrapper">
-    <?php if ($_SESSION['role_id'] != 4)
-        include __DIR__ . '/includes/sidebar.php'; ?>
+    <?php if ($_SESSION['role_id'] != 4) include __DIR__ . '/includes/sidebar.php'; ?>
 
     <main class="main-content" style="<?= $_SESSION['role_id'] == 4 ? 'margin-left: 0;' : '' ?>">
         <div class="page-header">
@@ -177,38 +118,30 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
             
             <div class="kds-tabs">
-                <button class="kds-tab active" onclick="switchTab('pending')">Pendientes (<?= count($pending_orders) ?>)</button>
-                <button class="kds-tab" onclick="switchTab('history')">Historial (<?= count($history_orders) ?>)</button>
+                <button class="kds-tab active" data-target="pending" onclick="switchTab('pending')">Pendientes (<?= count($pending_orders) ?>)</button>
+                <button class="kds-tab" data-target="history" onclick="switchTab('history')">Historial (<?= count($history_orders) ?>)</button>
             </div>
 
             <div style="display: flex; align-items: center; gap: 20px;">
                 <div id="clock" style="font-size: 1.5em; font-weight: 700; color: var(--text-primary);">
                     <?= date('H:i') ?>
                 </div>
-                <?php if ($_SESSION['role_id'] == 4): ?>
-                    <a href="salir.php" class="logout-pill">
-                        <span class="logout-icon">🚪</span>
-                        <span>Salir</span>
-                    </a>
-                <?php endif; ?>
             </div>
         </div>
 
-        <?php if (isset($_GET['success']) && $_GET['success'] === 'ready'): ?>
-            <div class="alert alert-success">
-                ✅ Pedido completado
+        <?php if (isset($_GET['success'])): ?>
+            <div class="alert-success">
+                <i class="bx bx-check-circle"></i> Acción completada con éxito
             </div>
         <?php endif; ?>
         
-        <!-- Pending Container -->
+        <!-- PENDING TAB -->
         <div id="tab-pending" class="tab-content active">
              <?php if (empty($pending_orders)): ?>
-                <div class="card empty-state">
-                    <div style="padding: 60px; text-align: center;">
-                        <div style="font-size: 4em; margin-bottom: 20px;">✅</div>
-                        <h2 style="color: var(--text-primary); margin-bottom: 10px;">Todo al día</h2>
-                        <p style="color: var(--text-secondary);">No hay pedidos pendientes en cocina.</p>
-                    </div>
+                <div class="empty-state">
+                    <div style="font-size: 4em; margin-bottom: 20px;">✅</div>
+                    <h2>Todo al día</h2>
+                    <p>No hay pedidos pendientes en cocina.</p>
                 </div>
             <?php else: ?>
                 <div class="kitchen-grid">
@@ -216,29 +149,24 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                         <?php
                         $isPreparing = ($order['status'] === 'preparing');
                         $startTime = strtotime($order['date_created']);
-                        $elapsed = time() - $startTime;
-                        $elapsedMins = floor($elapsed / 60);
-
-                        // Urgency logic
+                        $elapsedMins = floor((time() - $startTime) / 60);
                         $isUrgent = $elapsedMins >= 15;
                         $isWarning = $elapsedMins >= 10 && $elapsedMins < 15;
                         ?>
-                        <div
-                            class="kds-ticket <?= $isPreparing ? 'status-preparing' : 'status-pending' ?> <?= $isWarning ? 'is-warning' : '' ?> <?= $isUrgent ? 'is-urgent' : '' ?>">
-                            <!-- Ticket Header -->
+                        <div class="kds-ticket <?= $isPreparing ? 'status-preparing' : 'status-pending' ?> <?= $isWarning ? 'is-warning' : '' ?> <?= $isUrgent ? 'is-urgent' : '' ?>">
                             <div class="ticket-header">
                                 <div class="ticket-meta">
                                     <span class="order-id">#<?= $order['id'] ?></span>
                                     <span class="table-name"><?= htmlspecialchars($order['table_name']) ?></span>
                                     <span class="waiter-name">🤵 <?= htmlspecialchars($order['waiter_name']) ?></span>
                                     <span class="order-entry-time">🕒 <?= date('h:i A', strtotime($order['date_created'])) ?></span>
-                                    <?php if($order['status'] === 'preparing'): ?>
-                                        <span class="status-badge preparing">Cocinando</span>
+                                    <?php if($isPreparing): ?>
+                                        <span class="status-badge badge-prep">Cocinando</span>
                                     <?php else: ?>
-                                        <span class="status-badge pending">Pendiente</span>
+                                        <span class="status-badge badge-pend">Pendiente</span>
                                     <?php endif; ?>
                                 </div>
-                                <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 5px;" class="urgent-container">
+                                <div class="urgent-container">
                                     <div class="timer-badge" data-time="<?= $startTime * 1000 ?>">
                                         ⏱ <span class="min-val"><?= $elapsedMins ?></span> min
                                     </div>
@@ -248,21 +176,21 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                 </div>
                             </div>
 
-                            <!-- Ticket Body -->
                             <div class="ticket-body">
                                 <ul class="item-list">
                                     <?php foreach ($order['items'] as $item): ?>
                                         <li>
                                             <div class="item-qty"><?= $item['qty'] ?></div>
-                                            <div class="item-details" style="flex-direction: column; align-items: flex-start;">
-                                                <div style="display: flex; align-items: center;">
+                                            <div class="item-details">
+                                                <div class="item-title">
                                                     <span class="item-icon"><?= $item['icon'] ?: '🍽️' ?></span>
                                                     <span class="item-name"><?= htmlspecialchars($item['name']) ?></span>
+                                                    <?php if($item['status'] === 'pending' && $isPreparing): ?>
+                                                        <span class="new-item-badge">NUEVO</span>
+                                                    <?php endif; ?>
                                                 </div>
                                                 <?php if(!empty($item['notes'])): ?>
-                                                    <div style="font-size: 0.85em; color: #b45309; background: #fef3c7; padding: 3px 8px; border-radius: 4px; margin-top: 4px; font-weight: 700; border: 1px solid #fde68a; width: 100%;">
-                                                        ⚠️ Nota: <?= htmlspecialchars($item['notes']) ?>
-                                                    </div>
+                                                    <div class="item-notes">⚠️ <?= htmlspecialchars($item['notes']) ?></div>
                                                 <?php endif; ?>
                                             </div>
                                         </li>
@@ -270,21 +198,15 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                 </ul>
                             </div>
 
-                            <!-- Ticket Footer (Action) -->
                             <div class="ticket-footer">
                                 <form method="POST">
                                     <input type="hidden" name="order_id" value="<?= $order['id'] ?>">
-
                                     <?php if ($isPreparing): ?>
                                         <input type="hidden" name="complete_order" value="1">
-                                        <button type="submit" class="kds-btn btn-finish">
-                                            <span style="font-size: 1.2em;">✅</span> LISTO
-                                        </button>
+                                        <button type="submit" class="kds-btn btn-finish">✅ LISTO</button>
                                     <?php else: ?>
                                         <input type="hidden" name="start_preparation" value="1">
-                                        <button type="submit" class="kds-btn btn-start">
-                                            👨‍🍳 PREPARAR
-                                        </button>
+                                        <button type="submit" class="kds-btn btn-start">👨‍🍳 PREPARAR TODO</button>
                                     <?php endif; ?>
                                 </form>
                             </div>
@@ -294,34 +216,32 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             <?php endif; ?>
         </div>
 
-        <!-- History Container -->
+        <!-- HISTORY TAB -->
         <div id="tab-history" class="tab-content" style="display:none;">
             <?php if (empty($history_orders)): ?>
-                <div class="card empty-state">
-                    <div style="padding: 60px; text-align: center; opacity:0.7;">
-                        <div style="font-size: 4em; margin-bottom: 20px;">📜</div>
-                        <h2 style="color: var(--text-primary); margin-bottom: 10px;">Sin Historial</h2>
-                        <p style="color: var(--text-secondary);">No hay pedidos completados hoy.</p>
-                    </div>
+                <div class="empty-state">
+                    <div style="font-size: 4em; margin-bottom: 20px;">📜</div>
+                    <h2>Sin Historial</h2>
+                    <p>No hay pedidos completados hoy.</p>
                 </div>
             <?php else: ?>
-                <div class="kitchen-grid" style="opacity: 0.8;">
+                <div class="kitchen-grid">
                     <?php foreach ($history_orders as $order): ?>
-                        <div class="kds-ticket" style="border-top-color: #10b981;">
-                            <div class="ticket-header" style="background: #f9fafb;">
+                        <div class="kds-ticket status-ready">
+                            <div class="ticket-header">
                                 <div class="ticket-meta">
                                     <span class="order-id">#<?= $order['id'] ?></span>
                                     <span class="table-name"><?= htmlspecialchars($order['table_name']) ?></span>
-                                    <span class="waiter-name">✅ Completado a las <?= date('h:i A', strtotime($order['date_created'])) ?></span> <!-- approximations since we don't track exact complete time per se without new column, using creation for reference or we'd need updated_at -->
+                                    <span class="waiter-name">✅ Completado a las <?= $order['time'] ?></span>
                                 </div>
                             </div>
                             <div class="ticket-body">
                                 <ul class="item-list">
                                     <?php foreach ($order['items'] as $item): ?>
                                         <li>
-                                            <div class="item-qty" style="background:#d1fae5; color:#065f46;"><?= $item['qty'] ?></div>
+                                            <div class="item-qty history-qty"><?= $item['qty'] ?></div>
                                             <div class="item-details">
-                                                <span class="item-name" style="color:#4b5563;"><?= htmlspecialchars($item['name']) ?></span>
+                                                <span class="item-name history-name"><?= htmlspecialchars($item['name']) ?></span>
                                             </div>
                                         </li>
                                     <?php endforeach; ?>
@@ -336,17 +256,25 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 </div>
 
 <style>
-    /* KDS Specific Styles */
+    /* Dark Premium Theme CSS */
     :root {
-        --kds-bg: #f3f4f6;
-        --ticket-bg: #ffffff;
-        --pending-border: #fbbf24;
-        --prep-border: #3b82f6;
-        --urgent-color: #ef4444;
+        --kds-bg: #0f172a; /* Slate 900 */
+        --ticket-bg: #1e293b; /* Slate 800 */
+        --ticket-border: rgba(255, 255, 255, 0.05);
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --color-pending: #f59e0b; /* Amber */
+        --color-prep: #3b82f6; /* Blue */
+        --color-ready: #10b981; /* Emerald */
     }
 
     body {
         background-color: var(--kds-bg);
+        color: var(--text-primary);
+    }
+
+    .main-content {
+        padding: 30px;
     }
 
     .page-header {
@@ -356,402 +284,399 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         margin-bottom: 25px;
     }
 
+    .page-header h1 {
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: var(--text-primary);
+    }
+
+    .page-header p {
+        margin: 5px 0 0 0;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+
+    /* Tabs UI */
+    .kds-tabs {
+        display: flex;
+        gap: 5px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 5px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .kds-tab {
+        border: none;
+        background: transparent;
+        padding: 10px 20px;
+        border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        color: var(--text-secondary);
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+
+    .kds-tab:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    .kds-tab.active {
+        background: var(--fc-primary, #e11d48);
+        color: white;
+        box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
+    }
+
+    /* Grid */
     .kitchen-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 20px;
         padding-bottom: 40px;
     }
 
-    /* Ticket Card Styline */
+    /* Tickets */
     .kds-ticket {
         background: var(--ticket-bg);
-        border-radius: 12px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        border-radius: 16px;
+        border: 1px solid var(--ticket-border);
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
         overflow: hidden;
         display: flex;
         flex-direction: column;
-        border-top: 6px solid #e5e7eb;
-        /* Default Gray */
-        transition: transform 0.2s;
-        animation: fadeIn 0.3s ease-out;
+        border-top: 4px solid var(--ticket-border);
+        transition: all 0.3s ease;
+        animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes fadeIn {
-        from {
-            opacity: 0;
-            transform: translateY(10px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     .kds-ticket:hover {
         transform: translateY(-4px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.4);
     }
 
-    /* Status Varients */
-    .status-pending {
-        border-top-color: var(--pending-border);
-        animation: pulsePending 2s infinite ease-in-out;
-    }
+    /* Top Border Colors */
+    .status-pending { border-top-color: var(--color-pending); }
+    .status-preparing { border-top-color: var(--color-prep); }
+    .status-ready { border-top-color: var(--color-ready); }
 
-    @keyframes pulsePending {
-        0% {
-            border-top-color: #fbbf24;
-            box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.1);
-        }
-
-        50% {
-            border-top-color: #f59e0b;
-            box-shadow: 0 4px 12px -1px rgba(251, 191, 36, 0.3);
-        }
-
-        100% {
-            border-top-color: #fbbf24;
-            box-shadow: 0 4px 6px -1px rgba(251, 191, 36, 0.1);
-        }
-    }
-
-    .status-preparing {
-        border-top-color: var(--prep-border);
-        background-color: #eff6ff;
-        background-image: linear-gradient(45deg,
-                rgba(59, 130, 246, 0.08) 25%,
-                transparent 25%,
-                transparent 50%,
-                rgba(59, 130, 246, 0.08) 50%,
-                rgba(59, 130, 246, 0.08) 75%,
-                transparent 75%,
-                transparent);
-        background-size: 40px 40px;
-        animation: preparation-stripes 2s linear infinite;
-    }
-
-    @keyframes preparation-stripes {
-        0% {
-            background-position: 0 0;
-        }
-
-        100% {
-            background-position: 40px 0;
-        }
-    }
-
-    .is-warning {
-        border-top-color: #f59e0b !important;
-        animation: pulseWarning 2s infinite !important;
-    }
-    
-    @keyframes pulseWarning {
-        0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-        70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
-    }
-
-    .is-urgent {
-        border-top-color: var(--urgent-color) !important;
-        animation: pulseBorder 1s infinite !important;
-    }
-
-    @keyframes pulseBorder {
-        0% {
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-        }
-
-        70% {
-            box-shadow: 0 0 0 6px rgba(239, 68, 68, 0);
-        }
-
-        100% {
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-        }
-    }
-
-    /* Header */
+    /* Header inside Ticket */
     .ticket-header {
-        padding: 15px;
-        border-bottom: 1px dashed #e5e7eb;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--ticket-border);
         display: flex;
         justify-content: space-between;
-        align-items: flex-start;
     }
 
     .ticket-meta {
         display: flex;
         flex-direction: column;
+        gap: 6px;
     }
 
     .order-id {
         font-size: 1.4em;
-        font-weight: 800;
-        color: #111827;
+        font-weight: 900;
+        color: white;
+        letter-spacing: 0.5px;
     }
 
     .table-name {
         font-size: 1em;
-        color: #6b7280;
         font-weight: 600;
+        color: var(--text-primary);
     }
 
-    .order-entry-time {
+    .waiter-name, .order-entry-time {
         font-size: 0.85em;
-        color: #9ca3af;
-        margin-top: 2px;
-        font-weight: 500;
+        color: var(--text-secondary);
     }
 
-    .waiter-name {
-        font-size: 0.8em;
-        color: #6b7280;
-        margin-top: 2px;
-        font-style: italic;
+    /* Badges */
+    .status-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 0.75em;
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-top: 5px;
+        width: fit-content;
+    }
+
+    .badge-pend { background: rgba(245, 158, 11, 0.2); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-prep { background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+
+    .new-item-badge {
+        background: var(--fc-primary, #e11d48);
+        color: white;
+        font-size: 0.6em;
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin-left: 8px;
+        font-weight: bold;
+    }
+
+    /* Timers & Alerts */
+    .urgent-container {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
     }
 
     .timer-badge {
-        background: #f3f4f6;
-        padding: 4px 8px;
-        border-radius: 6px;
-        font-family: monospace;
-        font-weight: 700;
-        font-size: 1.1em;
-        color: #374151;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 0.9em;
+        font-weight: 600;
+        border: 1px solid rgba(255,255,255,0.05);
+        color: white;
+    }
+
+    .is-warning .timer-badge {
+        background: rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        border-color: rgba(245, 158, 11, 0.5);
     }
 
     .is-urgent .timer-badge {
-        background: #fee2e2;
-        color: #ef4444;
+        background: rgba(239, 68, 68, 0.2);
+        color: #f87171;
+        border-color: rgba(239, 68, 68, 0.5);
+        animation: pulseUrgent 1.5s infinite;
     }
 
-    /* Body */
+    @keyframes pulseUrgent {
+        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .urgent-badge {
+        background: #ef4444;
+        color: white;
+        font-size: 0.7em;
+        font-weight: 800;
+        padding: 4px 8px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
+    }
+
+    /* Items */
     .ticket-body {
-        padding: 0;
-        /* Reset padding to let items flush if needed, but we'll add it back */
-        padding: 15px;
+        padding: 15px 20px;
         flex-grow: 1;
     }
 
     .item-list {
         list-style: none;
         padding: 0;
-        margin: 0 0 15px 0;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
 
     .item-list li {
         display: flex;
+        gap: 12px;
         align-items: flex-start;
-        padding: 10px 0;
-        border-bottom: 1px solid #f3f4f6;
+        padding-bottom: 12px;
+        border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
     }
 
     .item-list li:last-child {
         border-bottom: none;
+        padding-bottom: 0;
     }
 
     .item-qty {
-        background: #e5e7eb;
-        color: #111827;
-        font-weight: 800;
-        width: 30px;
-        height: 30px;
-        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        min-width: 32px;
+        height: 32px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-right: 12px;
+        font-weight: 800;
+        font-size: 0.9em;
         flex-shrink: 0;
-        font-size: 1.1em;
     }
 
     .item-details {
-        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        width: 100%;
+    }
+
+    .item-title {
         display: flex;
         align-items: center;
-        flex-wrap: wrap;
     }
 
     .item-icon {
-        font-size: 1.4em;
         margin-right: 8px;
+        font-size: 1.1em;
     }
 
     .item-name {
-        font-size: 1.15em;
+        font-size: 1.05em;
         font-weight: 600;
-        color: #1f2937;
+        color: var(--text-primary);
         line-height: 1.3;
     }
 
-    .urgent-badge {
-        background: #ef4444;
-        color: white;
-        font-size: 0.75em;
-        font-weight: 800;
-        padding: 2px 6px;
-        border-radius: 4px;
-        text-transform: uppercase;
-        animation: blink 1s infinite;
-    }
-
-    @keyframes blink {
-        0% {
-            opacity: 1;
-        }
-
-        50% {
-            opacity: 0.6;
-        }
-
-        100% {
-            opacity: 1;
-        }
-    }
-
-    .waiter-info {
+    .item-notes {
+        background: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.2);
+        color: #fbbf24;
+        padding: 6px 10px;
+        border-radius: 6px;
         font-size: 0.85em;
-        color: #9ca3af;
-        text-align: right;
-        font-style: italic;
-        margin-top: 10px;
+        font-weight: 600;
+        margin-top: 4px;
     }
 
-    /* Footer */
+    /* History Specifics */
+    .history-qty {
+        background: rgba(16, 185, 129, 0.15);
+        color: #34d399;
+    }
+    .history-name {
+        color: var(--text-secondary);
+    }
+
+    /* Action Buttons */
     .ticket-footer {
-        padding: 15px;
-        background: rgba(255, 255, 255, 0.5);
+        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.02);
+        border-top: 1px solid var(--ticket-border);
     }
 
     .kds-btn {
         width: 100%;
         padding: 12px;
-        border: none;
-        border-radius: 8px;
+        border-radius: 10px;
         font-weight: 800;
-        font-size: 1.1em;
+        font-size: 1em;
         cursor: pointer;
-        transition: background 0.2s;
+        border: none;
+        transition: all 0.2s;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
         display: flex;
         align-items: center;
         justify-content: center;
-        gap: 10px;
+        gap: 8px;
     }
 
     .btn-start {
-        background: #fef3c7;
-        color: #92400e;
+        background: var(--color-prep);
+        color: white;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     .btn-start:hover {
-        background: #fde68a;
+        background: #2563eb;
+        transform: translateY(-2px);
     }
 
     .btn-finish {
-        background: #10b981;
+        background: var(--color-ready);
         color: white;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
 
     .btn-finish:hover {
         background: #059669;
+        transform: translateY(-2px);
     }
 
-    /* Misc */
-    .logout-pill {
-        /* Keep existing style if needed or redefine lightly */
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 80px 20px;
+        background: var(--ticket-bg);
+        border-radius: 16px;
+        border: 1px dashed rgba(255, 255, 255, 0.1);
+        max-width: 600px;
+        margin: 40px auto;
+        opacity: 0.8;
+    }
+
+    .empty-state h2 {
+        margin: 0 0 10px 0;
+        color: white;
+        font-weight: 800;
+    }
+
+    .empty-state p {
+        color: var(--text-secondary);
+        margin: 0;
+    }
+
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        color: #34d399;
+        padding: 15px 20px;
+        border-radius: 12px;
+        margin-bottom: 25px;
+        font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 8px;
-        background: white;
-        border: 1px solid #e5e7eb;
-        padding: 8px 16px;
-        border-radius: 20px;
-        text-decoration: none;
-        color: #ef4444;
-        font-weight: 600;
-    }
-    
-    .kds-tabs {
-        display: flex;
         gap: 10px;
-        background: white;
-        padding: 5px;
-        border-radius: 8px;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     }
-    .kds-tab {
-        border: none;
-        background: transparent;
-        padding: 8px 16px;
-        border-radius: 6px;
-        font-weight: 600;
-        cursor: pointer;
-        color: #6b7280;
-        transition: all 0.2s;
-    }
-    .kds-tab.active {
-        background: #f3f4f6;
-        color: #1f2937;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-    }
-    .status-badge {
-        display: inline-block;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 0.75em;
-        font-weight: 700;
-        text-transform: uppercase;
-        margin-top: 4px;
-    }
-    .status-badge.preparing {
-        background: #dbeafe;
-        color: #1e40af;
-    }
-    .status-badge.pending {
-        background: #fef3c7;
-        color: #92400e;
-    }
+</style>
 
 <script>
-    function switchTab(tabName) {
-        // Tabs UI
+    // Tab Switcher Logic - Robusto y sin dependencias de evento global
+    function switchTab(tabId) {
+        // UI
         document.querySelectorAll('.kds-tab').forEach(t => t.classList.remove('active'));
-        event.target.classList.add('active');
+        const btn = document.querySelector(`.kds-tab[data-target="${tabId}"]`);
+        if (btn) btn.classList.add('active');
 
         // Content
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        document.getElementById('tab-' + tabName).style.display = 'block';
+        const targetContainer = document.getElementById('tab-' + tabId);
+        if (targetContainer) targetContainer.style.display = 'block';
 
-        // Persist tab selection via session storage if desired (optional)
-        sessionStorage.setItem('kds_tab', tabName);
+        // Session
+        sessionStorage.setItem('kds_active_tab', tabId);
     }
-    
-    // Restore tab on load
+
+    // Init
     document.addEventListener('DOMContentLoaded', () => {
-        const savedTab = sessionStorage.getItem('kds_tab');
-        if (savedTab && document.getElementById('tab-'+savedTab)) {
-            // Find tab button
-            const btn = Array.from(document.querySelectorAll('.kds-tab')).find(b => b.textContent.toLowerCase().includes(savedTab === 'pending' ? 'pendientes' : 'historial'));
-            if(btn) btn.click();
+        const savedTab = sessionStorage.getItem('kds_active_tab');
+        if (savedTab) {
+            switchTab(savedTab);
         }
     });
 
-    // Live Clock & SLA Tracker
+    // Clock and SLA Tracker
     setInterval(() => {
         const now = new Date();
-        const timeString = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-        document.getElementById('clock').textContent = timeString;
+        document.getElementById('clock').textContent = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
         
-        // SLA Updater
         document.querySelectorAll('.timer-badge').forEach(badge => {
             const startTime = parseInt(badge.getAttribute('data-time'));
             if (startTime) {
                 const elapsedMins = Math.floor((now.getTime() - startTime) / 60000);
-                const minSpan = badge.querySelector('.min-val');
-                if(minSpan) minSpan.textContent = elapsedMins;
+                badge.querySelector('.min-val').textContent = elapsedMins;
                 
                 const ticket = badge.closest('.kds-ticket');
                 if (elapsedMins >= 15 && !ticket.classList.contains('is-urgent')) {
@@ -760,23 +685,19 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     let urgentBadge = ticket.querySelector('.urgent-badge');
                     if (!urgentBadge) {
                         const container = badge.closest('.urgent-container');
-                        urgentBadge = document.createElement('div');
-                        urgentBadge.className = 'urgent-badge';
-                        urgentBadge.innerHTML = '🔥 TARDE';
-                        container.appendChild(urgentBadge);
+                        container.insertAdjacentHTML('beforeend', '<div class="urgent-badge">🔥 TARDE</div>');
                     }
-                } else if (elapsedMins >= 10 && elapsedMins < 15 && !ticket.classList.contains('is-urgent')) {
-                    if (!ticket.classList.contains('is-warning')) {
-                        ticket.classList.add('is-warning');
-                    }
+                } else if (elapsedMins >= 10 && elapsedMins < 15 && !ticket.classList.contains('is-urgent') && !ticket.classList.contains('is-warning')) {
+                    ticket.classList.add('is-warning');
                 }
             }
         });
     }, 1000);
 
-    // Auto-refresh every 15 seconds to catch new orders
-    // In a real app we'd use WebSockets, but this works for now
-    setTimeout(() => location.reload(), 15000);
+    // Auto-refresh KDS every 15 seconds to fetch new incoming orders
+    setInterval(() => {
+        location.reload();
+    }, 15000);
 </script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
