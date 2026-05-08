@@ -485,7 +485,8 @@ if (!$clean_mode) {
                     <?php endforeach; ?>
                 </div>
             </div>
-            <!-- Order Summary Sidebar -->
+            <!-- Order Summary Sidebar (Waiter mobile only) -->
+            <?php if ($_SESSION['role_id'] == 2): ?>
             <div class="order-summary" id="order-summary-panel">
                 <div class="swipe-handle" id="swipe-handle">
                     <div class="handle-bar"></div>
@@ -556,6 +557,7 @@ if (!$clean_mode) {
                     <span class="badge" id="mobile-cart-badge"><?= count($order_items) ?></span>
                 </button>
             </div>
+            <?php endif; /* end waiter-only panel */ ?>
         </div>
     </main>
 </div>
