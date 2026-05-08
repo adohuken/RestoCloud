@@ -409,6 +409,15 @@ if (!$clean_mode) {
                 <a href="mesas.php" class="fc-btn fc-btn-outline" title="Volver a Mesas">
                     <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
                 </a>
+                <button class="fc-btn fc-btn-primary" onclick="toggleMobileCart(); switchTab('tab-draft');">
+                    <i class='bx bx-shopping-bag'></i> Pedido (<span id="top-cart-badge"><?= count($order_items) ?></span>)
+                </button>
+                <button class="fc-btn fc-btn-outline" onclick="toggleMobileCart(); switchTab('tab-kitchen');">
+                    <i class='bx bx-time-five'></i> Cocina
+                </button>
+                <button class="fc-btn fc-btn-outline" onclick="toggleMobileCart(); switchTab('tab-billing');">
+                    <i class='bx bx-receipt'></i> Cuenta
+                </button>
             </div>
         </div>
  
@@ -485,8 +494,7 @@ if (!$clean_mode) {
                     <?php endforeach; ?>
                 </div>
             </div>
-            <!-- Order Summary Sidebar (Waiter mobile only) -->
-            <?php if ($_SESSION['role_id'] == 2): ?>
+            <!-- Order Summary Sidebar -->
             <div class="order-summary" id="order-summary-panel">
                 <div class="swipe-handle" id="swipe-handle">
                     <div class="handle-bar"></div>
@@ -557,7 +565,7 @@ if (!$clean_mode) {
                     <span class="badge" id="mobile-cart-badge"><?= count($order_items) ?></span>
                 </button>
             </div>
-            <?php endif; /* end waiter-only panel */ ?>
+
         </div>
     </main>
 </div>
@@ -874,9 +882,13 @@ if (!$clean_mode) {
     .order-summary {
         background: var(--fc-bg);
         border-left: 1px solid var(--fc-border);
-        display: flex;
+        display: none;
         flex-direction: column;
         overflow: hidden;
+    }
+ 
+    .order-summary.active {
+        display: flex;
     }
  
     .item-name {
