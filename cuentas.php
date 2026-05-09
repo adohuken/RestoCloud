@@ -51,6 +51,7 @@ $stmt = $pdo->query('
            o.id as order_id, 
            o.total as order_total, 
            o.status as order_status,
+           o.payment_requested,
            u.name as waiter_name
     FROM tables t
     JOIN orders o ON t.id = o.table_id 
@@ -85,8 +86,9 @@ foreach ($tables as $t) {
         'order_id' => $t['order_id'],
         'total' => $t['order_total'],
         'status' => $t['order_status'],
+        'payment_requested' => $t['payment_requested'],
         'waiter' => $t['waiter_name'],
-        'link' => "ver_pedido.php?table={$t['id']}&view=bill"
+        'link' => "ver_pedido.php?table={$t['id']}&view=payment"
     ];
 }
 
@@ -99,6 +101,7 @@ foreach ($pedidosya as $py) {
         'order_id' => $py['id'], // Use ID as order ID
         'total' => $py['total'],
         'status' => $py['status'] === 'ready' ? 'ready' : 'pending',
+        'payment_requested' => 0,
         'waiter' => 'PedidosYa',
         'link' => "factura_pedidosya.php?id={$py['id']}" // Link directly to invoice/details
     ];
@@ -168,7 +171,7 @@ include __DIR__ . '/includes/header.php';
                     }
                 }
                 ?>
-                <div class="table-row table-<?= $cardClass ?>">
+                <div class="table-row table-<?= $cardClass ?> <?= !empty($account['payment_requested']) ? 'payment-requested' : '' ?>">
                     <!-- section: Info -->
                     <div class="row-section-info">
                         <div class="row-icon"><i class='bx <?= $icon ?>'></i></div>
@@ -178,7 +181,12 @@ include __DIR__ . '/includes/header.php';
                                 <?php if ($hasOrder): ?><span
                                         class="badge">#<?= $account['order_id'] ?></span><?php endif; ?>
                             </div>
-                            <div class="row-status"><?= $statusLabel ?></div>
+                            <div class="row-status">
+                                <?= $statusLabel ?>
+                                <?php if (!empty($account['payment_requested'])): ?>
+                                    <span class="fc-badge fc-badge-rose" style="margin-left: 8px; background: #e11d48; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; animation: pulse 2s infinite;"><i class='bx bx-bell'></i> COBRO SOLICITADO</span>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
 
@@ -218,9 +226,21 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <style>
+    @keyframes pulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.7; transform: scale(1.05); }
+        100% { opacity: 1; }
+    }
+    
+    .payment-requested {
+        box-shadow: 0 0 15px rgba(225, 29, 72, 0.6) !important;
+        border: 2px solid #e11d48 !important;
+        transform: scale(1.01);
+        z-index: 10;
+        position: relative;
+    }
+
     /* New List Layout */
-    /* New List Layout (Grid) */
-    /* New List Layout (Grid) */
     .tables-list {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));

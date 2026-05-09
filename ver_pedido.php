@@ -42,12 +42,13 @@ if (!$order) {
     exit();
 }
 
-// Get order details
+// Get order details (Grouped by product and price to avoid long lists)
 $stmt = $pdo->prepare('
-    SELECT od.*, p.name as product_name
+    SELECT MIN(od.id) as id, p.id as product_id, p.name as product_name, od.price, SUM(od.quantity) as quantity
     FROM order_details od
     JOIN products p ON od.product_id = p.id
     WHERE od.order_id = ?
+    GROUP BY p.id, p.name, od.price
 ');
 $stmt->execute([$order['id']]);
 $order_items = $stmt->fetchAll();
@@ -63,6 +64,13 @@ $has_splits = $stmt->fetchColumn() > 0;
 
 if ($has_splits) {
     header('Location: split_invoices.php?order_id=' . $order['id']);
+    exit();
+}
+
+// Handle Request Cancellation
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_cancellation'])) {
+    $pdo->prepare('UPDATE orders SET payment_requested = 1 WHERE id = ?')->execute([$order['id']]);
+    header('Location: ver_pedido.php?table=' . $table_id . '&success=requested');
     exit();
 }
 
@@ -294,28 +302,39 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
             <?php endif; ?>
         <?php endif; ?>
 
-        <div class="fc-invoice-grid<?= $_SESSION['role_id'] == 2 ? ' waiter-view' : '' ?> <?= $view_mode === 'bill' ? 'view-only-mode' : '' ?>">
-            <?php if ($_SESSION['role_id'] != 2): // Hide payment card for waiters ?>
-                <?php if ($view_mode === 'bill'): ?>
-                    <!-- View Only Mode: Show Button to Start Payment -->
-                    <div class="fc-card" style="text-align: center; padding: 50px;">
-                        <div style="font-size: 64px; margin-bottom: 25px; filter: drop-shadow(0 0 15px rgba(225, 29, 72, 0.4));">💳</div>
-                        <h2 class="fc-text-rose" style="font-weight: 800; margin-bottom: 10px;">LISTO PARA PAGO</h2>
-                        <p style="color: var(--fc-text-sec); margin-bottom: 35px; font-size: 1.1em;">
-                            Revise el detalle de la cuenta a la derecha.<br>
-                            Si todo está correcto, proceda al cobro seguro.
-                        </p>
-                        <a href="ver_pedido.php?table=<?= $table_id ?>&view=payment"
-                            class="fc-btn fc-btn-primary fc-w100" style="font-size: 1.2em; padding: 18px;">
-                            <i class='bx bx-check-double'></i> PROCESAR PAGO
+        <div class="fc-invoice-grid <?= $view_mode === 'bill' ? 'view-only-mode' : '' ?>">
+            <?php if ($view_mode === 'bill'): ?>
+                <!-- Bill View: Show the Request Cancellation Panel for EVERYONE -->
+                <div class="fc-card" style="text-align: center; padding: 50px;">
+                    <div style="font-size: 64px; margin-bottom: 25px; filter: drop-shadow(0 0 15px rgba(225, 29, 72, 0.4));">🧾</div>
+                    <h2 class="fc-text-rose" style="font-weight: 800; margin-bottom: 10px;">ESTADO DE CUENTA</h2>
+                    <p style="color: var(--fc-text-sec); margin-bottom: 35px; font-size: 1.1em;">
+                        Revise el detalle de la cuenta a la derecha.<br>
+                        Si todo está correcto, solicite el cobro a Caja.
+                    </p>
+                    
+                    <?php if (!empty($order['payment_requested'])): ?>
+                        <button disabled class="fc-btn fc-btn-primary fc-w100" style="font-size: 1.2em; padding: 18px; background: #10b981; border-color: #10b981; opacity: 1;">
+                            <i class='bx bx-check-double'></i> Cancelación Solicitada
+                        </button>
+                    <?php else: ?>
+                        <form method="POST" style="margin: 0;">
+                            <input type="hidden" name="request_cancellation" value="1">
+                            <button type="submit" class="fc-btn fc-btn-primary fc-w100" style="font-size: 1.2em; padding: 18px;">
+                                <i class='bx bx-bell'></i> Solicitar Cancelación
+                            </button>
+                        </form>
+                    <?php endif; ?>
+
+                    <div class="fc-mt-20">
+                        <a href="venta.php?table=<?= $table_id ?>" class="fc-btn" style="color: var(--fc-text-sec);">
+                            <i class='bx bx-arrow-back'></i> Volver al Pedido
                         </a>
-                        <div class="fc-mt-20">
-                            <a href="venta.php?table=<?= $table_id ?>" class="fc-btn" style="color: var(--fc-text-sec);">
-                                <i class='bx bx-arrow-back'></i> Volver al Pedido
-                            </a>
-                        </div>
                     </div>
-                <?php else: ?>
+                </div>
+            <?php else: ?>
+                <!-- Payment View: ONLY Cashier and Admin can see this -->
+                <?php if (in_array($_SESSION['role_id'], [1, 3, 5])): ?>
                     <div class="fc-card">
  
                         <div class="fc-card-header primary">
@@ -522,16 +541,17 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                         </div>
                     </div>
                 </div>
-            <?php endif; ?>
-        <?php endif; // End hide payment card for waiters ?>
+            <?php endif; // End payment view for Cashier/Admin ?>
+        <?php endif; // End view mode switch ?>
 
         <div class="fc-receipt">
-            <div class="fc-card-header">
+            <div class="fc-card-header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin:0;"><i class='bx bx-list-ol'></i> Detalle de Cuenta</h3>
+                <span class="fc-badge fc-badge-outline"><?= count($order_items) ?> Productos</span>
             </div>
-            <div class="fc-table-container">
-                <table class="fc-table">
-                    <thead>
+            <div class="fc-table-container" style="max-height: 400px; overflow-y: auto; border-bottom: 1px solid var(--fc-border);">
+                <table class="fc-table" style="border-collapse: separate; border-spacing: 0;">
+                    <thead style="position: sticky; top: 0; background: var(--fc-card-bg); z-index: 10; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
                         <tr>
                             <th>Producto</th>
                             <th style="text-align: right;">Precio</th>
@@ -542,32 +562,47 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                     <tbody>
                         <?php foreach ($order_items as $item): ?>
                             <tr>
-                                <td><?= htmlspecialchars($item['product_name']) ?></td>
-                                <td style="text-align: right; color: var(--fc-text-sec);">C$<?= number_format($item['price'], 2) ?></td>
-                                <td style="text-align: center; font-weight: 700;"><?= $item['quantity'] ?></td>
-                                <td style="text-align: right; font-weight: 700; color: var(--fc-text-main);">
+                                <td style="padding: 12px 15px;"><?= htmlspecialchars($item['product_name']) ?></td>
+                                <td style="text-align: right; color: var(--fc-text-sec); padding: 12px 15px;">C$<?= number_format($item['price'], 2) ?></td>
+                                <td style="text-align: center; font-weight: 700; padding: 12px 15px;"><?= $item['quantity'] ?></td>
+                                <td style="text-align: right; font-weight: 700; color: var(--fc-text-main); padding: 12px 15px;">
                                     C$<?= number_format($item['price'] * $item['quantity'], 2) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
-                    <tfoot>
-                        <tr class="fc-total-row">
-                            <td colspan="3">TOTAL FINAL</td>
-                            <td style="text-align: right;">C$<?= number_format($order['total'], 2) ?></td>
-                        </tr>
-                    </tfoot>
                 </table>
+            </div>
+            <div class="fc-receipt-footer" style="padding: 15px 20px; background: rgba(255,255,255,0.02);">
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.2em; font-weight: 800;">
+                    <span>TOTAL FINAL</span>
+                    <span style="color: var(--fc-primary);">C$<?= number_format($order['total'], 2) ?></span>
+                </div>
             </div>
         </div>
 
-        <?php if ($_SESSION['role_id'] == 2): // Show back to tables button for waiters ?>
-            <div class="fc-mt-20">
-                <a href="mesas.php" class="fc-btn fc-btn-primary fc-w100" style="padding: 16px;">
-                    <i class='bx bx-chair'></i> Volver a Mesas
+        <?php if ($view_mode !== 'bill'): ?>
+        <div class="fc-actions-sticky-bottom" style="margin-top: 25px; padding: 20px; background: var(--fc-card-bg); border-radius: 16px; border: 1px solid var(--fc-border); box-shadow: 0 -10px 25px rgba(0,0,0,0.1);">
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <?php if (!empty($order['payment_requested'])): ?>
+                    <button disabled class="fc-btn fc-btn-primary" style="padding: 18px; flex: 2; justify-content: center; background: #10b981; border-color: #10b981; opacity: 1; min-width: 250px;">
+                        <i class='bx bx-check-double'></i> Cancelación Solicitada
+                    </button>
+                <?php else: ?>
+                    <form method="POST" style="flex: 2; margin: 0; display: flex; min-width: 250px;">
+                        <input type="hidden" name="request_cancellation" value="1">
+                        <button type="submit" class="fc-btn fc-btn-primary" style="padding: 18px; flex: 1; justify-content: center; font-size: 1.1em;">
+                            <i class='bx bx-bell'></i> Solicitar Cancelación de Cuenta
+                        </button>
+                    </form>
+                <?php endif; ?>
+                
+                <a href="mesas.php" class="fc-btn fc-btn-outline" style="padding: 18px; flex: 1; justify-content: center; background: rgba(255,255,255,0.05); min-width: 180px;">
+                    <i class='bx bx-arrow-back'></i> Volver a Mesas
                 </a>
             </div>
+        </div>
         <?php endif; ?>
-</div>
+    </div>
 </main>
 </div>
 

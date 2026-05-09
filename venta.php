@@ -553,7 +553,7 @@ if (!$clean_mode) {
                             </div>
                         </div>
                         <div style="margin-top: 25px;">
-                            <a href="ver_pedido.php?table=<?= $table_id ?>&view=bill" target="_blank" class="fc-btn fc-btn-outline fc-w100" style="height: 55px; display: flex; align-items: center; justify-content: center; gap: 10px;">
+                            <a href="ver_pedido.php?table=<?= $table_id ?>&view=bill" class="fc-btn fc-btn-outline fc-w100" style="height: 55px; display: flex; align-items: center; justify-content: center; gap: 10px;">
                                 <i class='bx bx-receipt'></i> Consultar Cuenta
                             </a>
                         </div>
