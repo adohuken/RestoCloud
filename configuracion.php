@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/modules_helper.php';
 session_start();
@@ -41,10 +41,10 @@ try {
 
     // Ensure granular permissions exist
     $modules_to_ensure = [
-        ['name' => 'Editar Productos', 'key' => 'inventory_edit', 'icon' => '✏️', 'path' => '#', 'order' => 25],
-        ['name' => 'Eliminar Productos', 'key' => 'inventory_delete', 'icon' => '🗑️', 'path' => '#', 'order' => 26],
-        ['name' => 'Gestionar Facturas', 'key' => 'config_invoices_manage', 'icon' => '📝', 'path' => 'gestion_facturas.php', 'order' => 90],
-        ['name' => 'Pedido Libre', 'key' => 'pedido_libre', 'icon' => '🛒', 'path' => 'mesas.php', 'order' => 15]
+        ['name' => 'Editar Productos', 'key' => 'inventory_edit', 'icon' => 'âœï¸', 'path' => '#', 'order' => 25],
+        ['name' => 'Eliminar Productos', 'key' => 'inventory_delete', 'icon' => 'ðŸ—‘ï¸', 'path' => '#', 'order' => 26],
+        ['name' => 'Gestionar Facturas', 'key' => 'config_invoices_manage', 'icon' => 'ðŸ“', 'path' => 'gestion_facturas.php', 'order' => 90],
+        ['name' => 'Pedido Libre', 'key' => 'pedido_libre', 'icon' => 'ðŸ›’', 'path' => 'mesas.php', 'order' => 15]
     ];
 
     foreach ($modules_to_ensure as $mod) {
@@ -78,9 +78,9 @@ if (isset($_POST['backup'])) {
             $tables[] = $row[0];
         }
 
-        $sqlScript = "-- Backup de Base de Datos: foodcorp_system\n";
+        $sqlScript = "-- Backup de Base de Datos: RestoCloud_system\n";
         $sqlScript .= "-- Fecha: " . date('Y-m-d H:i:s') . "\n";
-        $sqlScript .= "-- Generado por FoodCorp System\n\n";
+        $sqlScript .= "-- Generado por RestoCloud System\n\n";
         $sqlScript .= "SET FOREIGN_KEY_CHECKS = 0;\n";
         $sqlScript .= "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
         $sqlScript .= "SET time_zone = \"+00:00\";\n\n";
@@ -132,7 +132,7 @@ if (isset($_POST['backup'])) {
 
         if (!empty($sqlScript)) {
             // Save the SQL script to a backup file
-            $backup_file_name = 'backup_foodcorp_system_' . date('Y-m-d_H-i-s') . '.sql';
+            $backup_file_name = 'backup_RestoCloud_system_' . date('Y-m-d_H-i-s') . '.sql';
 
             header('Content-Type: application/octet-stream');
             header("Content-Transfer-Encoding: Binary");
@@ -168,7 +168,7 @@ if (isset($_POST['restore_db'])) {
                 if (strtolower($file_ext) !== 'sql') {
                     $error_msg = 'Error: Solo se permiten archivos .sql';
                 } else if ($_FILES['sql_file']['size'] > 50 * 1024 * 1024) { // 50MB limit
-                    $error_msg = 'Error: El archivo es demasiado grande (máximo 50MB)';
+                    $error_msg = 'Error: El archivo es demasiado grande (mÃ¡ximo 50MB)';
                 } else {
                     try {
                         // Read SQL file
@@ -228,10 +228,10 @@ if (isset($_POST['restore_db'])) {
                     }
                 }
             } else {
-                $error_msg = 'Error: No se seleccionó ningún archivo o hubo un error en la carga.';
+                $error_msg = 'Error: No se seleccionÃ³ ningÃºn archivo o hubo un error en la carga.';
             }
         } else {
-            $error_msg = 'Credenciales de SuperAdmin incorrectas. No se realizó la restauración.';
+            $error_msg = 'Credenciales de SuperAdmin incorrectas. No se realizÃ³ la restauraciÃ³n.';
         }
     }
 }
@@ -309,7 +309,7 @@ if (isset($_POST['update_iva'])) {
     $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('enable_tips', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
     $stmt->execute([$enable_tips, $enable_tips]);
 
-    $success_msg = 'Configuración de facturación actualizada correctamente.';
+    $success_msg = 'ConfiguraciÃ³n de facturaciÃ³n actualizada correctamente.';
 }
 
 // Handle General Settings Update
@@ -339,9 +339,9 @@ if (isset($_POST['update_general'])) {
 
         $ext = pathinfo($filename, PATHINFO_EXTENSION);
         if (!in_array(strtolower($ext), $allowed)) {
-            $error_msg = 'Formato de archivo no válido. Solo JPG, PNG, GIF y WEBP.';
+            $error_msg = 'Formato de archivo no vÃ¡lido. Solo JPG, PNG, GIF y WEBP.';
         } elseif ($filesize > 5 * 1024 * 1024) {
-            $error_msg = 'El archivo es demasiado grande. Máximo 5MB.';
+            $error_msg = 'El archivo es demasiado grande. MÃ¡ximo 5MB.';
         } else {
             // Create uploads directory if not exists
             if (!file_exists('uploads')) {
@@ -361,7 +361,7 @@ if (isset($_POST['update_general'])) {
     }
 
     if (empty($error_msg)) {
-        $success_msg = 'Configuración general actualizada correctamente.';
+        $success_msg = 'ConfiguraciÃ³n general actualizada correctamente.';
     }
 }
 
@@ -373,9 +373,9 @@ if (isset($_POST['update_modules'])) {
         $module_ids = isset($_POST['module_ids']) ? array_map('intval', $_POST['module_ids']) : [];
 
         if (updateRoleModules($pdo, $role_id, $module_ids)) {
-            $success_msg = 'Módulos actualizados correctamente para el rol.';
+            $success_msg = 'MÃ³dulos actualizados correctamente para el rol.';
         } else {
-            $error_msg = 'Error al actualizar los módulos.';
+            $error_msg = 'Error al actualizar los mÃ³dulos.';
         }
     } else {
         $error_msg = 'Acceso denegado.';
@@ -411,7 +411,7 @@ if (isset($_POST['delete_table'])) {
     $table_id = intval($_POST['table_id'] ?? 0);
 
     if ($table_id <= 0) {
-        $error_msg = 'Mesa no válida.';
+        $error_msg = 'Mesa no vÃ¡lida.';
     } else {
         try {
             // Check if table has active orders
@@ -427,7 +427,7 @@ if (isset($_POST['delete_table'])) {
                 if ($stmt->rowCount() > 0) {
                     $success_msg = 'Mesa eliminada correctamente.';
                 } else {
-                    $error_msg = 'No se encontró la mesa.';
+                    $error_msg = 'No se encontrÃ³ la mesa.';
                 }
             }
         } catch (Exception $e) {
@@ -452,8 +452,8 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     <main class="main-content">
         <div class="fc-header" style="margin-bottom: 30px;">
             <div class="fc-header-left">
-                <h1><i class='bx bx-cog'></i> Configuración del Sistema</h1>
-                <p>Administración global, seguridad y mantenimiento</p>
+                <h1><i class='bx bx-cog'></i> ConfiguraciÃ³n del Sistema</h1>
+                <p>AdministraciÃ³n global, seguridad y mantenimiento</p>
             </div>
             <div class="fc-header-right">
                 <div class="fc-user-pill">
@@ -489,7 +489,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
             <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_menu_init') || !modulesTableExists($pdo)): ?>
                 <button class="fc-tab" onclick="switchTab('menu_init')" data-tab="menu_init">
-                    <i class='bx bx-rocket'></i> <span>Menú</span>
+                    <i class='bx bx-rocket'></i> <span>MenÃº</span>
                 </button>
             <?php endif; ?>
 
@@ -501,7 +501,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
             <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_invoicing') || !modulesTableExists($pdo)): ?>
                 <button class="fc-tab" onclick="switchTab('invoicing')" data-tab="invoicing">
-                    <i class='bx bx-receipt'></i> <span>Facturación</span>
+                    <i class='bx bx-receipt'></i> <span>FacturaciÃ³n</span>
                 </button>
             <?php endif; ?>
 
@@ -513,7 +513,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
             <?php if (modulesTableExists($pdo) && hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules')): ?>
                 <button class="fc-tab" onclick="switchTab('modules')" data-tab="modules">
-                    <i class='bx bx-shield-quarter'></i> <span>Módulos</span>
+                    <i class='bx bx-shield-quarter'></i> <span>MÃ³dulos</span>
                 </button>
             <?php endif; ?>
         </div>
@@ -532,7 +532,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                         $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_logo', 'theme_effects_enabled', 'show_company_name')");
                         $stmt->execute();
                         $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
-                        $current_name = $settings['company_name'] ?? 'FoodCorp System';
+                        $current_name = $settings['company_name'] ?? 'RestoCloud System';
                         $current_logo = $settings['company_logo'] ?? '';
                         $effects_enabled = $settings['theme_effects_enabled'] ?? '0';
                         $show_company_name = $settings['show_company_name'] ?? '1'; // Default visible
@@ -561,7 +561,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                     <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
                                         <input type="checkbox" name="show_company_name" value="1" <?= $show_company_name == '1' ? 'checked' : '' ?> style="width: 20px; height: 20px; accent-color: var(--fc-primary); margin-top: 2px;">
                                         <div>
-                                            <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i class='bx bx-text'></i> Mostrar nombre en menú</span>
+                                            <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i class='bx bx-text'></i> Mostrar nombre en menÃº</span>
                                             <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Permite elegir si el nombre del negocio aparece debajo del logo en la barra lateral.</p>
                                         </div>
                                     </label>
@@ -571,14 +571,14 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                         <input type="checkbox" name="theme_effects_enabled" value="1" <?= $effects_enabled == '1' ? 'checked' : '' ?> style="width: 20px; height: 20px; accent-color: var(--fc-primary); margin-top: 2px;">
                                         <div>
                                             <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i class='bx bx-party'></i> Activar Efectos Visuales</span>
-                                            <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Habilita animaciones y elementos temáticos en todo el sistema.</p>
+                                            <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Habilita animaciones y elementos temÃ¡ticos en todo el sistema.</p>
                                         </div>
                                     </label>
                                 </div>
                             </div>
 
                             <button type="submit" name="update_general" class="fc-btn fc-btn-primary fc-w100" style="margin-top: 25px;">
-                                <i class='bx bx-save'></i> Guardar Configuración
+                                <i class='bx bx-save'></i> Guardar ConfiguraciÃ³n
                             </button>
                         </form>
                     </div>
@@ -597,7 +597,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                 <h3><i class='bx bxs-data'></i> Respaldo SQL</h3>
                             </div>
                             <div class="fc-modal-body">
-                                <p style="color: var(--fc-text-sec); margin-bottom: 20px;">Descarga una copia completa de la base de datos para auditorías o migraciones manuales.</p>
+                                <p style="color: var(--fc-text-sec); margin-bottom: 20px;">Descarga una copia completa de la base de datos para auditorÃ­as o migraciones manuales.</p>
                                 <form method="POST">
                                     <button type="submit" name="backup" class="fc-btn fc-btn-primary fc-w100">
                                         <i class='bx bx-download'></i> Generar Respaldo
@@ -611,13 +611,13 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_restore') || !modulesTableExists($pdo)): ?>
                         <div class="fc-card">
                             <div class="fc-modal-header">
-                                <h3><i class='bx bx-cloud-upload'></i> Restauración</h3>
+                                <h3><i class='bx bx-cloud-upload'></i> RestauraciÃ³n</h3>
                             </div>
                             <div class="fc-modal-body">
                                 <p style="color: var(--fc-text-sec); margin-bottom: 20px;">Sube un archivo de respaldo .sql para restaurar el estado previo del sistema.</p>
                                 <div style="padding: 12px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; margin-bottom: 20px;">
                                     <span style="color: #f59e0b; font-weight: 700; font-size: 13px;"><i class='bx bx-error'></i> PELIGRO:</span>
-                                    <p style="font-size: 12px; color: var(--fc-text-sec); margin-top: 4px;">Esta acción sobrescribirá permanentemente todos los datos actuales.</p>
+                                    <p style="font-size: 12px; color: var(--fc-text-sec); margin-top: 4px;">Esta acciÃ³n sobrescribirÃ¡ permanentemente todos los datos actuales.</p>
                                 </div>
                                 <button type="button" onclick="openRestoreModal()" class="fc-btn fc-btn-outline fc-w100">
                                     <i class='bx bx-upload'></i> Subir y Restaurar
@@ -634,17 +634,17 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             <div id="menu_init" class="tab-content">
                 <div class="fc-card" style="max-width: 600px; margin: 0 auto;">
                     <div class="fc-modal-header">
-                        <h3><i class='bx bx-rocket'></i> Configuración Inicial</h3>
+                        <h3><i class='bx bx-rocket'></i> ConfiguraciÃ³n Inicial</h3>
                     </div>
                     <div class="fc-modal-body" style="text-align: center;">
                         <div style="font-size: 50px; color: var(--fc-primary); margin-bottom: 20px;">
                             <i class='bx bx-archive-in'></i>
                         </div>
-                        <p style="color: var(--fc-text-main); font-weight: 600; margin-bottom: 10px;">Carga Masiva de Menú</p>
-                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Utiliza nuestra herramienta de inicialización para cargar rápidamente categorías y productos desde una interfaz simplificada.</p>
+                        <p style="color: var(--fc-text-main); font-weight: 600; margin-bottom: 10px;">Carga Masiva de MenÃº</p>
+                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Utiliza nuestra herramienta de inicializaciÃ³n para cargar rÃ¡pidamente categorÃ­as y productos desde una interfaz simplificada.</p>
                         
                         <a href="menu_init.php" class="fc-btn fc-btn-primary fc-w100" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <i class='bx bx-edit-alt'></i> Abrir Asistente de Menú
+                            <i class='bx bx-edit-alt'></i> Abrir Asistente de MenÃº
                         </a>
                     </div>
                 </div>
@@ -656,14 +656,14 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             <div id="tables" class="tab-content">
                 <div class="fc-card">
                     <div class="fc-modal-header">
-                        <h3><i class='bx bx-chair'></i> Gestión de Salón</h3>
+                        <h3><i class='bx bx-chair'></i> GestiÃ³n de SalÃ³n</h3>
                     </div>
                     <div class="fc-modal-body">
-                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Administra las mesas disponibles para el servicio en salón.</p>
+                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Administra las mesas disponibles para el servicio en salÃ³n.</p>
 
                         <!-- Add New Table Form -->
                         <form method="POST" class="fc-form" style="background: rgba(255,255,255,0.02); padding: 25px; border-radius: 20px; border: 1px dashed var(--fc-border); margin-bottom: 30px;">
-                            <label class="fc-label">Nueva Mesa / Área</label>
+                            <label class="fc-label">Nueva Mesa / Ãrea</label>
                             <div style="display: flex; gap: 12px;">
                                 <input type="text" name="table_name" class="fc-input" placeholder="Ej: Mesa 15, Terraza 2, VIP" required style="flex: 1;">
                                 <button type="submit" name="add_table" class="fc-btn fc-btn-primary" style="padding: 0 25px; height: 48px;">
@@ -676,7 +676,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                         <div>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 0 5px;">
                                 <h4 style="margin: 0; color: var(--fc-text-main); font-size: 16px;">
-                                    Distribución Actual 
+                                    DistribuciÃ³n Actual 
                                     <span class="fc-badge fc-badge-outline" style="margin-left: 10px;"><?= count($all_tables) ?> Mesas</span>
                                 </h4>
                             </div>
@@ -684,7 +684,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                             <?php if (empty($all_tables)): ?>
                                 <div style="text-align: center; padding: 60px 20px; color: var(--fc-text-sec); background: rgba(255,255,255,0.01); border-radius: 20px; border: 1px solid var(--fc-border);">
                                     <i class='bx bx-chair' style="font-size: 48px; opacity: 0.3; display: block; margin-bottom: 15px;"></i>
-                                    <p>No se han configurado mesas aún.</p>
+                                    <p>No se han configurado mesas aÃºn.</p>
                                 </div>
                             <?php else: ?>
                                 <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px;">
@@ -725,7 +725,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             <div id="invoicing" class="tab-content">
                 <div class="fc-card" style="max-width: 600px; margin: 0 auto;">
                     <div class="fc-modal-header">
-                        <h3><i class='bx bx-receipt'></i> Parámetros de Facturación</h3>
+                        <h3><i class='bx bx-receipt'></i> ParÃ¡metros de FacturaciÃ³n</h3>
                     </div>
                     <div class="fc-modal-body">
                         <?php
@@ -739,7 +739,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                             <div class="fc-form-group">
                                 <label class="fc-label">Impuesto al Valor Agregado (IVA %)</label>
                                 <input type="number" name="iva_percentage" class="fc-input" value="<?= $current_iva ?>" min="0" max="100" step="0.01" required>
-                                <small style="color: var(--fc-text-sec); margin-top: 5px; display: block;">Este valor se aplicará automáticamente al subtotal de cada pedido.</small>
+                                <small style="color: var(--fc-text-sec); margin-top: 5px; display: block;">Este valor se aplicarÃ¡ automÃ¡ticamente al subtotal de cada pedido.</small>
                             </div>
                             
                             <div class="fc-form-group" style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 16px; border: 1px solid var(--fc-border); margin: 20px 0;">
@@ -747,19 +747,19 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                     <input type="checkbox" name="enable_tips" value="1" <?= $enable_tips == '1' ? 'checked' : '' ?> style="width: 20px; height: 20px; accent-color: var(--fc-primary); margin-top: 2px;">
                                     <div>
                                         <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i class='bx bx-coin-stack'></i> Sugerir Propina (10%)</span>
-                                        <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Habilita el cálculo sugerido de propina en el cierre de cuenta.</p>
+                                        <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Habilita el cÃ¡lculo sugerido de propina en el cierre de cuenta.</p>
                                     </div>
                                 </label>
                             </div>
 
                             <button type="submit" name="update_iva" class="fc-btn fc-btn-primary fc-w100">
-                                <i class='bx bx-save'></i> Actualizar Configuración Fiscal
+                                <i class='bx bx-save'></i> Actualizar ConfiguraciÃ³n Fiscal
                             </button>
                         </form>
 
                         <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_invoices_manage') || !modulesTableExists($pdo)): ?>
                             <div style="margin-top: 30px; padding-top: 25px; border-top: 1px solid var(--fc-border);">
-                                <h4 style="color: var(--fc-text-main); font-size: 15px; margin-bottom: 15px;">Control de Auditoría</h4>
+                                <h4 style="color: var(--fc-text-main); font-size: 15px; margin-bottom: 15px;">Control de AuditorÃ­a</h4>
                                 <a href="gestion_facturas.php" class="fc-btn fc-btn-outline fc-w100" style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">
                                     <i class='bx bx-history'></i> Administrar Historial de Facturas
                                 </a>
@@ -780,14 +780,14 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <div class="fc-modal-body">
                         <div style="background: rgba(225, 29, 72, 0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(225, 29, 72, 0.1); margin-bottom: 25px;">
                             <p style="color: var(--fc-text-main); font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                <i class='bx bx-info-circle'></i> ACCIÓN IRREVERSIBLE
+                                <i class='bx bx-info-circle'></i> ACCIÃ“N IRREVERSIBLE
                             </p>
-                            <p style="color: var(--fc-text-sec); font-size: 14px; margin-bottom: 15px;">Esta acción restablecerá el sistema a su estado inicial, eliminando permanentemente:</p>
+                            <p style="color: var(--fc-text-sec); font-size: 14px; margin-bottom: 15px;">Esta acciÃ³n restablecerÃ¡ el sistema a su estado inicial, eliminando permanentemente:</p>
                             <ul style="color: var(--fc-text-sec); font-size: 13px; padding-left: 20px; gap: 8px; display: flex; flex-direction: column;">
-                                <li><i class='bx bx-chevron-right'></i> Todos los productos, categorías e insumos.</li>
+                                <li><i class='bx bx-chevron-right'></i> Todos los productos, categorÃ­as e insumos.</li>
                                 <li><i class='bx bx-chevron-right'></i> Historial completo de ventas, facturas y pagos.</li>
-                                <li><i class='bx bx-chevron-right'></i> Configuración de mesas y pedidos activos.</li>
-                                <li><i class='bx bx-chevron-right'></i> Todos los usuarios (excepto la sesión actual del sistema).</li>
+                                <li><i class='bx bx-chevron-right'></i> ConfiguraciÃ³n de mesas y pedidos activos.</li>
+                                <li><i class='bx bx-chevron-right'></i> Todos los usuarios (excepto la sesiÃ³n actual del sistema).</li>
                             </ul>
                         </div>
                         
@@ -804,7 +804,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             <div id="modules" class="tab-content">
                 <div class="fc-card">
                     <div class="fc-modal-header">
-                        <h3><i class='bx bx-shield-quarter'></i> Permisos y Módulos</h3>
+                        <h3><i class='bx bx-shield-quarter'></i> Permisos y MÃ³dulos</h3>
                     </div>
                     <div class="fc-modal-body">
                         <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Configura el acceso granular para cada rol del sistema.</p>
@@ -816,7 +816,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
                         <?php if (empty($all_modules)): ?>
                             <div class="fc-badge fc-badge-outline" style="width: 100%; justify-content: center; padding: 20px;">
-                                <i class='bx bx-error-circle'></i> No hay módulos configurados en la base de datos.
+                                <i class='bx bx-error-circle'></i> No hay mÃ³dulos configurados en la base de datos.
                             </div>
                         <?php else: ?>
                             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px;">
@@ -847,7 +847,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                                 <i class='bx bx-check-double'></i> Actualizar Permisos
                                             </button>
                                         <?php else: ?>
-                                            <p style="font-size: 11px; color: var(--fc-text-sec); margin-top: 15px; text-align: center; font-style: italic;">Acceso restringido por configuración de SuperAdmin</p>
+                                            <p style="font-size: 11px; color: var(--fc-text-sec); margin-top: 15px; text-align: center; font-style: italic;">Acceso restringido por configuraciÃ³n de SuperAdmin</p>
                                         <?php endif; ?>
                                     </form>
                                 <?php endforeach; ?>
@@ -864,7 +864,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 <div class="fc-modal-overlay" id="resetModal">
     <div class="fc-modal" style="max-width: 450px;">
         <div class="fc-modal-header">
-            <h3><i class='bx bx-lock-alt'></i> Confirmación requerida</h3>
+            <h3><i class='bx bx-lock-alt'></i> ConfirmaciÃ³n requerida</h3>
             <button class="fc-modal-close" onclick="closeResetModal()">&times;</button>
         </div>
         <div class="fc-modal-body">
@@ -875,7 +875,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <input type="text" name="super_admin_username" class="fc-input" required autocomplete="off">
                 </div>
                 <div class="fc-form-group">
-                    <label class="fc-label">Contraseña</label>
+                    <label class="fc-label">ContraseÃ±a</label>
                     <input type="password" name="super_admin_password" class="fc-input" required autocomplete="off">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
@@ -891,7 +891,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 <div class="fc-modal-overlay" id="restoreModal">
     <div class="fc-modal" style="max-width: 450px;">
         <div class="fc-modal-header">
-            <h3><i class='bx bx-lock-alt'></i> Restauración Segura</h3>
+            <h3><i class='bx bx-lock-alt'></i> RestauraciÃ³n Segura</h3>
             <button class="fc-modal-close" onclick="closeRestoreModal()">&times;</button>
         </div>
         <div class="fc-modal-body">
@@ -905,7 +905,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <input type="text" name="super_admin_username" class="fc-input" required autocomplete="off">
                 </div>
                 <div class="fc-form-group">
-                    <label class="fc-label">Contraseña</label>
+                    <label class="fc-label">ContraseÃ±a</label>
                     <input type="password" name="super_admin_password" class="fc-input" required autocomplete="off">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
@@ -949,13 +949,13 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     function confirmDeleteTable(e, form, name) {
         e.preventDefault();
         Swal.fire({
-            title: '¿Eliminar ' + name + '?',
-            text: 'Esta acción no se puede deshacer.',
+            title: 'Â¿Eliminar ' + name + '?',
+            text: 'Esta acciÃ³n no se puede deshacer.',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: 'var(--fc-primary)',
             cancelButtonColor: 'var(--fc-bg-dark)',
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: 'SÃ­, eliminar',
             cancelButtonText: 'Cancelar',
             background: 'var(--fc-bg-dark)',
             color: 'var(--fc-text-main)'
@@ -965,7 +965,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     }
 
     <?php if ($success_msg): ?>
-        Swal.fire({ icon: 'success', title: '¡Hecho!', text: '<?= addslashes($success_msg) ?>', background: 'var(--fc-bg-dark)', color: 'var(--fc-text-main)', confirmButtonColor: 'var(--fc-primary)' });
+        Swal.fire({ icon: 'success', title: 'Â¡Hecho!', text: '<?= addslashes($success_msg) ?>', background: 'var(--fc-bg-dark)', color: 'var(--fc-text-main)', confirmButtonColor: 'var(--fc-primary)' });
     <?php endif; ?>
     <?php if ($error_msg): ?>
         Swal.fire({ icon: 'error', title: 'Error', text: '<?= addslashes($error_msg) ?>', background: 'var(--fc-bg-dark)', color: 'var(--fc-text-main)', confirmButtonColor: 'var(--fc-primary)' });

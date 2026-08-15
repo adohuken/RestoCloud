@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/inventory_helper.php';
 require_once __DIR__ . '/includes/modules_helper.php';
@@ -18,7 +18,7 @@ if (!hasModuleAccess($pdo, $_SESSION['role_id'], 'pedidosya')) {
     // Fallback for hardcoded roles (Admin, Kitchen, SuperAdmin) to match mesas.php
     if (!in_array($_SESSION['role_id'], [1, 3, 5])) {
         if (isset($_GET['clean'])) {
-            die('<div style="color:red;padding:20px;">No tienes acceso al módulo de PedidosYa.</div>');
+            die('<div style="color:red;padding:20px;">No tienes acceso al mÃ³dulo de PedidosYa.</div>');
         }
         checkModuleAccess($pdo, $_SESSION['role_id'], 'pedidosya'); // Redirects
     }
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_order'])) {
     $quantities = $_POST['quantities'] ?? [];
 
     if (empty($external_order_id)) {
-        $error_msg = 'El número de orden de PedidosYa es obligatorio.';
+        $error_msg = 'El nÃºmero de orden de PedidosYa es obligatorio.';
     } elseif (empty($products) || !array_filter($quantities)) {
         $error_msg = 'Debe agregar al menos un producto.';
     } else {
@@ -96,7 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create_order'])) {
             }
 
             if (empty($valid_items)) {
-                throw new Exception('No se encontraron productos válidos.');
+                throw new Exception('No se encontraron productos vÃ¡lidos.');
             }
 
             $iva_amount = $subtotal * ($iva_percentage / 100);
@@ -172,7 +172,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 ?>
 <?php
 // Fetch company settings for sidebar
-$sidebar_company_name = 'Sistema Pizzería';
+$sidebar_company_name = 'Sistema PizzerÃ­a';
 $sidebar_company_logo = '';
 
 try {
@@ -205,7 +205,7 @@ if (!$clean_mode) {
         <title>PedidosYa</title>
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
-        <link rel="stylesheet" href="assets/css/foodcorp-theme.css?v=1.0">
+        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=1.0">
         <style>
             body { background: var(--fc-bg); padding: 20px; color: var(--fc-text-main); }
             .dashboard-wrapper { display: block !important; }
@@ -225,7 +225,7 @@ if (!$clean_mode) {
         <div class="page-header">
             <div>
                 <h1><i class='bx bxs-truck'></i> PedidosYa</h1>
-                <p>Centro de recepción y control de delivery externo</p>
+                <p>Centro de recepciÃ³n y control de delivery externo</p>
             </div>
             <div class="user-profile-header">
                 <div class="user-avatar">
@@ -268,7 +268,7 @@ if (!$clean_mode) {
                                     value="<?= htmlspecialchars($_POST['external_order_id'] ?? '') ?>">
                             </div>
                             <div class="fc-input-group" style="flex: 1;">
-                                <label class="fc-label">Teléfono</label>
+                                <label class="fc-label">TelÃ©fono</label>
                                 <input type="text" name="customer_phone" class="fc-input" placeholder="8888-8888"
                                     value="<?= htmlspecialchars($_POST['customer_phone'] ?? '') ?>">
                             </div>
@@ -279,7 +279,7 @@ if (!$clean_mode) {
                                 value="<?= htmlspecialchars($_POST['customer_name'] ?? '') ?>">
                         </div>
                         <div class="fc-input-group">
-                            <label class="fc-label">Dirección Completa</label>
+                            <label class="fc-label">DirecciÃ³n Completa</label>
                             <textarea name="customer_address" class="fc-input" rows="2" style="height: auto; padding: 12px;"
                                 placeholder="Punto de entrega"><?= htmlspecialchars($_POST['customer_address'] ?? '') ?></textarea>
                         </div>
@@ -311,7 +311,7 @@ if (!$clean_mode) {
                             </div>
                         </div>
                         <button type="button" id="addProductBtn" class="fc-btn fc-btn-outline" style="width: 100%; border-style: dashed; border-width: 2px;">
-                            <i class='bx bx-plus'></i> Agregar otro ítem
+                            <i class='bx bx-plus'></i> Agregar otro Ã­tem
                         </button>
                     </div>
                     <!-- Product Selection Modal -->
@@ -324,7 +324,7 @@ if (!$clean_mode) {
                             <div class="fc-modal-body">
                                 <div class="fc-input-group" style="margin-bottom: 20px;">
                                     <input type="text" id="modalSearch" class="fc-input"
-                                        placeholder="Ej: Pizza Jamón..." onkeyup="filterProducts()">
+                                        placeholder="Ej: Pizza JamÃ³n..." onkeyup="filterProducts()">
                                 </div>
                                 <div id="modalProductList" style="max-height: 400px; overflow-y: auto; border-radius: 12px; border: 1px solid var(--fc-border);">
                                     <?php foreach ($products_list as $p): ?>
@@ -334,7 +334,7 @@ if (!$clean_mode) {
                                             style="padding: 15px; border-bottom: 1px solid var(--fc-border); cursor: pointer; display: flex; justify-content: space-between; align-items: center;">
                                             <div>
                                                 <div style="font-weight: 600; color: var(--fc-text-main);"><?= htmlspecialchars($p['name']) ?></div>
-                                                <div style="font-size: 12px; color: var(--fc-text-sec);">Stock: <?= $p['stock'] ?> ítem(s)</div>
+                                                <div style="font-size: 12px; color: var(--fc-text-sec);">Stock: <?= $p['stock'] ?> Ã­tem(s)</div>
                                             </div>
                                             <div style="font-weight: 800; color: var(--fc-primary);">C$<?= number_format($p['price'], 2) ?></div>
                                         </div>
@@ -382,7 +382,7 @@ if (!$clean_mode) {
                     <?php if (empty($recent_orders)): ?>
                         <div style="text-align: center; padding: 40px; color: var(--fc-text-sec);">
                             <i class='bx bx-package' style="font-size: 40px; opacity: 0.3;"></i>
-                            <p>No hay pedidos registrados aún</p>
+                            <p>No hay pedidos registrados aÃºn</p>
                         </div>
                     <?php else: ?>
                         <?php foreach ($recent_orders as $order): ?>
@@ -395,7 +395,7 @@ if (!$clean_mode) {
                                     <?php if ($order['customer_name']): ?>
                                         <div style="margin-bottom: 5px;"><i class='bx bx-user' style="color: var(--fc-text-sec);"></i> <?= htmlspecialchars($order['customer_name']) ?></div>
                                     <?php endif; ?>
-                                    <div style="margin-bottom: 5px;"><i class='bx bx-package' style="color: var(--fc-text-sec);"></i> <?= $order['item_count'] ?> ítems</div>
+                                    <div style="margin-bottom: 5px;"><i class='bx bx-package' style="color: var(--fc-text-sec);"></i> <?= $order['item_count'] ?> Ã­tems</div>
                                     <div style="font-weight: 800; color: var(--fc-text-main); font-size: 1.2em;">C$<?= number_format($order['total'], 2) ?></div>
                                 </div>
                                 <div style="display: flex; gap: 10px;">

@@ -5,7 +5,7 @@ $host_env = $_SERVER['HTTP_HOST'];
 if ($host_env === 'localhost' || strpos($host_env, '127.0.0.1') !== false) {
     // LOCAL CONFIG (XAMPP)
     $host = 'localhost';
-    $db = 'foodcorp_system';
+    $db = 'restocloud';
     $user = 'root';
     $pass = '';
 } else {

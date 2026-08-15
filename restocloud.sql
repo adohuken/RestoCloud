@@ -1,6 +1,6 @@
--- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
+﻿-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
 --
--- Host: localhost    Database: foodcorp_system
+-- Host: localhost    Database: restocloud
 -- ------------------------------------------------------
 -- Server version	10.4.32-MariaDB
 
@@ -123,7 +123,7 @@ CREATE TABLE `ingredient_categories` (
 
 LOCK TABLES `ingredient_categories` WRITE;
 /*!40000 ALTER TABLE `ingredient_categories` DISABLE KEYS */;
-INSERT INTO `ingredient_categories` VALUES (1,'Carnes',NULL),(2,'Verduras',NULL),(3,'Frutas',NULL),(4,'Lácteos/Huevos',NULL),(5,'Granos/Pan',NULL),(6,'Bebidas',NULL),(7,'Condimentos',NULL),(8,'Otros',NULL);
+INSERT INTO `ingredient_categories` VALUES (1,'Carnes',NULL),(2,'Verduras',NULL),(3,'Frutas',NULL),(4,'LÃ¡cteos/Huevos',NULL),(5,'Granos/Pan',NULL),(6,'Bebidas',NULL),(7,'Condimentos',NULL),(8,'Otros',NULL);
 /*!40000 ALTER TABLE `ingredient_categories` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -190,7 +190,7 @@ CREATE TABLE `ingredients` (
 
 LOCK TABLES `ingredients` WRITE;
 /*!40000 ALTER TABLE `ingredients` DISABLE KEYS */;
-INSERT INTO `ingredients` VALUES (1,'Carne Molida',NULL,NULL,'kg',120.00,10.000,5.000,'2026-03-31 15:00:49',8),(2,'Pan de Hamburguesa',NULL,NULL,'unidad',5.00,100.000,5.000,'2026-03-31 15:00:49',8),(3,'Queso Cheddar',NULL,NULL,'kg',180.00,5.000,5.000,'2026-03-31 15:00:49',8),(4,'Tocino',NULL,NULL,'kg',200.00,5.000,5.000,'2026-03-31 15:00:49',8),(5,'Alitas Crudas',NULL,NULL,'kg',80.00,20.000,5.000,'2026-03-31 15:00:49',8),(6,'Salsa BBQ',NULL,NULL,'l',150.00,5.000,5.000,'2026-03-31 15:00:49',8),(7,'Salsa Buffalo',NULL,NULL,'l',160.00,5.000,5.000,'2026-03-31 15:00:49',8),(8,'Papas Congeladas',NULL,NULL,'kg',40.00,50.000,5.000,'2026-03-31 15:00:49',8),(9,'Aceite','🍾',NULL,'',35.00,20.000,5.000,'2026-03-31 15:00:49',8);
+INSERT INTO `ingredients` VALUES (1,'Carne Molida',NULL,NULL,'kg',120.00,10.000,5.000,'2026-03-31 15:00:49',8),(2,'Pan de Hamburguesa',NULL,NULL,'unidad',5.00,100.000,5.000,'2026-03-31 15:00:49',8),(3,'Queso Cheddar',NULL,NULL,'kg',180.00,5.000,5.000,'2026-03-31 15:00:49',8),(4,'Tocino',NULL,NULL,'kg',200.00,5.000,5.000,'2026-03-31 15:00:49',8),(5,'Alitas Crudas',NULL,NULL,'kg',80.00,20.000,5.000,'2026-03-31 15:00:49',8),(6,'Salsa BBQ',NULL,NULL,'l',150.00,5.000,5.000,'2026-03-31 15:00:49',8),(7,'Salsa Buffalo',NULL,NULL,'l',160.00,5.000,5.000,'2026-03-31 15:00:49',8),(8,'Papas Congeladas',NULL,NULL,'kg',40.00,50.000,5.000,'2026-03-31 15:00:49',8),(9,'Aceite','ðŸ¾',NULL,'',35.00,20.000,5.000,'2026-03-31 15:00:49',8);
 /*!40000 ALTER TABLE `ingredients` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -487,7 +487,7 @@ CREATE TABLE `products` (
 
 LOCK TABLES `products` WRITE;
 /*!40000 ALTER TABLE `products` DISABLE KEYS */;
-INSERT INTO `products` VALUES (1,'ALI001','Alitas Buffalo (6 pzas)','Alitas de pollo ba??????adas en salsa Buffalo picante',120.00,100,1,NULL,'active','2026-03-31 14:24:27',NULL,'🍗'),(2,'ALI002','Alitas BBQ (6 pzas)','Alitas de pollo con salsa BBQ ahumada',120.00,100,1,NULL,'active','2026-03-31 14:24:27','uploads/products/1777051883_alitas-platillo-final.gif','🍗'),(3,'ALI003','Alitas Lemon Pepper (6 pzas)','Alitas sazonadas con lim??????n y pimienta',120.00,100,1,NULL,'active','2026-03-31 14:24:27',NULL,'🍗'),(4,'ALI004','Alitas Mango Habanero (6 pzas)','Alitas con salsa de mango y habanero',130.00,100,1,NULL,'active','2026-03-31 14:24:27',NULL,'🍗'),(5,'BUR001','Hamburguesa Clásica','Carne de res, queso, lechuga, tomate y cebolla',150.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'🍔'),(6,'BUR002','Cheeseburger Bacon','Doble carne, doble queso cheddar y tocino crujiente',190.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'🍔'),(7,'BUR003','Hamburguesa de Pollo','Pechuga de pollo empanizada, queso y aderezo ranch',160.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'🍔'),(8,'BUR004','Monster Burger','Triple carne, aros de cebolla, queso y BBQ',220.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'🍔'),(9,'COM001','Combo Individual','Hamburguesa Cl?????sica + Papas + Refresco',195.00,100,3,NULL,'active','2026-03-31 14:24:27',NULL,'🥡'),(10,'COM002','Combo Pareja','12 Alitas + 2 Ordenes de Papas + 2 Refrescos',350.00,100,3,NULL,'active','2026-03-31 14:24:27',NULL,'🥡'),(11,'BEB001','Coca-Cola 500ml','Refresco de cola',25.00,200,4,NULL,'active','2026-03-31 14:24:27',NULL,'🥤'),(12,'BEB002','Limonada Natural','Limonada fresca 500ml',30.00,100,4,NULL,'active','2026-03-31 14:24:27',NULL,'🥤'),(13,'BEB003','Cerveza Nacional','Cerveza bien fr?????a',45.00,150,4,NULL,'active','2026-03-31 14:24:27',NULL,'🥤'),(14,'BEB004','Té Helado','T????? helado de lim??????n',25.00,100,4,NULL,'active','2026-03-31 14:24:27',NULL,'🥤'),(15,'CMP001','Papas Fritas','Orden de papas fritas',50.00,100,5,NULL,'active','2026-03-31 14:24:27',NULL,'🍟'),(16,'CMP002','Papas Gajo','Papas sazonadas tipo gajo',60.00,100,5,NULL,'active','2026-03-31 14:24:27',NULL,'🍟'),(17,'CMP003','Aros de Cebolla','10 aros de cebolla empanizados',70.00,100,5,NULL,'active','2026-03-31 14:24:27',NULL,'🍟'),(18,'CMP004','Dedos de Queso','6 dedos de queso con salsa marinara',90.00,50,5,NULL,'active','2026-03-31 14:24:27',NULL,'🍟'),(19,'POS001','Brownie con Helado','Brownie de chocolate con bola de vainilla',85.00,30,6,NULL,'active','2026-03-31 14:24:27',NULL,'🍰'),(20,'POS002','Cheesecake','Rebanada de cheesecake con fresa',95.00,30,6,NULL,'active','2026-03-31 14:24:27',NULL,'🍽️');
+INSERT INTO `products` VALUES (1,'ALI001','Alitas Buffalo (6 pzas)','Alitas de pollo ba??????adas en salsa Buffalo picante',120.00,100,1,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ—'),(2,'ALI002','Alitas BBQ (6 pzas)','Alitas de pollo con salsa BBQ ahumada',120.00,100,1,NULL,'active','2026-03-31 14:24:27','uploads/products/1777051883_alitas-platillo-final.gif','ðŸ—'),(3,'ALI003','Alitas Lemon Pepper (6 pzas)','Alitas sazonadas con lim??????n y pimienta',120.00,100,1,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ—'),(4,'ALI004','Alitas Mango Habanero (6 pzas)','Alitas con salsa de mango y habanero',130.00,100,1,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ—'),(5,'BUR001','Hamburguesa ClÃ¡sica','Carne de res, queso, lechuga, tomate y cebolla',150.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ”'),(6,'BUR002','Cheeseburger Bacon','Doble carne, doble queso cheddar y tocino crujiente',190.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ”'),(7,'BUR003','Hamburguesa de Pollo','Pechuga de pollo empanizada, queso y aderezo ranch',160.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ”'),(8,'BUR004','Monster Burger','Triple carne, aros de cebolla, queso y BBQ',220.00,100,2,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ”'),(9,'COM001','Combo Individual','Hamburguesa Cl?????sica + Papas + Refresco',195.00,100,3,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ¥¡'),(10,'COM002','Combo Pareja','12 Alitas + 2 Ordenes de Papas + 2 Refrescos',350.00,100,3,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ¥¡'),(11,'BEB001','Coca-Cola 500ml','Refresco de cola',25.00,200,4,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ¥¤'),(12,'BEB002','Limonada Natural','Limonada fresca 500ml',30.00,100,4,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ¥¤'),(13,'BEB003','Cerveza Nacional','Cerveza bien fr?????a',45.00,150,4,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ¥¤'),(14,'BEB004','TÃ© Helado','T????? helado de lim??????n',25.00,100,4,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ¥¤'),(15,'CMP001','Papas Fritas','Orden de papas fritas',50.00,100,5,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸŸ'),(16,'CMP002','Papas Gajo','Papas sazonadas tipo gajo',60.00,100,5,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸŸ'),(17,'CMP003','Aros de Cebolla','10 aros de cebolla empanizados',70.00,100,5,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸŸ'),(18,'CMP004','Dedos de Queso','6 dedos de queso con salsa marinara',90.00,50,5,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸŸ'),(19,'POS001','Brownie con Helado','Brownie de chocolate con bola de vainilla',85.00,30,6,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ°'),(20,'POS002','Cheesecake','Rebanada de cheesecake con fresa',95.00,30,6,NULL,'active','2026-03-31 14:24:27',NULL,'ðŸ½ï¸');
 /*!40000 ALTER TABLE `products` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -636,7 +636,7 @@ CREATE TABLE `users` (
 
 LOCK TABLES `users` WRITE;
 /*!40000 ALTER TABLE `users` DISABLE KEYS */;
-INSERT INTO `users` VALUES (1,'Administrador','admin@foodcorp.com','admin','$2y$10$ca4jG0DKhXwRTTr8aG56Ae/2Uv.UNpQbXQMSFyXx3spqOVTi44OCm',1,'active','2026-03-31 14:24:27',0),(2,'Juan Mesero','juan@foodcorp.com','mesero','$2y$10$UNBbIfsSG0JE5bymjBgoHuLDHRIKTktGXr2R8ZLkUer18mUktWeUe',2,'active','2026-03-31 14:24:27',0),(3,'Ana Cajera','ana@foodcorp.com','cajero','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',3,'active','2026-03-31 14:24:27',0),(4,'Carlos Cocina','carlos@foodcorp.com','cocina','$2y$10$DscPGILEN6uBbDn5Eub2DOrNvo1cXqFIglcO3VOi61mamZ86853sO',4,'active','2026-03-31 14:24:27',0);
+INSERT INTO `users` VALUES (1,'Administrador','admin@restocloud.com','admin','$2y$10$ca4jG0DKhXwRTTr8aG56Ae/2Uv.UNpQbXQMSFyXx3spqOVTi44OCm',1,'active','2026-03-31 14:24:27',0),(2,'Juan Mesero','juan@restocloud.com','mesero','$2y$10$UNBbIfsSG0JE5bymjBgoHuLDHRIKTktGXr2R8ZLkUer18mUktWeUe',2,'active','2026-03-31 14:24:27',0),(3,'Ana Cajera','ana@restocloud.com','cajero','$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi',3,'active','2026-03-31 14:24:27',0),(4,'Carlos Cocina','carlos@restocloud.com','cocina','$2y$10$DscPGILEN6uBbDn5Eub2DOrNvo1cXqFIglcO3VOi61mamZ86853sO',4,'active','2026-03-31 14:24:27',0);
 /*!40000 ALTER TABLE `users` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -650,3 +650,4 @@ UNLOCK TABLES;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
 -- Dump completed on 2026-08-15  8:35:21
+

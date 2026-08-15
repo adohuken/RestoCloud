@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/db.php';
 session_start();
 
@@ -40,16 +40,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             exit();
         } else {
-            $error = 'Usuario o contraseña incorrectos.';
+            $error = 'Usuario o contraseÃ±a incorrectos.';
         }
     } else {
-        $error = 'Por favor ingrese usuario y contraseña.';
+        $error = 'Por favor ingrese usuario y contraseÃ±a.';
     }
 }
 
 
 // Fetch company settings
-$company_name = 'FoodCorp System';
+$company_name = 'RestoCloud System';
 $company_logo = '';
 
 try {
@@ -97,10 +97,10 @@ try {
             <div class="login-input-wrapper">
                 <i class='bx bx-lock-alt'></i>
                 <input type="password" id="password" name="password" class="fc-input"
-                    placeholder="Contraseña" required>
+                    placeholder="ContraseÃ±a" required>
             </div>
  
-            <button type="submit" class="fc-login-btn">Iniciar Sesión</button>
+            <button type="submit" class="fc-login-btn">Iniciar SesiÃ³n</button>
         </form>
     </div>
 </div>

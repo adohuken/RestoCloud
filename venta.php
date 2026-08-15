@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/modules_helper.php';
 session_start();
@@ -368,7 +368,7 @@ if (!$clean_mode) {
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
-        <link rel="stylesheet" href="assets/css/foodcorp-theme.css?v=1.1">
+        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=1.1">
         <!-- SweetAlert2 -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -404,7 +404,7 @@ if (!$clean_mode) {
         <div class="pos-header">
             <div>
                 <h1><i class='bx bx-store-alt'></i> <?= htmlspecialchars($table['name']) ?></h1>
-                <p><?= $is_libre ? 'Venta rápida / Barra' : 'Atención en salón' ?></p>
+                <p><?= $is_libre ? 'Venta rÃ¡pida / Barra' : 'AtenciÃ³n en salÃ³n' ?></p>
             </div>
             <div class="pos-header-actions">
                 <a href="mesas.php" class="fc-btn fc-btn-outline" title="Volver a Mesas">
@@ -428,7 +428,7 @@ if (!$clean_mode) {
                 <div class="pos-toolbar-sticky">
                     <div class="search-container">
                         <i class='bx bx-search search-icon-overlay'></i>
-                        <input type="text" id="productSearch" class="search-input" placeholder="Buscar por nombre o código..." onkeyup="filterProducts()">
+                        <input type="text" id="productSearch" class="search-input" placeholder="Buscar por nombre o cÃ³digo..." onkeyup="filterProducts()">
                     </div>
  
                     <div class="categories-bar">
@@ -503,7 +503,7 @@ if (!$clean_mode) {
                 <div class="summary-header" onclick="toggleOrderPanel()" style="padding: 20px 25px 15px; border-bottom: none;">
                     <div class="fc-flex-between" style="width:100%;">
                         <h3 style="margin:0;"><i class='bx bx-restaurant'></i> Seguimiento</h3>
-                        <span class="fc-badge fc-badge-rose" id="item-count"><?= count($order_items) ?> ítems</span>
+                        <span class="fc-badge fc-badge-rose" id="item-count"><?= count($order_items) ?> Ã­tems</span>
                     </div>
                 </div>
 
@@ -575,16 +575,16 @@ if (!$clean_mode) {
 <div class="modern-modal-overlay" id="confirmModal">
     <div class="modern-modal">
         <div class="modal-icon">
-            <span>🗑️</span>
+            <span>ðŸ—‘ï¸</span>
         </div>
-        <h3 class="modal-title">¿Eliminar producto?</h3>
-        <p class="modal-message">Este producto será removido del pedido actual.</p>
+        <h3 class="modal-title">Â¿Eliminar producto?</h3>
+        <p class="modal-message">Este producto serÃ¡ removido del pedido actual.</p>
         <div class="modal-buttons">
             <button class="modal-btn modal-btn-cancel" onclick="closeConfirmModal()">
                 Cancelar
             </button>
             <button class="modal-btn modal-btn-confirm" id="confirmModalBtn">
-                Sí, eliminar
+                SÃ­, eliminar
             </button>
         </div>
     </div>
@@ -1023,7 +1023,7 @@ if (!$clean_mode) {
             if (data.success) {
                 updateOrder();
                 switchTab('tab-draft');
-                showToast('Añadido al pedido');
+                showToast('AÃ±adido al pedido');
                 if (data.order_id && <?= $is_libre ? 'true' : 'false' ?> && !window.location.search.includes('libre')) {
                     history.replaceState(null, '', '?libre=' + data.order_id);
                 }
@@ -1077,7 +1077,7 @@ if (!$clean_mode) {
         const start = new Date(dateStr.replace(' ', 'T'));
         const now = new Date();
         const diff = Math.floor((now - start) / 60000);
-        return diff > 0 ? `${diff} min` : 'Recién';
+        return diff > 0 ? `${diff} min` : 'ReciÃ©n';
     }
 
     function switchTab(tabId) {
@@ -1099,7 +1099,7 @@ if (!$clean_mode) {
             
             if (!data.items) data.items = [];
 
-            document.getElementById('item-count').textContent = `${data.items.length} ítems`;
+            document.getElementById('item-count').textContent = `${data.items.length} Ã­tems`;
             document.getElementById('mobile-cart-badge').textContent = data.items.length;
             
             // Actualizar badge del header desktop si existe
@@ -1113,7 +1113,7 @@ if (!$clean_mode) {
             const billSubtotalElem = document.getElementById('bill-subtotal');
             if (billSubtotalElem) billSubtotalElem.textContent = totalStr;
 
-            // Group items: Lógica limpia usando el nuevo estado 'draft'
+            // Group items: LÃ³gica limpia usando el nuevo estado 'draft'
             const newItems = data.items.filter(i => {
                 const s = String(i.item_status || '').trim().toLowerCase();
                 return s === 'draft';
@@ -1181,7 +1181,7 @@ if (!$clean_mode) {
         const statusMap = {
             'pending': { label: 'En Cola', class: 'status-label-pending', icon: 'bx-time' },
             'preparing': { label: 'Cocinando', class: 'status-label-preparing', icon: 'bx-loader-alt bx-spin' },
-            'ready': { label: '¡Listo!', class: 'status-label-ready', icon: 'bx-check-double' }
+            'ready': { label: 'Â¡Listo!', class: 'status-label-ready', icon: 'bx-check-double' }
         };
         const status = statusMap[item.item_status] || statusMap.pending;
 
@@ -1203,7 +1203,7 @@ if (!$clean_mode) {
                     </div>` : ''}
                 <div class="pos-item-meta">
                     <div style="color: var(--fc-text-sec); font-weight: 500;">
-                        <span style="color: var(--fc-primary);">${item.quantity}</span> × C$${parseFloat(item.price).toFixed(0)}
+                        <span style="color: var(--fc-primary);">${item.quantity}</span> Ã— C$${parseFloat(item.price).toFixed(0)}
                     </div>
                     ${isSent ? `
                         <div class="pos-item-status ${status.class}">
@@ -1236,11 +1236,11 @@ if (!$clean_mode) {
 
     function removeFromOrder(id) {
         Swal.fire({
-            title: '¿Remover?',
+            title: 'Â¿Remover?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: 'var(--fc-primary)',
-            confirmButtonText: 'Sí, eliminar',
+            confirmButtonText: 'SÃ­, eliminar',
             background: 'var(--fc-bg-dark)',
             color: 'var(--fc-text-main)'
         }).then(result => {
@@ -1279,7 +1279,7 @@ if (!$clean_mode) {
         })
         .catch(err => {
             console.error("Error en sendToKitchen:", err);
-            showToast('Error de conexión', 'error');
+            showToast('Error de conexiÃ³n', 'error');
             btn.disabled = false;
             btn.innerHTML = '<i class="bx bx-restaurant"></i> Enviar a Cocina';
         });

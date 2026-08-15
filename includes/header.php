@@ -1,6 +1,6 @@
-<?php
+﻿<?php
 if (!isset($page_title)) {
-    $page_title = 'FoodCorp System';
+    $page_title = 'RestoCloud System';
     if (isset($pdo)) {
         try {
             // Check if settings table exists
@@ -43,7 +43,7 @@ if (!isset($page_title)) {
     
     <!-- Core Styles -->
     <link rel="stylesheet" href="assets/css/style.css?v=1.4">
-    <link rel="stylesheet" href="assets/css/foodcorp-theme.css?v=2.8">
+    <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.8">
     <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2): ?>
         <link rel="stylesheet" href="css/waiter-mobile.css?v=1.0">
     <?php endif; ?>
@@ -90,7 +90,7 @@ if (!isset($page_title)) {
             }
 
             .gothic-spider::after {
-                content: '🕷️';
+                content: 'ðŸ•·ï¸';
                 position: absolute;
                 bottom: -20px;
                 left: -13px;
