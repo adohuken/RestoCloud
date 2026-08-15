@@ -10,10 +10,10 @@ if ($host_env === 'localhost' || strpos($host_env, '127.0.0.1') !== false) {
     $pass = '';
 } else {
     // LIVE CONFIG (InfinityFree)
-    $host = 'sql109.infinityfree.com';
-    $db = 'if0_41605608_foodcorp_system';
-    $user = 'if0_41605608';
-    $pass = 'vN2z1h96I7IobCu';
+    $host = 'sql107.infinityfree.com';
+    $db = 'if0_42662715_restocloud';
+    $user = 'if0_42662715';
+    $pass = '04D92Goz7fqXL';
 }
 
 $charset = 'utf8mb4';
