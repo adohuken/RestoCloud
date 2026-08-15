@@ -302,7 +302,7 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
             <?php endif; ?>
         <?php endif; ?>
 
-        <div class="fc-invoice-grid <?= $view_mode === 'bill' ? 'view-only-mode' : '' ?>">
+        <div class="invoice-layout <?= $view_mode === 'bill' ? 'view-only-mode' : '' ?>">
             <?php if ($view_mode === 'bill'): ?>
                 <!-- Bill View: Show the Request Cancellation Panel for EVERYONE -->
                 <div class="fc-card" style="text-align: center; padding: 50px;">
@@ -428,9 +428,9 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                                         <!-- Dynamic rows -->
                                     </div>
 
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="addMixedPaymentRow()"
-                                        style="margin-bottom: 20px; width: 100%;">
-                                        + Agregar Método
+                                    <button type="button" class="fc-btn fc-btn-outline fc-w100" onclick="addMixedPaymentRow()"
+                                        style="margin-bottom: 20px; color: var(--fc-primary); border-color: rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.05);">
+                                        <i class='bx bx-plus'></i> Agregar Método
                                     </button>
 
                                     <div class="payment-summary">
@@ -444,9 +444,9 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                                         </div>
                                     </div>
 
-                                    <button type="submit" id="btn-mixed-pay" class="btn btn-primary-gradient btn-block-lg"
-                                        disabled>
-                                        Procesar Pago Mixto
+                                    <button type="submit" id="btn-mixed-pay" class="fc-btn fc-btn-primary fc-w100"
+                                        style="padding: 16px; font-size: 1.1em;" disabled>
+                                        <i class='bx bx-check-shield'></i> Procesar Pago Mixto
                                     </button>
                                 </form>
                             </div>
@@ -469,8 +469,9 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                                         </div>
 
                                         <div class="add-person-section">
-                                            <button type="button" class="btn btn-secondary btn-block" onclick="addNewPerson()">
-                                                ➕ Agregar Persona
+                                            <button type="button" class="fc-btn fc-btn-outline fc-w100" onclick="addNewPerson()"
+                                                style="color: var(--fc-primary); border-color: rgba(99, 102, 241, 0.3); background: rgba(99, 102, 241, 0.05);">
+                                                <i class='bx bx-user-plus'></i> Agregar Persona
                                             </button>
                                         </div>
 
@@ -486,9 +487,9 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                                             </div>
                                         </div>
 
-                                        <button type="submit" class="btn btn-primary-gradient btn-block-lg"
-                                            id="btn-individual-submit" disabled>
-                                            Generar Facturas
+                                        <button type="submit" class="fc-btn fc-btn-primary fc-w100"
+                                            id="btn-individual-submit" style="padding: 16px; font-size: 1.1em;" disabled>
+                                            <i class='bx bx-receipt'></i> Generar Facturas
                                         </button>
                                     </div>
                                 </form>
@@ -515,20 +516,20 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                                             <button type="button" onclick="adjustSplit(1)">+</button>
                                         </div>
                                     </div>
-                                                     <div class="fc-split-card" style="text-align: center;">
-                                        <p class="fc-label">Cada persona pagará:</p>
-                                        <div class="fc-split-amount" id="split-amount-display">
+                                    <div class="split-preview">
+                                        <p>Cada persona pagará:</p>
+                                        <div class="split-amount" id="split-amount-display">
                                             C$ <?= number_format($order['total'] / 2, 2) ?>
                                         </div>
                                     </div>
  
-                                    <div class="fc-alert fc-alert-slate" style="font-size: 14px;">
+                                    <div class="alert-info" style="font-size: 14px;">
                                         <i class='bx bx-info-circle'></i> Se generarán facturas separadas para cada persona. Podrás procesar el pago de cada una individualmente.
                                     </div>
  
-                                    <button type="submit" class="fc-btn fc-btn-primary fc-w100" <?= !$active_register ? 'disabled' : '' ?>>
+                                    <button type="submit" class="fc-btn fc-btn-primary fc-w100" style="padding: 16px; font-size: 1.1em;" <?= !$active_register ? 'disabled' : '' ?>>
                                         <i class='bx bx-git-branch'></i> Generar Facturas Divididas
-                                    </button>                         </button>
+                                    </button>
                                 </form>
                             </div>
 
@@ -540,7 +541,6 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                             </a>
                         </div>
                     </div>
-                </div>
             <?php endif; // End payment view for Cashier/Admin ?>
         <?php endif; // End view mode switch ?>
 
@@ -572,37 +572,16 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
                     </tbody>
                 </table>
             </div>
-            <div class="fc-receipt-footer" style="padding: 15px 20px; background: rgba(255,255,255,0.02);">
+            <div class="fc-receipt-footer" style="padding: 15px 20px; background: #f8fafc; border-top: 1px solid var(--fc-border);">
                 <div style="display: flex; justify-content: space-between; align-items: center; font-size: 1.2em; font-weight: 800;">
-                    <span>TOTAL FINAL</span>
+                    <span style="color: var(--fc-text-main);">TOTAL FINAL</span>
                     <span style="color: var(--fc-primary);">C$<?= number_format($order['total'], 2) ?></span>
                 </div>
             </div>
         </div>
+        </div> <!-- End of invoice-layout -->
 
-        <?php if ($view_mode !== 'bill'): ?>
-        <div class="fc-actions-sticky-bottom" style="margin-top: 25px; padding: 20px; background: var(--fc-card-bg); border-radius: 16px; border: 1px solid var(--fc-border); box-shadow: 0 -10px 25px rgba(0,0,0,0.1);">
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <?php if (!empty($order['payment_requested'])): ?>
-                    <button disabled class="fc-btn fc-btn-primary" style="padding: 18px; flex: 2; justify-content: center; background: #10b981; border-color: #10b981; opacity: 1; min-width: 250px;">
-                        <i class='bx bx-check-double'></i> Cancelación Solicitada
-                    </button>
-                <?php else: ?>
-                    <form method="POST" style="flex: 2; margin: 0; display: flex; min-width: 250px;">
-                        <input type="hidden" name="request_cancellation" value="1">
-                        <button type="submit" class="fc-btn fc-btn-primary" style="padding: 18px; flex: 1; justify-content: center; font-size: 1.1em;">
-                            <i class='bx bx-bell'></i> Solicitar Cancelación de Cuenta
-                        </button>
-                    </form>
-                <?php endif; ?>
-                
-                <a href="mesas.php" class="fc-btn fc-btn-outline" style="padding: 18px; flex: 1; justify-content: center; background: rgba(255,255,255,0.05); min-width: 180px;">
-                    <i class='bx bx-arrow-back'></i> Volver a Mesas
-                </a>
-            </div>
-        </div>
-        <?php endif; ?>
-    </div>
+
 </main>
 </div>
 
@@ -617,11 +596,20 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
 
     .invoice-layout {
         display: grid;
-        grid-template-columns: 1.8fr 1.2fr;
+        grid-template-columns: 1.2fr 1.8fr;
         gap: 30px;
         align-items: start;
         max-width: 1400px;
         margin: 0 auto;
+    }
+    
+    .fc-receipt {
+        order: -1;
+        background: #ffffff;
+        border-radius: 24px;
+        border: 1px solid var(--fc-border);
+        box-shadow: var(--card-shadow);
+        overflow: hidden;
     }
 
     /* View Only Mode Adjustments */
@@ -721,15 +709,15 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     .payment-tab-container {
-        padding: 30px;
+        padding: 20px 25px;
     }
 
     /* Payment Methods (Radio Cards) */
     .payment-methods-horizontal {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-        gap: 20px;
-        margin-bottom: 30px;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
     }
 
     .payment-option-horizontal {
@@ -746,8 +734,8 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     .payment-card-horizontal {
         background: #fff;
         border: 2px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 25px 15px;
+        border-radius: 14px;
+        padding: 15px 10px;
         text-align: center;
         transition: all 0.2s ease;
         height: 100%;
@@ -761,8 +749,8 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     .payment-icon-horizontal {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
+        font-size: 2rem;
+        margin-bottom: 5px;
         display: block;
     }
 
@@ -775,24 +763,24 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     /* Total Section */
     .payment-total-modern {
         background: #f8fafc;
-        border-radius: 20px;
-        padding: 25px;
+        border-radius: 16px;
+        padding: 15px;
         text-align: center;
-        margin-bottom: 25px;
+        margin-bottom: 20px;
         border: 1px dashed #cbd5e1;
     }
 
     .payment-total-modern span {
         display: block;
         color: #64748b;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         text-transform: uppercase;
         letter-spacing: 1px;
-        margin-bottom: 5px;
+        margin-bottom: 2px;
     }
 
     .payment-total-modern strong {
-        font-size: 2.5rem;
+        font-size: 2rem;
         color: #1e293b;
         font-weight: 800;
         background: linear-gradient(90deg, #1e293b, #475569);
@@ -849,35 +837,6 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         border-top: 2px solid #e2e8f0;
     }
 
-    /* Action Buttons */
-    .btn-block-lg {
-        width: 100%;
-        padding: 18px;
-        font-size: 1.1rem;
-        font-weight: 600;
-        border-radius: 12px;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-        transition: all 0.2s;
-    }
-
-    .btn-primary-gradient {
-        background: var(--primary-gradient);
-        border: none;
-        color: white;
-    }
-
-    .btn-primary-gradient:hover:not(:disabled) {
-        box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
-        transform: translateY(-1px);
-    }
-
-    .btn-primary-gradient:disabled {
-        opacity: 0.6;
-        cursor: not-allowed;
-        background: #cbd5e1;
-    }
-
     @media (max-width: 900px) {
         .invoice-layout {
             grid-template-columns: 1fr;
@@ -895,10 +854,10 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     .mixed-payment-row select,
     .mixed-payment-row input {
         padding: 12px;
-        border: 1px solid #475569;
+        border: 1px solid var(--fc-border);
         border-radius: 8px;
-        background: #1e293b;
-        color: white;
+        background: #ffffff;
+        color: var(--fc-text-main);
         font-size: 15px;
     }
 
@@ -911,18 +870,10 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         text-align: right;
     }
 
-    /* Fix visibility for inputs on white background if theme varies */
-    .mixed-payment-row select,
-    .mixed-payment-row input {
-        color: #000 !important;
-        background: #fff !important;
-        border: 1px solid #ccc !important;
-    }
-
     .btn-remove {
-        background: rgba(220, 38, 38, 0.2);
-        color: #f87171;
-        border: 1px solid #dc2626;
+        background: #fee2e2;
+        color: #ef4444;
+        border: 1px solid #fca5a5;
         border-radius: 8px;
         width: 45px;
         cursor: pointer;
@@ -934,16 +885,16 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     .btn-remove:hover {
-        background: #dc2626;
+        background: #ef4444;
         color: white;
     }
 
     .payment-summary {
-        background: #1e293b;
+        background: #f8fafc;
         padding: 20px;
         border-radius: 12px;
         margin-bottom: 25px;
-        border: 1px solid #334155;
+        border: 1px solid var(--fc-border);
     }
 
     .summary-row {
@@ -951,21 +902,21 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         justify-content: space-between;
         margin-bottom: 8px;
         font-size: 15px;
-        color: #cbd5e1;
+        color: var(--fc-text-sec);
     }
 
     .summary-row span:last-child {
         font-weight: 600;
-        color: white;
+        color: var(--fc-text-main);
     }
 
     .summary-row.remaining {
-        border-top: 1px solid #334155;
+        border-top: 1px solid var(--fc-border);
         padding-top: 15px;
         margin-top: 10px;
         font-weight: bold;
         font-size: 18px;
-        color: var(--primary);
+        color: var(--fc-primary);
     }
 
     /* Split Controls */
@@ -981,9 +932,9 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         width: 50px;
         height: 50px;
         border-radius: 50%;
-        border: 2px solid var(--primary);
+        border: 2px solid var(--fc-primary);
         background: transparent;
-        color: var(--primary);
+        color: var(--fc-primary);
         font-size: 24px;
         cursor: pointer;
         transition: all 0.2s;
@@ -993,7 +944,7 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     .split-controls button:hover {
-        background: var(--primary);
+        background: var(--fc-primary);
         color: white;
         transform: scale(1.1);
     }
@@ -1004,11 +955,11 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         text-align: center;
         font-size: 28px;
         line-height: 60px;
-        border: 2px solid var(--primary);
+        border: 2px solid var(--fc-primary);
         border-radius: 12px;
         font-weight: bold;
-        background: var(--bg-secondary);
-        color: var(--text-primary);
+        background: #ffffff;
+        color: var(--fc-text-main);
         padding: 0;
         box-sizing: border-box;
         vertical-align: middle;
@@ -1016,31 +967,34 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
 
     .split-preview {
         text-align: center;
-        padding: 25px;
-        background: rgba(34, 197, 94, 0.1);
+        padding: 20px;
+        background: #f0fdf4;
         border-radius: 16px;
         border: 2px dashed #22c55e;
         margin-bottom: 20px;
     }
 
     .split-preview p {
-        color: #86efac;
-        margin: 0 0 10px 0;
+        color: #16a34a;
+        margin: 0 0 5px 0;
         font-size: 16px;
+        font-weight: 600;
     }
 
     .split-amount {
-        font-size: 42px;
+        font-size: 2.5rem;
         font-weight: 800;
         color: #22c55e;
         margin-top: 5px;
-        text-shadow: 0 2px 10px rgba(34, 197, 94, 0.2);
     }
 
     .alert-info {
-        background: rgba(59, 130, 246, 0.1);
+        background: #eff6ff;
         border-left: 4px solid #3b82f6;
-        color: #93c5fd;
+        color: #1e3a8a;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 20px;
     }
 </style>
 
@@ -1063,7 +1017,7 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     function switchTab(tabName) {
         // Hide all tabs
         document.querySelectorAll('.tab-pane').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.fc-tab').forEach(el => el.classList.remove('active'));
 
         // Show selected
         const tab = document.getElementById('tab-' + tabName);
@@ -1081,7 +1035,7 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         // Activate button
         const index = ['single', 'mixed', 'split', 'individual'].indexOf(tabName);
         if (index >= 0) {
-            document.querySelectorAll('.tab-btn')[index].classList.add('active');
+            document.querySelectorAll('.fc-tab')[index].classList.add('active');
         }
 
         if (tabName === 'mixed') {
@@ -1100,19 +1054,52 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     // === MIXED PAYMENT LOGIC ===
+    let mixedRowCounter = 0;
     function addMixedPaymentRow() {
+        mixedRowCounter++;
         const container = document.getElementById('mixed-payments-container');
         const div = document.createElement('div');
-        div.className = 'mixed-payment-row';
+        div.className = 'mixed-payment-row-modern';
+        div.style.display = 'flex';
+        div.style.flexDirection = 'column';
+        div.style.gap = '10px';
+        div.style.padding = '15px';
+        div.style.background = '#f8fafc';
+        div.style.borderRadius = '12px';
+        div.style.marginBottom = '15px';
+        div.style.border = '1px solid var(--fc-border)';
+        div.style.position = 'relative';
+
         div.innerHTML = `
-        <select name="mixed_methods[]" onchange="calculateMixedTotal()">
-            <option value="cash">💵 Efectivo</option>
-            <option value="card">💳 Tarjeta</option>
-            <option value="transfer">🏦 Transferencia</option>
-        </select>
-        <input type="number" name="mixed_amounts[]" step="0.01" placeholder="0.00" oninput="calculateMixedTotal()">
-        <button type="button" class="btn-remove" onclick="removeMixedRow(this)">×</button>
-    `;
+        <button type="button" onclick="removeMixedRow(this)" style="position: absolute; right: 10px; top: 10px; width: 30px; height: 30px; border-radius: 50%; padding: 0; background: #fee2e2; color: #ef4444; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10;"><i class='bx bx-x' style="font-size: 20px;"></i></button>
+        <div class="payment-methods-horizontal" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 10px; margin-top: 15px;">
+            <label class="payment-option-horizontal">
+                <input type="radio" name="mixed_methods[${mixedRowCounter}]" value="cash" checked onchange="calculateMixedTotal()">
+                <div class="payment-card-horizontal" style="padding: 10px; border-radius: 8px;">
+                    <span class="payment-icon-horizontal" style="font-size: 1.5rem; margin-bottom: 0;">💵</span>
+                    <span class="payment-label-horizontal" style="font-size: 0.8rem;">Efectivo</span>
+                </div>
+            </label>
+            <label class="payment-option-horizontal">
+                <input type="radio" name="mixed_methods[${mixedRowCounter}]" value="card" onchange="calculateMixedTotal()">
+                <div class="payment-card-horizontal" style="padding: 10px; border-radius: 8px;">
+                    <span class="payment-icon-horizontal" style="font-size: 1.5rem; margin-bottom: 0;">💳</span>
+                    <span class="payment-label-horizontal" style="font-size: 0.8rem;">Tarjeta</span>
+                </div>
+            </label>
+            <label class="payment-option-horizontal">
+                <input type="radio" name="mixed_methods[${mixedRowCounter}]" value="transfer" onchange="calculateMixedTotal()">
+                <div class="payment-card-horizontal" style="padding: 10px; border-radius: 8px;">
+                    <span class="payment-icon-horizontal" style="font-size: 1.5rem; margin-bottom: 0;">🏦</span>
+                    <span class="payment-label-horizontal" style="font-size: 0.8rem;">Transf.</span>
+                </div>
+            </label>
+        </div>
+        <div style="display: flex; align-items: center; background: white; border-radius: 8px; border: 1px solid var(--fc-border); padding: 5px 15px;">
+            <span style="font-weight: bold; color: var(--fc-text-main); font-size: 1.2rem;">C$</span>
+            <input type="number" name="mixed_amounts[${mixedRowCounter}]" step="0.01" placeholder="0.00" oninput="calculateMixedTotal()" style="flex: 1; border: none; font-size: 1.2rem; text-align: right; padding: 10px; font-weight: bold; color: var(--fc-primary); background: transparent; outline: none; -moz-appearance: textfield;">
+        </div>
+        `;
         container.appendChild(div);
     }
 
@@ -1122,7 +1109,7 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     function calculateMixedTotal() {
-        const inputs = document.querySelectorAll('input[name="mixed_amounts[]"]');
+        const inputs = document.querySelectorAll('input[name^="mixed_amounts"]');
         let totalPaid = 0;
 
         inputs.forEach(input => {
@@ -1148,7 +1135,7 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     function validateMixedPayment() {
-        const inputs = document.querySelectorAll('input[name="mixed_amounts[]"]');
+        const inputs = document.querySelectorAll('input[name^="mixed_amounts"]');
         let totalPaid = 0;
         inputs.forEach(input => totalPaid += parseFloat(input.value || 0));
 
@@ -1397,8 +1384,8 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     .person-card {
-        background: var(--bg-secondary);
-        border: 1px solid var(--border-color);
+        background: #ffffff;
+        border: 1px solid var(--fc-border);
         border-radius: 12px;
         padding: 15px;
         margin-bottom: 15px;
@@ -1409,19 +1396,19 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         justify-content: space-between;
         align-items: center;
         margin-bottom: 15px;
-        border-bottom: 1px solid var(--border-color);
+        border-bottom: 1px solid var(--fc-border);
         padding-bottom: 10px;
     }
 
     .person-header h4 {
         margin: 0;
-        color: var(--text-primary);
+        color: var(--fc-text-main);
     }
 
     .btn-remove-person {
         background: none;
         border: none;
-        color: var(--danger);
+        color: #ef4444;
         font-size: 18px;
         cursor: pointer;
     }
@@ -1431,14 +1418,14 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         justify-content: space-between;
         align-items: center;
         padding: 10px;
-        border-bottom: 1px solid var(--border-color);
-        background: var(--bg-primary);
+        border-bottom: 1px solid var(--fc-border);
+        background: #f8fafc;
         margin-bottom: 5px;
         border-radius: 6px;
     }
 
     .item-select-row.selected {
-        border-left: 3px solid var(--primary);
+        border-left: 3px solid var(--fc-primary);
         background: rgba(99, 102, 241, 0.05);
     }
 
@@ -1449,12 +1436,12 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
 
     .item-name {
         font-weight: 500;
-        color: var(--text-primary);
+        color: var(--fc-text-main);
     }
 
     .item-price {
         font-size: 12px;
-        color: var(--text-secondary);
+        color: var(--fc-text-sec);
     }
 
     .item-controls {
@@ -1467,9 +1454,9 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         width: 30px;
         height: 30px;
         border-radius: 50%;
-        border: 1px solid var(--border-color);
-        background: var(--bg-secondary);
-        color: var(--text-primary);
+        border: 1px solid var(--fc-border);
+        background: #ffffff;
+        color: var(--fc-text-main);
         cursor: pointer;
         display: flex;
         align-items: center;
@@ -1482,9 +1469,9 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
     }
 
     .item-controls button:hover:not(:disabled) {
-        background: var(--primary);
+        background: var(--fc-primary);
         color: white;
-        border-color: var(--primary);
+        border-color: var(--fc-primary);
     }
 
     .qty-display {
@@ -1497,14 +1484,14 @@ $enable_tips_ui = $stmt->fetchColumn() ?: '0';
         text-align: right;
         font-weight: bold;
         font-size: 16px;
-        color: var(--success);
+        color: #10b981;
         margin-top: 15px;
         padding-top: 10px;
-        border-top: 1px dashed var(--border-color);
+        border-top: 1px dashed var(--fc-border);
     }
 
     .split-summary-box {
-        background: var(--bg-secondary);
+        background: #f8fafc;
         padding: 20px;
         border-radius: 12px;
         margin-top: 20px;

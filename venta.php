@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/modules_helper.php';
 session_start();
@@ -35,11 +35,11 @@ if ($libre_order !== null) {
             exit();
         }
         $table_id = $existing_libre['table_id'];
-        $table = ['id' => $table_id, 'name' => 'Pedido Libre', 'status' => 'available'];
+        $table = ['id' => $table_id, 'name' => 'Barra', 'status' => 'available'];
     } else {
         // New libre order - will get/create Barra table later
         $table_id = 0;
-        $table = ['id' => 0, 'name' => 'Pedido Libre', 'status' => 'available'];
+        $table = ['id' => 0, 'name' => 'Barra', 'status' => 'available'];
     }
 } else {
     if (!$table_id) {
@@ -75,7 +75,7 @@ if ($is_libre) {
     }
 
     $table_id = $barra_table_id;
-    $table = ['id' => $barra_table_id, 'name' => 'Pedido Libre', 'status' => 'available'];
+    $table = ['id' => $barra_table_id, 'name' => 'Barra', 'status' => 'available'];
 }
 
 // Handle AJAX requests
@@ -124,7 +124,7 @@ if (isset($_GET['ajax'])) {
                     // $order remains false -> triggering INSERT
                 } else {
                     // Normal table: check for ANY active order on this table
-                    $stmt = $pdo->prepare('SELECT id, status FROM orders WHERE table_id = ? AND status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered") LIMIT 1 FOR UPDATE');
+                    $stmt = $pdo->prepare('SELECT id, status FROM orders WHERE table_id = ? AND status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered") ORDER BY id DESC LIMIT 1 FOR UPDATE');
                     $stmt->execute([$table_id]);
                     $order = $stmt->fetch();
                 }
@@ -198,12 +198,13 @@ if (isset($_GET['ajax'])) {
             $stmt = $pdo->prepare('SELECT id, status, total FROM orders WHERE id = ?');
             $stmt->execute([$libre_order]);
         } else {
-            $stmt = $pdo->prepare('SELECT id, status, total FROM orders WHERE table_id = ? AND status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered") LIMIT 1');
+            $stmt = $pdo->prepare('SELECT id, status, total FROM orders WHERE table_id = ? AND status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered") ORDER BY id DESC LIMIT 1');
             $stmt->execute([$table_id]);
         }
         $order = $stmt->fetch();
 
-        if ($is_libre && $libre_order > 1) {
+        $items = [];
+        if ($order) {
             $stmt = $pdo->prepare('
                 SELECT od.*, p.name as product_name, o.user_id, u.name as waiter_name
                 FROM order_details od
@@ -212,19 +213,9 @@ if (isset($_GET['ajax'])) {
                 JOIN users u ON o.user_id = u.id
                 WHERE od.order_id = ?
             ');
-            $stmt->execute([$libre_order]);
-        } else {
-            $stmt = $pdo->prepare('
-                SELECT od.*, p.name as product_name, o.user_id, u.name as waiter_name
-                FROM order_details od
-                JOIN products p ON od.product_id = p.id
-                JOIN orders o ON od.order_id = o.id
-                JOIN users u ON o.user_id = u.id
-                WHERE o.table_id = ? AND o.status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered")
-            ');
-            $stmt->execute([$table_id]);
+            $stmt->execute([$order['id']]);
+            $items = $stmt->fetchAll();
         }
-        $items = $stmt->fetchAll();
 
         // Check if there are draft items that need to be sent to kitchen
         $has_pending_items = false;
@@ -251,7 +242,7 @@ if (isset($_GET['ajax'])) {
             $stmt = $pdo->prepare('SELECT id, status FROM orders WHERE id = ?');
             $stmt->execute([$libre_order]);
         } else {
-            $stmt = $pdo->prepare('SELECT id, status FROM orders WHERE table_id = ? AND status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered") LIMIT 1');
+            $stmt = $pdo->prepare('SELECT id, status FROM orders WHERE table_id = ? AND status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered") ORDER BY id DESC LIMIT 1');
             $stmt->execute([$table_id]);
         }
         $order = $stmt->fetch();
@@ -368,7 +359,7 @@ if (!$clean_mode) {
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
-        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=1.1">
+        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.6.3">
         <!-- SweetAlert2 -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -401,24 +392,21 @@ if (!$clean_mode) {
             </div>
         <?php endif; ?>
  
-        <div class="pos-header">
+        <div class="pos-header" style="margin-bottom: 20px;">
             <div>
                 <h1><i class='bx bx-store-alt'></i> <?= htmlspecialchars($table['name']) ?></h1>
-                <p><?= $is_libre ? 'Venta rÃ¡pida / Barra' : 'AtenciÃ³n en salÃ³n' ?></p>
+                <p><?= $is_libre ? 'Venta rápida / Barra' : 'Atención en salón' ?></p>
             </div>
             <div class="pos-header-actions">
-                <a href="mesas.php" class="fc-btn fc-btn-outline" title="Volver a Mesas">
-                    <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
-                </a>
-                <button class="fc-btn fc-btn-primary" onclick="toggleMobileCart(); switchTab('tab-draft');">
-                    <i class='bx bx-shopping-bag'></i> Pedido (<span id="top-cart-badge"><?= count($order_items) ?></span>)
-                </button>
-                <button class="fc-btn fc-btn-outline" onclick="toggleMobileCart(); switchTab('tab-kitchen');">
-                    <i class='bx bx-time-five'></i> Cocina
-                </button>
-                <button class="fc-btn fc-btn-outline" onclick="toggleMobileCart(); switchTab('tab-billing');">
-                    <i class='bx bx-receipt'></i> Cuenta
-                </button>
+                <?php if ($clean_mode): ?>
+                    <button onclick="window.parent.switchOrdersTab('mesas')" class="fc-btn fc-btn-outline" title="Volver a Mesas">
+                        <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
+                    </button>
+                <?php else: ?>
+                    <a href="mesas.php" class="fc-btn fc-btn-outline" title="Volver a Mesas">
+                        <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
+                    </a>
+                <?php endif; ?>
             </div>
         </div>
  
@@ -428,7 +416,7 @@ if (!$clean_mode) {
                 <div class="pos-toolbar-sticky">
                     <div class="search-container">
                         <i class='bx bx-search search-icon-overlay'></i>
-                        <input type="text" id="productSearch" class="search-input" placeholder="Buscar por nombre o cÃ³digo..." onkeyup="filterProducts()">
+                        <input type="text" id="productSearch" class="search-input" placeholder="Buscar por nombre o código..." onkeyup="filterProducts()">
                     </div>
  
                     <div class="categories-bar">
@@ -496,31 +484,33 @@ if (!$clean_mode) {
                 </div>
             </div>
             <!-- Order Summary Sidebar -->
-            <div class="order-summary" id="order-summary-panel">
+            <div class="order-summary active" id="order-summary-panel">
                 <div class="swipe-handle" id="swipe-handle">
                     <div class="handle-bar"></div>
                 </div>
-                <div class="summary-header" onclick="toggleOrderPanel()" style="padding: 20px 25px 15px; border-bottom: none;">
-                    <div class="fc-flex-between" style="width:100%;">
-                        <h3 style="margin:0;"><i class='bx bx-restaurant'></i> Seguimiento</h3>
-                        <span class="fc-badge fc-badge-rose" id="item-count"><?= count($order_items) ?> Ã­tems</span>
+                
+                <div class="summary-header" style="padding: 20px 25px 0px; border-bottom: none;">
+                    <div class="fc-flex-between" style="width:100%; margin-bottom: 15px;">
+                        <h3 style="margin:0; font-size: 1.3rem; color: var(--fc-text-main);"><i class='bx bx-restaurant'></i> Seguimiento</h3>
+                        <span class="fc-badge fc-badge-rose" id="item-count"><?= count($order_items) ?> ítems</span>
                     </div>
                 </div>
 
-                <div class="sidebar-tabs">
-                    <button class="tab-btn active" onclick="switchTab('tab-draft')">
+                <div class="sidebar-tabs" style="border-bottom: 1px solid var(--fc-border); padding: 0 20px;">
+                    <button class="tab-btn active" onclick="switchTab('tab-draft')" style="color: var(--fc-text-main);">
                         <i class='bx bx-plus-circle'></i> Nuevo
                     </button>
-                    <button class="tab-btn" onclick="switchTab('tab-kitchen')">
+                    <button class="tab-btn" onclick="switchTab('tab-kitchen')" style="color: var(--fc-text-main);">
                         <i class='bx bx-time-five'></i> Cocina
                     </button>
-                    <button class="tab-btn" onclick="switchTab('tab-billing')">
+                    <button class="tab-btn" onclick="switchTab('tab-billing')" style="color: var(--fc-text-main);">
                         <i class='bx bx-receipt'></i> Cuenta
                     </button>
                 </div>
 
-                <div class="pos-cart-items" style="padding: 0 20px 20px; flex: 1; overflow-y: auto;">
-                    <!-- Tab: New Order (Draft) -->
+                <div class="pos-cart-items" style="padding: 20px; flex: 1; overflow-y: auto;">
+                    
+                    <!-- Tab 1: New Order (Draft) -->
                     <div id="tab-draft" class="tab-content active">
                         <div id="draft-items-container">
                             <!-- JS populated -->
@@ -532,7 +522,7 @@ if (!$clean_mode) {
                         </div>
                     </div>
 
-                    <!-- Tab: Kitchen Tracking -->
+                    <!-- Tab 2: Kitchen Tracking -->
                     <div id="tab-kitchen" class="tab-content">
                         <div id="order-progress-wrapper"></div>
                         <div id="kitchen-items-container" style="margin-top: 15px;">
@@ -540,9 +530,9 @@ if (!$clean_mode) {
                         </div>
                     </div>
 
-                    <!-- Tab: Billing -->
+                    <!-- Tab 3: Billing -->
                     <div id="tab-billing" class="tab-content">
-                        <div class="billing-section" style="background: rgba(255,255,255,0.03); border: 1px solid var(--fc-border); border-radius: 15px; padding: 20px; margin-top: 10px;">
+                        <div class="billing-section" style="background: rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.1); border-radius: 15px; padding: 20px; margin-top: 10px;">
                             <div class="bill-row" style="display: flex; justify-content: space-between; margin-bottom: 12px; color: var(--fc-text-sec);">
                                 <span>Subtotal Neto</span>
                                 <span id="bill-subtotal">C$<?= number_format($order_total, 2) ?></span>
@@ -558,6 +548,7 @@ if (!$clean_mode) {
                             </a>
                         </div>
                     </div>
+
                 </div>
  
                 <button class="pos-mobile-cart-btn" onclick="toggleMobileCart()" style="background: var(--fc-primary); box-shadow: 0 10px 30px rgba(225,29,72,0.4);">
@@ -565,29 +556,10 @@ if (!$clean_mode) {
                     <span class="badge" id="mobile-cart-badge"><?= count($order_items) ?></span>
                 </button>
             </div>
-            <div class="pos-cart-overlay" id="cartOverlay" onclick="toggleMobileCart()"></div>
+            <div class="pos-cart-overlay" id="cartOverlay" onclick="closePanel()"></div>
 
         </div>
     </main>
-</div>
-
-<!-- Modern Confirmation Modal -->
-<div class="modern-modal-overlay" id="confirmModal">
-    <div class="modern-modal">
-        <div class="modal-icon">
-            <span>ðŸ—‘ï¸</span>
-        </div>
-        <h3 class="modal-title">Â¿Eliminar producto?</h3>
-        <p class="modal-message">Este producto serÃ¡ removido del pedido actual.</p>
-        <div class="modal-buttons">
-            <button class="modal-btn modal-btn-cancel" onclick="closeConfirmModal()">
-                Cancelar
-            </button>
-            <button class="modal-btn modal-btn-confirm" id="confirmModalBtn">
-                SÃ­, eliminar
-            </button>
-        </div>
-    </div>
 </div>
 
 <style>
@@ -880,101 +852,6 @@ if (!$clean_mode) {
         box-shadow: 0 4px 10px rgba(225,29,72,0.2);
     }
 
-    .pos-modern-layout {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: var(--grid-gap);
-        height: 100%;
-        overflow: hidden;
-    }
-
-    .order-summary {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%) scale(0.9);
-        width: 500px;
-        height: 650px; /* Altura fija para evitar saltos */
-        max-width: 95vw;
-        max-height: 90vh;
-        background: #0f172a !important;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 24px;
-        box-shadow: 0 0 0 100vmax rgba(0,0,0,0.7), 0 25px 50px -12px rgba(0, 0, 0, 0.8);
-        display: none;
-        flex-direction: column;
-        overflow: hidden;
-        z-index: 1001;
-        transition: all 0.2s ease-out;
-        opacity: 0;
-        color: white;
-    }
-
-    .order-summary.active {
-        display: flex;
-        transform: translate(-50%, -50%) scale(1);
-        opacity: 1;
-    }
-
-    /* Overlay para oscurecer el fondo */
-    .pos-cart-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.7);
-        backdrop-filter: blur(4px);
-        display: none;
-        z-index: 1000;
-    }
-
-    .pos-cart-overlay.active {
-        display: block;
-    }
- 
-    .item-name {
-        margin-right: 25px;
-    }
- 
-    @media (max-width: 1200px) {
-        .pos-modern-layout {
-            grid-template-columns: 1fr;
-            height: auto;
-        }
- 
-        .order-summary {
-            position: fixed;
-            top: auto;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            width: 100%;
-            max-width: none;
-            height: 80vh;
-            transform: translateY(100%);
-            border-radius: 25px 25px 0 0;
-            opacity: 1;
-        }
- 
-        .order-summary.active {
-            transform: translateY(0);
-        }
- 
-        .swipe-handle {
-            height: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
- 
-        .handle-bar {
-            width: 40px;
-            height: 4px;
-            background: var(--fc-border);
-            border-radius: 2px;
-        }
-    }
 </style>
 
 <script>
@@ -984,6 +861,8 @@ if (!$clean_mode) {
         const urlParams = new URLSearchParams(window.location.search);
         const libreId = urlParams.get('libre');
         if (libreId) { url += '&libre=' + libreId; }
+        // Cache buster to prevent stale GET responses
+        url += '&_t=' + new Date().getTime();
         return url;
     }
 
@@ -1021,12 +900,20 @@ if (!$clean_mode) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                updateOrder();
-                switchTab('tab-draft');
-                showToast('AÃ±adido al pedido');
-                if (data.order_id && <?= $is_libre ? 'true' : 'false' ?> && !window.location.search.includes('libre')) {
-                    history.replaceState(null, '', '?libre=' + data.order_id);
+                if (data.order_id && <?= $is_libre ? 'true' : 'false' ?>) {
+                    const params = new URLSearchParams(window.location.search);
+                    if (params.get('libre') === '1') {
+                        params.set('libre', data.order_id);
+                        history.replaceState(null, '', '?' + params.toString());
+                    }
                 }
+                updateOrder();
+                if (window.innerWidth <= 1200) {
+                    document.getElementById('order-summary-panel').classList.add('active');
+                    document.getElementById('cartOverlay').classList.add('active');
+                }
+                switchTab('tab-draft');
+                showToast('Añadido al pedido');
             } else {
                 showToast(data.message || 'Error', 'error');
             }
@@ -1077,7 +964,7 @@ if (!$clean_mode) {
         const start = new Date(dateStr.replace(' ', 'T'));
         const now = new Date();
         const diff = Math.floor((now - start) / 60000);
-        return diff > 0 ? `${diff} min` : 'ReciÃ©n';
+        return diff > 0 ? `${diff} min` : 'Recién';
     }
 
     function switchTab(tabId) {
@@ -1099,7 +986,7 @@ if (!$clean_mode) {
             
             if (!data.items) data.items = [];
 
-            document.getElementById('item-count').textContent = `${data.items.length} Ã­tems`;
+            document.getElementById('item-count').textContent = `${data.items.length} ítems`;
             document.getElementById('mobile-cart-badge').textContent = data.items.length;
             
             // Actualizar badge del header desktop si existe
@@ -1113,7 +1000,7 @@ if (!$clean_mode) {
             const billSubtotalElem = document.getElementById('bill-subtotal');
             if (billSubtotalElem) billSubtotalElem.textContent = totalStr;
 
-            // Group items: LÃ³gica limpia usando el nuevo estado 'draft'
+            // Group items: Lógica limpia usando el nuevo estado 'draft'
             const newItems = data.items.filter(i => {
                 const s = String(i.item_status || '').trim().toLowerCase();
                 return s === 'draft';
@@ -1181,7 +1068,7 @@ if (!$clean_mode) {
         const statusMap = {
             'pending': { label: 'En Cola', class: 'status-label-pending', icon: 'bx-time' },
             'preparing': { label: 'Cocinando', class: 'status-label-preparing', icon: 'bx-loader-alt bx-spin' },
-            'ready': { label: 'Â¡Listo!', class: 'status-label-ready', icon: 'bx-check-double' }
+            'ready': { label: '¡Listo!', class: 'status-label-ready', icon: 'bx-check-double' }
         };
         const status = statusMap[item.item_status] || statusMap.pending;
 
@@ -1203,7 +1090,7 @@ if (!$clean_mode) {
                     </div>` : ''}
                 <div class="pos-item-meta">
                     <div style="color: var(--fc-text-sec); font-weight: 500;">
-                        <span style="color: var(--fc-primary);">${item.quantity}</span> Ã— C$${parseFloat(item.price).toFixed(0)}
+                        <span style="color: var(--fc-primary);">${item.quantity}</span> &times; C$${parseFloat(item.price).toFixed(0)}
                     </div>
                     ${isSent ? `
                         <div class="pos-item-status ${status.class}">
@@ -1236,11 +1123,11 @@ if (!$clean_mode) {
 
     function removeFromOrder(id) {
         Swal.fire({
-            title: 'Â¿Remover?',
+            title: '¿Remover?',
             icon: 'warning',
             showCancelButton: true,
             confirmButtonColor: 'var(--fc-primary)',
-            confirmButtonText: 'SÃ­, eliminar',
+            confirmButtonText: 'Sí, eliminar',
             background: 'var(--fc-bg-dark)',
             color: 'var(--fc-text-main)'
         }).then(result => {
@@ -1279,15 +1166,31 @@ if (!$clean_mode) {
         })
         .catch(err => {
             console.error("Error en sendToKitchen:", err);
-            showToast('Error de conexiÃ³n', 'error');
+            showToast('Error de conexión', 'error');
             btn.disabled = false;
             btn.innerHTML = '<i class="bx bx-restaurant"></i> Enviar a Cocina';
         });
     }
 
+    function switchTab(tabId) {
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.sidebar-tabs .tab-btn').forEach(b => b.classList.remove('active'));
+        
+        const activeContent = document.getElementById(tabId);
+        if (activeContent) activeContent.classList.add('active');
+        
+        const btn = document.querySelector(`.sidebar-tabs .tab-btn[onclick="switchTab('${tabId}')"]`);
+        if (btn) btn.classList.add('active');
+    }
+
     function toggleMobileCart() {
         document.getElementById('order-summary-panel').classList.toggle('active');
         document.getElementById('cartOverlay').classList.toggle('active');
+    }
+
+    function closePanel() {
+        document.getElementById('order-summary-panel').classList.remove('active');
+        document.getElementById('cartOverlay').classList.remove('active');
     }
 </script>
 <?php

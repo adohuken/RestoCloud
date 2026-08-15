@@ -153,7 +153,7 @@ include __DIR__ . '/includes/header.php';
         }
 
         .recipe-sidebar {
-            background: rgba(255, 255, 255, 0.03);
+            background: #ffffff;
             border: 1px solid var(--fc-border);
             border-radius: 24px;
             padding: 25px;
@@ -161,6 +161,7 @@ include __DIR__ . '/includes/header.php';
             flex-direction: column;
             gap: 20px;
             overflow-y: auto;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
         .recipe-main {
@@ -186,9 +187,9 @@ include __DIR__ . '/includes/header.php';
         }
 
         .category-nav-item.active {
-            background: rgba(225, 29, 72, 0.1);
+            background: rgba(139, 92, 246, 0.1);
             color: var(--fc-primary);
-            border-color: rgba(225, 29, 72, 0.2);
+            border-color: rgba(139, 92, 246, 0.2);
             font-weight: 600;
         }
 
@@ -199,19 +200,19 @@ include __DIR__ . '/includes/header.php';
             overflow: hidden;
             display: flex;
             flex-direction: column;
-            background: rgba(30, 41, 59, 0.5);
-            backdrop-filter: blur(10px);
+            background: #ffffff;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
         }
 
         .plato-card:hover {
             transform: translateY(-8px);
             border-color: var(--fc-primary);
-            box-shadow: 0 20px 40px -12px rgba(225, 29, 72, 0.25);
+            box-shadow: 0 20px 40px -12px rgba(139, 92, 246, 0.25);
         }
 
         .plato-visual {
             height: 180px;
-            background: rgba(255, 255, 255, 0.02);
+            background: #f8fafc;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -247,7 +248,7 @@ include __DIR__ . '/includes/header.php';
 
         .plato-footer {
             padding: 15px 18px;
-            background: rgba(255, 255, 255, 0.01);
+            background: #f8fafc;
             border-top: 1px solid var(--fc-border);
             display: flex;
             justify-content: space-between;
@@ -266,7 +267,7 @@ include __DIR__ . '/includes/header.php';
             gap: 15px;
             align-items: center;
             padding: 15px;
-            background: rgba(255, 255, 255, 0.02);
+            background: #ffffff;
             border: 1px solid var(--fc-border);
             border-radius: 16px;
             margin-bottom: 12px;
@@ -274,8 +275,8 @@ include __DIR__ . '/includes/header.php';
         }
 
         .recipe-item-row:hover {
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.2);
+            background: #f8fafc;
+            border-color: var(--fc-primary);
         }
 
         .ing-catalog-grid {
@@ -288,7 +289,7 @@ include __DIR__ . '/includes/header.php';
         }
 
         .ing-pick-card {
-            background: rgba(255, 255, 255, 0.03);
+            background: #ffffff;
             border: 1px solid var(--fc-border);
             border-radius: 16px;
             padding: 15px;
@@ -296,10 +297,11 @@ include __DIR__ . '/includes/header.php';
             cursor: pointer;
             transition: all 0.2s ease;
             position: relative;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
         }
 
         .ing-pick-card:hover {
-            background: rgba(225, 29, 72, 0.1);
+            background: rgba(139, 92, 246, 0.05);
             border-color: var(--fc-primary);
             transform: scale(1.05);
         }
@@ -404,7 +406,7 @@ include __DIR__ . '/includes/header.php';
         <div class="fc-modal-body" style="flex:1; overflow: hidden; display: flex; flex-direction: column; padding: 0;">
             <!-- View 1: Catalog -->
             <div id="ingCatalogView" style="height: 100%; display: flex; flex-direction: column;">
-                <div style="padding: 20px; background: rgba(255,255,255,0.02); border-bottom: 1px solid var(--fc-border);">
+                <div style="padding: 20px; background: #f8fafc; border-bottom: 1px solid var(--fc-border);">
                     <div style="position:relative;">
                         <i class='bx bx-search' style="position:absolute; left:15px; top:50%; transform:translateY(-50%); font-size:1.2em; color: var(--fc-text-sec);"></i>
                         <input type="text" id="catalogSearch" class="fc-input" style="padding-left: 45px; height: 50px;" placeholder="Buscar insumo (ej: Tomate, Harina)..." onkeyup="filterCatalog()" autofocus>
@@ -423,7 +425,7 @@ include __DIR__ . '/includes/header.php';
                     <p id="selIngUnit" style="color:var(--fc-text-sec); margin-top:5px; font-weight: 500;">Costo Base: C$ 0.00 / un</p>
 
                     <!-- Calculator Tabs -->
-                    <div style="background: rgba(0,0,0,0.2); padding: 5px; border-radius: 14px; display: inline-flex; margin-top: 25px; gap: 5px; border: 1px solid var(--fc-border);">
+                    <div style="background: #f1f5f9; padding: 5px; border-radius: 14px; display: inline-flex; margin-top: 25px; gap: 5px; border: 1px solid var(--fc-border);">
                         <button id="modeSimple" class="fc-btn fc-btn-outline" style="border:none; height: 36px; padding: 0 20px; font-size: 13px;" onclick="setMode('simple')">Simple</button>
                         <button id="modeYield" class="fc-btn fc-btn-outline" style="border:none; height: 36px; padding: 0 20px; font-size: 13px;" onclick="setMode('yield')">⏳ Prorrateo</button>
                     </div>
@@ -438,7 +440,7 @@ include __DIR__ . '/includes/header.php';
                     </div>
 
                     <!-- YIELD MODE -->
-                    <div id="yieldInputSection" style="margin-top: 25px; width: 100%; max-width: 400px; display: none; background: rgba(255,255,255,0.03); border: 1px solid var(--fc-border); padding: 20px; border-radius: 20px;">
+                    <div id="yieldInputSection" style="margin-top: 25px; width: 100%; max-width: 400px; display: none; background: #ffffff; border: 1px solid var(--fc-border); padding: 20px; border-radius: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                         <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                             <div style="text-align: left;">
                                 <label class="fc-label" style="font-size: 10px;">TOTAL LOTE/ENVASE</label>
@@ -528,7 +530,7 @@ include __DIR__ . '/includes/header.php';
                 <span class="close" onclick="closeModal('editorModal')">&times;</span>
             </div>
             <div class="fc-modal-body" style="padding: 25px; overflow-y: auto; max-height: 70vh;">
-                <div onclick="document.getElementById('editImage').click()" style="width:100%; height:180px; border-radius:20px; background:rgba(255,255,255,0.03); border:2px dashed var(--fc-border); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative; margin-bottom: 25px;">
+                <div onclick="document.getElementById('editImage').click()" style="width:100%; height:180px; border-radius:20px; background:#f8fafc; border:2px dashed var(--fc-border); display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; overflow:hidden; position:relative; margin-bottom: 25px;">
                     ${p.image_url ? `<img src="${p.image_url}" style="width:100%; height:100%; object-fit:cover;">` : `<i class='bx bx-camera' style="font-size:40px; color:var(--fc-text-sec);"></i><span style="font-size:11px; color:var(--fc-text-sec); margin-top:8px; font-weight: 700;">SUBIR IMAGEN DEL PLATO</span>`}
                 </div>
                 <input type="file" id="editImage" hidden onchange="previewUpload(this)">
@@ -568,13 +570,13 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
 
-            <div class="fc-modal-footer" style="padding: 20px 25px; background: rgba(0,0,0,0.2); border-top: 1px solid var(--fc-border);">
+            <div class="fc-modal-footer" style="padding: 20px 25px; background: #f8fafc; border-top: 1px solid var(--fc-border);">
                 <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
-                    <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid var(--fc-border); text-align: center;">
+                    <div style="background: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid var(--fc-border); text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                         <div style="font-size: 10px; color: var(--fc-text-sec); margin-bottom: 4px;">COSTO PRODUCCIÓN</div>
                         <div id="lblCost" style="font-size: 18px; font-weight: 800; color: #ef4444;">C$ 0.00</div>
                     </div>
-                    <div style="background: rgba(255,255,255,0.02); padding: 12px; border-radius: 12px; border: 1px solid var(--fc-border); text-align: center;">
+                    <div style="background: #ffffff; padding: 12px; border-radius: 12px; border: 1px solid var(--fc-border); text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                         <div style="font-size: 10px; color: var(--fc-text-sec); margin-bottom: 4px;">UTILIDAD BRUTA</div>
                         <div id="lblProfit" style="font-size: 18px; font-weight: 800; color: #10b981;">C$ 0.00</div>
                     </div>
@@ -699,13 +701,13 @@ include __DIR__ . '/includes/header.php';
             const div = document.createElement('div');
             div.className = 'recipe-item-row';
             div.innerHTML = `
-                <div style="font-size: 24px; background: rgba(255,255,255,0.03); border-radius: 10px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--fc-border);">${item.icon || '📦'}</div>
+                <div style="font-size: 24px; background: #f8fafc; border-radius: 10px; height: 48px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--fc-border);">${item.icon || '📦'}</div>
                 <div>
                     <div style="font-size: 13px; font-weight: 700; color: var(--fc-text-main);">${item.name}</div>
                     <div style="font-size: 10px; color: var(--fc-text-sec);">C$ ${parseFloat(item.cost).toFixed(2)} / ${item.unit}</div>
                 </div>
                 <div style="display:flex; flex-direction:column; align-items:flex-end;">
-                    <div style="display:flex; align-items:center; gap:5px; background:rgba(0,0,0,0.2); border-radius:6px; padding:2px 6px;">
+                    <div style="display:flex; align-items:center; gap:5px; background:#f1f5f9; border: 1px solid var(--fc-border); border-radius:6px; padding:2px 6px;">
                         <input type="number" value="${parseFloat(item.quantity_required)}" step="0.0001" style="width:50px; background:transparent; border:none; color:var(--fc-text-main); font-weight:700; font-size:11px; text-align:right; outline:none;" onchange="updateQty(${item.recipe_item_id}, this.value)">
                         <span style="font-size:9px; color:var(--fc-text-sec); font-weight:700;">${item.unit}</span>
                     </div>

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/config/db.php';
 session_start();
 
@@ -40,10 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
             exit();
         } else {
-            $error = 'Usuario o contraseÃ±a incorrectos.';
+            $error = 'Usuario o contraseña incorrectos.';
         }
     } else {
-        $error = 'Por favor ingrese usuario y contraseÃ±a.';
+        $error = 'Por favor ingrese usuario y contraseña.';
     }
 }
 
@@ -97,10 +97,10 @@ try {
             <div class="login-input-wrapper">
                 <i class='bx bx-lock-alt'></i>
                 <input type="password" id="password" name="password" class="fc-input"
-                    placeholder="ContraseÃ±a" required>
+                    placeholder="Contraseña" required>
             </div>
  
-            <button type="submit" class="fc-login-btn">Iniciar SesiÃ³n</button>
+            <button type="submit" class="fc-login-btn">Iniciar Sesión</button>
         </form>
     </div>
 </div>

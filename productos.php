@@ -268,28 +268,35 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <tbody>
                         <?php foreach ($products as $product): ?>
                             <?php
-                            $emoji = $product['icon'] ?? '🍽️';
+                            $cat_icon = 'bx-restaurant';
                             $gradientClass = 'grad-default';
                             $p_cat_name = mb_strtolower($product['category_name'] ?? '', 'UTF-8');
 
-                            if (strpos($p_cat_name, 'alitas') !== false || strpos($p_cat_name, 'hamburguesa') !== false || strpos($p_cat_name, 'pizza') !== false) {
+                            if (strpos($p_cat_name, 'alitas') !== false || strpos($p_cat_name, 'pollo') !== false) {
+                                $cat_icon = 'bx-dish';
                                 $gradientClass = 'grad-warm';
-                            } elseif (strpos($p_cat_name, 'bebida') !== false) {
+                            } elseif (strpos($p_cat_name, 'hamburguesa') !== false || strpos($p_cat_name, 'burger') !== false || strpos($p_cat_name, 'pizza') !== false) {
+                                $cat_icon = 'bx-restaurant';
+                                $gradientClass = 'grad-warm';
+                            } elseif (strpos($p_cat_name, 'bebida') !== false || strpos($p_cat_name, 'refresco') !== false || strpos($p_cat_name, 'soda') !== false) {
+                                $cat_icon = 'bx-drink';
                                 $gradientClass = 'grad-cool';
-                            } elseif (strpos($p_cat_name, 'combo') !== false || strpos($p_cat_name, 'complemento') !== false || strpos($p_cat_name, 'entrada') !== false) {
-                                $gradientClass = 'grad-amber';
-                            } elseif (strpos($p_cat_name, 'postre') !== false) {
+                            } elseif (strpos($p_cat_name, 'postre') !== false || strpos($p_cat_name, 'dulce') !== false) {
+                                $cat_icon = 'bx-cake';
                                 $gradientClass = 'grad-sweet';
+                            } elseif (strpos($p_cat_name, 'combo') !== false || strpos($p_cat_name, 'complemento') !== false || strpos($p_cat_name, 'papa') !== false || strpos($p_cat_name, 'entrada') !== false) {
+                                $cat_icon = 'bx-bowl-hot';
+                                $gradientClass = 'grad-amber';
                             }
                             ?>
                             <tr data-category="<?= htmlspecialchars($product['category_name'] ?? '') ?>" data-status="<?= $product['status'] === 'active' ? 'Activo' : 'Inactivo' ?>">
                                 <td>
-                                    <div class="product-mini-img <?= $gradientClass ?>">
+                                    <div class="product-mini-img <?= $gradientClass ?>" style="color: white;">
                                         <?php if (!empty($product['image_url'])): ?>
                                             <img src="<?= htmlspecialchars($product['image_url']) ?>" alt="img" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
-                                            <span class="thumb-fallback" style="display:none;"><?= $emoji ?></span>
+                                            <span class="thumb-fallback" style="display:none;"><i class='bx <?= $cat_icon ?>'></i></span>
                                         <?php else: ?>
-                                            <span class="thumb-emoji"><?= $emoji ?></span>
+                                            <span class="thumb-emoji"><i class='bx <?= $cat_icon ?>'></i></span>
                                         <?php endif; ?>
                                     </div>
                                 </td>

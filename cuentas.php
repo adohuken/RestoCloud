@@ -165,7 +165,7 @@ include __DIR__ . '/includes/header.php';
                             $statusLabel = 'Servido (Por Cobrar)';
                             $icon = 'bx-dish';
                         } elseif ($status === 'draft') {
-                            $statusLabel = 'Anotando...';
+                            $statusLabel = 'Tomando pedido...';
                             $icon = 'bx-edit';
                         }
                     }
@@ -179,13 +179,10 @@ include __DIR__ . '/includes/header.php';
                             <div class="row-name">
                                 <?= htmlspecialchars($account['name']) ?>
                                 <?php if ($hasOrder): ?><span
-                                        class="badge">#<?= $account['order_id'] ?></span><?php endif; ?>
+                                        class="badge">Orden #<?= $account['order_id'] ?></span><?php endif; ?>
                             </div>
                             <div class="row-status">
-                                <?= $statusLabel ?>
-                                <?php if (!empty($account['payment_requested'])): ?>
-                                    <span class="fc-badge fc-badge-rose" style="margin-left: 8px; background: #e11d48; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.85em; font-weight: bold; animation: pulse 2s infinite;"><i class='bx bx-bell'></i> COBRO SOLICITADO</span>
-                                <?php endif; ?>
+                                <span><?= $statusLabel ?></span>
                             </div>
                         </div>
                     </div>
@@ -201,6 +198,12 @@ include __DIR__ . '/includes/header.php';
 
                     <!-- section: Actions -->
                     <div class="row-section-actions">
+                        <?php if (!empty($account['payment_requested'])): ?>
+                            <div style="display: flex; align-items: center; background: rgba(225, 29, 72, 0.1); color: #e11d48; padding: 3px 8px; border-radius: 12px; font-size: 0.7rem; font-weight: 700; margin-right: 10px; animation: pulse 2s infinite; border: 1px solid rgba(225, 29, 72, 0.2); white-space: nowrap;">
+                                <i class='bx bx-bell bx-tada' style="margin-right: 4px; font-size: 0.9rem;"></i> COBRO SOLICITADO
+                            </div>
+                        <?php endif; ?>
+
                         <?php if ($hasOrder): ?>
                             <?php if ($account['type'] !== 'pedidosya'): ?>
                                 <button type="button" onclick="showOrderSummary(<?= $account['order_id'] ?>)"
@@ -253,14 +256,14 @@ include __DIR__ . '/includes/header.php';
     .table-row {
         background: white;
         border-radius: 8px;
-        padding: 5px 20px;
-        /* More horizontal padding */
+        padding: 10px 15px;
         display: flex;
-        align-items: center;
+        flex-wrap: wrap;
         justify-content: space-between;
+        gap: 10px;
+        align-items: center;
         border: 1px solid #e2e8f0;
         min-height: 55px;
-        /* Slightly taller */
         box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
         transition: all 0.2s;
     }
@@ -275,21 +278,22 @@ include __DIR__ . '/includes/header.php';
         display: flex;
         align-items: center;
         gap: 15px;
-        flex: 2;
+        flex: 1 1 200px;
         min-width: 0;
     }
 
     .row-section-total {
-        flex: 1;
-        text-align: center;
+        flex: 0 0 auto;
+        text-align: right;
         display: flex;
-        justify-content: center;
+        justify-content: flex-end;
         align-items: center;
         white-space: nowrap;
+        padding: 0 10px;
     }
 
     .row-section-actions {
-        flex: 1.5;
+        flex: 0 0 auto;
         display: flex;
         justify-content: flex-end;
         gap: 5px;
@@ -334,9 +338,12 @@ include __DIR__ . '/includes/header.php';
 
     .row-status {
         font-size: 0.9rem;
-        /* Larger status text */
         color: #64748b;
-        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 5px;
+        margin-top: 3px;
     }
 
     .total-amount {
@@ -387,219 +394,79 @@ include __DIR__ . '/includes/header.php';
 
     /* --- Theme: Occupied (Purple) --- */
     .table-occupied {
-        background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-        border: none;
+        background: #ffffff;
+        border-left: 4px solid var(--fc-primary, #8b5cf6);
     }
-
-    .table-occupied .row-name,
-    .table-occupied .row-status,
-    .table-occupied .total-amount {
-        color: white;
-    }
-
     .table-occupied .row-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-occupied .badge {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-occupied .btn-info {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-    }
-
-    .table-occupied .btn-primary {
-        background: white;
-        color: #4f46e5;
-        border: none;
+        background: rgba(139, 92, 246, 0.1);
+        color: var(--fc-primary, #8b5cf6);
     }
 
     /* --- Theme: Libre (Orange) --- */
     .table-libre {
-        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-        border: none;
+        background: #ffffff;
+        border-left: 4px solid #f59e0b;
     }
-
-    .table-libre .row-name,
-    .table-libre .row-status,
-    .table-libre .total-amount {
-        color: white;
-    }
-
     .table-libre .row-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-libre .badge {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-libre .btn-info {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-    }
-
-    .table-libre .btn-primary {
-        background: white;
-        color: #d97706;
-        border: none;
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
     }
 
     /* --- Theme: PedidosYa (Red) --- */
     .table-pedidosya {
-        background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
-        border: none;
+        background: #ffffff;
+        border-left: 4px solid #ef4444;
     }
-
-    .table-pedidosya .row-name,
-    .table-pedidosya .row-status,
-    .table-pedidosya .total-amount {
-        color: white;
-    }
-
     .table-pedidosya .row-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-pedidosya .badge {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-pedidosya .btn-primary {
-        background: white;
-        color: #b91c1c;
-        border: none;
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
     }
 
     /* --- Theme: Ready (Green) --- */
     .table-ready {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border: none;
+        background: #ffffff;
+        border-left: 4px solid #10b981;
     }
-
-    .table-ready .row-name,
-    .table-ready .row-status,
-    .table-ready .total-amount {
-        color: white;
-    }
-
     .table-ready .row-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-ready .badge {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-ready .btn-info {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
-    }
-
-    .table-ready .btn-primary {
-        background: white;
-        color: #059669;
-        border: none;
-    }
-
-    /* --- Theme: Available (White) --- */
-    }
-
-    .table-pedidosya .table-name,
-    .table-pedidosya .table-status,
-    .table-pedidosya .table-total {
-        color: white;
-    }
-
-    .table-pedidosya .table-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-pedidosya .badge {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    /* --- Theme: Ready (Green) --- */
-    .table-ready {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border: none;
-    }
-
-    .table-ready .table-name,
-    .table-ready .table-status,
-    .table-ready .table-total {
-        color: white;
-    }
-
-    .table-ready .table-icon {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-    }
-
-    .table-ready .badge {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
     }
 
     /* --- Theme: Available (White) --- */
     .table-available {
-        background: white;
-        border-left: 5px solid #10b981;
+        background: #ffffff;
+        border-left: 4px solid #cbd5e1;
     }
-
-    .table-available .table-icon {
-        color: #10b981;
-        background: #dcfce7;
+    .table-available .row-icon {
+        color: #64748b;
+        background: #f1f5f9;
     }
 
     /* Button Colors in Themes */
-    .table-occupied .btn-info,
-    .table-libre .btn-info,
-    .table-ready .btn-info {
-        background: rgba(255, 255, 255, 0.2);
-        color: white;
-        border: none;
+    .table-row .btn-info {
+        background: #f1f5f9;
+        color: #64748b;
+        border: 1px solid #e2e8f0;
     }
-
-    .table-occupied .btn-primary,
-    .table-libre .btn-primary,
-    .table-ready .btn-primary,
-    .table-pedidosya .btn-primary {
-        background: white;
-        color: #333;
-        border: none;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    .table-row .btn-info:hover {
+        background: #e2e8f0;
     }
 
     .table-occupied .btn-primary {
-        color: #4f46e5;
+        background: var(--fc-primary, #8b5cf6);
+        color: white;
     }
-
     .table-libre .btn-primary {
-        color: #d97706;
+        background: #f59e0b;
+        color: white;
     }
-
     .table-pedidosya .btn-primary {
-        color: #b91c1c;
+        background: #ef4444;
+        color: white;
     }
-
     .table-ready .btn-primary {
-        color: #059669;
+        background: #10b981;
+        color: white;
     }
 
     /* Animation */

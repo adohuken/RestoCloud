@@ -206,24 +206,24 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
             <?php if ($has_free_orders_access || $has_pedidosya_access): ?>
                 <div class="fc-tabs">
-                    <button class="fc-tab active" onclick="switchOrdersTab('mesas', this)">
+                    <a href="mesas.php" class="fc-tab active" style="text-decoration: none;">
                         <i class='bx bx-chair'></i> <span>Mesas</span>
-                    </button>
+                    </a>
                     <?php if ($has_free_orders_access): ?>
-                        <button class="fc-tab" onclick="switchOrdersTab('libre', this)">
-                            <i class='bx bx-shopping-bag'></i> <span>Pedido Libre</span>
+                        <a href="venta.php?libre=1" class="fc-tab" style="text-decoration: none;">
+                            <i class='bx bx-shopping-bag'></i> <span>Barra</span>
                             <?php if (count($free_orders) > 0): ?>
                                 <span class="fc-tab-badge"><?= count($free_orders) ?></span>
                             <?php endif; ?>
-                        </button>
+                        </a>
                     <?php endif; ?>
                     <?php if ($has_pedidosya_access): ?>
-                        <button class="fc-tab" onclick="switchOrdersTab('pedidosya', this)">
+                        <a href="pedidosya.php" class="fc-tab" style="text-decoration: none;">
                             <i class='bx bxl-product-hunt'></i> <span>PedidosYa</span>
                             <?php if (count($pedidosya_orders) > 0): ?>
                                 <span class="fc-tab-badge"><?= count($pedidosya_orders) ?></span>
                             <?php endif; ?>
-                        </button>
+                        </a>
                     <?php endif; ?>
                 </div>
             <?php endif; ?>
@@ -326,32 +326,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
         </div> <!-- End Tab: Mesas -->
 
-        <!-- Tab: Pedido Libre -->
-        <?php if ($has_free_orders_access): ?>
-            <div id="tab-libre" class="orders-tab-content" style="height: calc(100vh - 140px); margin: -20px;">
-                <iframe src="venta.php?libre=1&clean=1" style="width: 100%; height: 100%; border: none;" id="libre-frame"
-                    title="Pedido Libre POS">
-                </iframe>
-                <button onclick="document.getElementById('libre-frame').contentWindow.location.reload();"
-                    style="position: absolute; top: 10px; right: 20px; z-index: 100; background: white; border: 1px solid #ddd; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    🔄
-                </button>
-            </div>
-        <?php endif; ?>
-
-        <!-- Tab: PedidosYa -->
-        <?php if ($has_pedidosya_access): ?>
-            <div id="tab-pedidosya" class="orders-tab-content"
-                style="display: none; height: calc(100vh - 140px); margin: -20px;">
-                <iframe src="pedidosya.php?clean=1&v=<?= time() + 1 ?>" style="width: 100%; height: 100%; border: none;"
-                    id="pedidosya-frame" title="PedidosYa">
-                </iframe>
-                <button onclick="document.getElementById('pedidosya-frame').contentWindow.location.reload();"
-                    style="position: absolute; top: 10px; right: 20px; z-index: 100; background: white; border: 1px solid #ddd; border-radius: 50%; width: 40px; height: 40px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-                    🔄
-                </button>
-            </div>
-        <?php endif; ?>
+        <!-- Separated Views: Barra and PedidosYa now load in their own pages instead of iframes -->
 
     </main>
 </div>
@@ -588,105 +563,9 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
 
 
-    // Get current tab from URL hash or localStorage
-    let currentTab = 'mesas';
-
-    if (window.location.hash) {
-        currentTab = window.location.hash.replace('#', '');
-    }
-
-    else if (localStorage.getItem('mesasActiveTab')) {
-        // Check for tab parameter in URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const tabParam = urlParams.get('tab');
-
-        // Initial State
-        if (tabParam) {
-            switchOrdersTab(tabParam);
-        } else {
-            const savedTab = localStorage.getItem('mesasActiveTab') || 'mesas';
-            switchOrdersTab(savedTab);
-        }
-    }
-
-    // Apply saved tab on page load
-    document.addEventListener('DOMContentLoaded', function () {
-        if (currentTab && currentTab !== 'mesas') {
-            const tabContent = document.getElementById('tab-' + currentTab);
-
-            if (tabContent) {
-                // Deactivate all tabs
-                document.querySelectorAll('.fc-tab').forEach(btn => btn.classList.remove('active'));
-                document.querySelectorAll('.orders-tab-content').forEach(content => content.classList.remove('active'));
-
-                // Activate the saved tab
-                tabContent.classList.add('active');
-
-                document.querySelectorAll('.fc-tab').forEach(btn => {
-                    if (btn.textContent.toLowerCase().includes(currentTab === 'libre' ? 'pedido libre' : currentTab)) {
-                        btn.classList.add('active');
-                    }
-                });
-
-                // Find the matching button by checking onclick attribute
-                document.querySelectorAll('.fc-tab').forEach(btn => {
-                    const onclick = btn.getAttribute('onclick');
-
-                    if (onclick && onclick.includes("'" + currentTab + "'")) {
-                        btn.classList.add('active');
-                    }
-                });
-            }
-        }
-    });
-
-    // Tab switching function
-    function switchOrdersTab(tab, btn) {
-        console.log('DEBUG: switchOrdersTab called for:', tab);
-        console.log('Switching to tab:', tab);
-        // Save to localStorage
-        localStorage.setItem('mesasActiveTab', tab);
-
-        // Update tab buttons
-        document.querySelectorAll('.fc-tab').forEach(b => {
-            b.classList.remove('active');
-        });
-
-        if (btn) {
-            btn.classList.add('active');
-        }
-
-        else {
-
-            // Fallback: search by onclick attribute if not passed
-            document.querySelectorAll('.fc-tab').forEach(b => {
-                const onclick = b.getAttribute('onclick');
-
-                if (onclick && onclick.includes("'" + tab + "'")) {
-                    b.classList.add('active');
-                }
-            });
-        }
-
-        // Update tab content
-        const allContents = document.querySelectorAll('.orders-tab-content');
-
-        allContents.forEach(content => {
-            content.style.display = 'none'; // Force hide
-            content.classList.remove('active');
-        });
-
-        const targetContent = document.getElementById('tab-' + tab);
-
-        if (targetContent) {
-            targetContent.style.display = 'block'; // Force show
-            // Small timeout to allow display:block to apply before opacity transition if any
-            setTimeout(() => targetContent.classList.add('active'), 10);
-        }
-
-        else {
-            console.error('Target tab content not found:', 'tab-' + tab);
-        }
+    // Clear legacy tab state if it exists
+    if (localStorage.getItem('mesasActiveTab')) {
+        localStorage.removeItem('mesasActiveTab');
     }
 
     function pickupOrder(orderId, btn) {
