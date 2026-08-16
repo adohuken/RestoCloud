@@ -1,8 +1,8 @@
 <?php
 // Database connection using PDO - Auto-detecting environment
-$host_env = $_SERVER['HTTP_HOST'];
+$host_env = $_SERVER['HTTP_HOST'] ?? 'localhost';
 
-if ($host_env === 'localhost' || strpos($host_env, '127.0.0.1') !== false) {
+if ($host_env === 'localhost' || strpos($host_env, '127.0.0.1') !== false || php_sapi_name() === 'cli') {
     // LOCAL CONFIG (XAMPP)
     $host = 'localhost';
     $db = 'restocloud';

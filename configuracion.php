@@ -39,26 +39,8 @@ try {
         $pdo->exec("INSERT INTO settings (setting_key, setting_value) VALUES ('iva_percentage', '0')");
     }
 
-    // Ensure granular permissions exist
-    $modules_to_ensure = [
-        ['name' => 'Editar Productos', 'key' => 'inventory_edit', 'icon' => 'âœï¸', 'path' => '#', 'order' => 25],
-        ['name' => 'Eliminar Productos', 'key' => 'inventory_delete', 'icon' => 'ðŸ—‘ï¸', 'path' => '#', 'order' => 26],
-        ['name' => 'Gestionar Facturas', 'key' => 'config_invoices_manage', 'icon' => 'ðŸ“', 'path' => 'gestion_facturas.php', 'order' => 90],
-        ['name' => 'Pedido Libre', 'key' => 'pedido_libre', 'icon' => 'ðŸ›’', 'path' => 'mesas.php', 'order' => 15]
-    ];
-
-    foreach ($modules_to_ensure as $mod) {
-        $stmt = $pdo->prepare("SELECT id FROM modules WHERE module_key = ?");
-        $stmt->execute([$mod['key']]);
-        if ($stmt->rowCount() == 0) {
-            $stmt = $pdo->prepare("INSERT INTO modules (name, module_key, icon, file_path, display_order, is_active) VALUES (?, ?, ?, ?, ?, 1)");
-            $stmt->execute([$mod['name'], $mod['key'], $mod['icon'], $mod['path'], $mod['order']]);
-            // Auto-assign to Admin (ID 1 assumed SuperAdmin/Admin)
-            $newModId = $pdo->lastInsertId();
-            $pdo->exec("INSERT IGNORE INTO role_modules (role_id, module_id) VALUES (1, $newModId)");
-        }
-    }
-
+    // Ensure modules and roles permission system exists
+    ensureModulesSystem($pdo);
 } catch (Exception $e) {
     // Silent fail or log if needed
 }
@@ -365,17 +347,108 @@ if (isset($_POST['update_general'])) {
     }
 }
 
-// Handle Module Assignments Update
-if (isset($_POST['update_modules'])) {
-    // Only SuperAdmin can modify module assignments
-    if (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] == 1) {
-        $role_id = intval($_POST['role_id']);
+// Handle Role & Module Management Actions
+if (isset($_POST['update_role_modules'])) {
+    if (isRoleAdmin($pdo, $_SESSION['role_id'])) {
+        $role_id = intval($_POST['role_id'] ?? 0);
         $module_ids = isset($_POST['module_ids']) ? array_map('intval', $_POST['module_ids']) : [];
 
+        // If trying to edit Admin role, enforce all modules
+        if (isRoleAdmin($pdo, $role_id)) {
+            $module_ids = $pdo->query("SELECT id FROM modules WHERE is_active = 1")->fetchAll(PDO::FETCH_COLUMN);
+        }
+
         if (updateRoleModules($pdo, $role_id, $module_ids)) {
-            $success_msg = 'Módulos actualizados correctamente para el rol.';
+            $success_msg = 'Permisos de módulos actualizados exitosamente para el rol.';
         } else {
-            $error_msg = 'Error al actualizar los módulos.';
+            $error_msg = 'Error al guardar los permisos de los módulos.';
+        }
+    } else {
+        $error_msg = 'Acceso denegado. Solo administradores pueden gestionar permisos.';
+    }
+}
+
+// Handle Create Role
+if (isset($_POST['create_role'])) {
+    if (isRoleAdmin($pdo, $_SESSION['role_id'])) {
+        $role_name = trim($_POST['role_name'] ?? '');
+        if (empty($role_name)) {
+            $error_msg = 'Debe ingresar un nombre para el nuevo rol.';
+        } else {
+            try {
+                $stmtCheck = $pdo->prepare("SELECT COUNT(*) FROM roles WHERE LOWER(name) = LOWER(?)");
+                $stmtCheck->execute([$role_name]);
+                if ($stmtCheck->fetchColumn() > 0) {
+                    $error_msg = 'Ya existe un rol con la denominación "' . htmlspecialchars($role_name) . '".';
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO roles (name) VALUES (?)");
+                    $stmt->execute([$role_name]);
+                    $new_role_id = $pdo->lastInsertId();
+
+                    // Automatically assign default basic modules (e.g. Mesas) if selected
+                    if (isset($_POST['module_ids']) && is_array($_POST['module_ids'])) {
+                        $module_ids = array_map('intval', $_POST['module_ids']);
+                        updateRoleModules($pdo, $new_role_id, $module_ids);
+                    }
+
+                    $success_msg = 'Rol "' . htmlspecialchars($role_name) . '" creado correctamente.';
+                }
+            } catch (Exception $e) {
+                $error_msg = 'Error al crear el rol: ' . $e->getMessage();
+            }
+        }
+    } else {
+        $error_msg = 'Acceso denegado.';
+    }
+}
+
+// Handle Update Role Name
+if (isset($_POST['update_role_name'])) {
+    if (isRoleAdmin($pdo, $_SESSION['role_id'])) {
+        $role_id = intval($_POST['role_id'] ?? 0);
+        $role_name = trim($_POST['role_name'] ?? '');
+
+        if ($role_id == 1 || isRoleAdmin($pdo, $role_id)) {
+            $error_msg = 'No se puede modificar la denominación del rol Administrador principal.';
+        } elseif (empty($role_name)) {
+            $error_msg = 'El nombre del rol no puede estar vacío.';
+        } else {
+            try {
+                $stmt = $pdo->prepare("UPDATE roles SET name = ? WHERE id = ?");
+                $stmt->execute([$role_name, $role_id]);
+                $success_msg = 'Nombre del rol actualizado correctamente.';
+            } catch (Exception $e) {
+                $error_msg = 'Error al actualizar el nombre del rol.';
+            }
+        }
+    } else {
+        $error_msg = 'Acceso denegado.';
+    }
+}
+
+// Handle Delete Role
+if (isset($_POST['delete_role'])) {
+    if (isRoleAdmin($pdo, $_SESSION['role_id'])) {
+        $role_id = intval($_POST['role_id'] ?? 0);
+
+        if ($role_id == 1 || isRoleAdmin($pdo, $role_id)) {
+            $error_msg = 'No es posible eliminar el rol Administrador del sistema.';
+        } else {
+            try {
+                $stmtCount = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role_id = ?");
+                $stmtCount->execute([$role_id]);
+                $userCount = $stmtCount->fetchColumn();
+
+                if ($userCount > 0) {
+                    $error_msg = 'No se puede eliminar el rol porque tiene ' . $userCount . ' usuario(s) asignado(s). Reasigna los usuarios primero.';
+                } else {
+                    $stmt = $pdo->prepare("DELETE FROM roles WHERE id = ?");
+                    $stmt->execute([$role_id]);
+                    $success_msg = 'Rol eliminado correctamente del sistema.';
+                }
+            } catch (Exception $e) {
+                $error_msg = 'Error al eliminar el rol: ' . $e->getMessage();
+            }
         }
     } else {
         $error_msg = 'Acceso denegado.';
@@ -511,9 +584,9 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 </button>
             <?php endif; ?>
 
-            <?php if (modulesTableExists($pdo) && hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules')): ?>
-                <button class="fc-tab" onclick="switchTab('modules')" data-tab="modules">
-                    <i class='bx bx-shield-quarter'></i> <span>Módulos</span>
+            <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules') || isRoleAdmin($pdo, $_SESSION['role_id'])): ?>
+                <button class="fc-tab" onclick="switchTab('roles')" data-tab="roles">
+                    <i class='bx bx-shield-quarter'></i> <span>Roles y Permisos</span>
                 </button>
             <?php endif; ?>
         </div>
@@ -799,65 +872,234 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
         <?php endif; ?>
 
-        <!-- Modules Tab -->
-        <?php if (modulesTableExists($pdo) && hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules')): ?>
-            <div id="modules" class="tab-content">
-                <div class="fc-card">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-shield-quarter'></i> Permisos y Módulos</h3>
-                    </div>
-                    <div class="fc-modal-body">
-                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Configura el acceso granular para cada rol del sistema.</p>
-                        <?php
-                        $all_modules = getAllModules($pdo);
-                        usort($all_modules, fn($a, $b) => strcasecmp($a['name'], $b['name']));
-                        $all_roles = getRolesWithModules($pdo);
-                        ?>
-
-                        <?php if (empty($all_modules)): ?>
-                            <div class="fc-badge fc-badge-outline" style="width: 100%; justify-content: center; padding: 20px;">
-                                <i class='bx bx-error-circle'></i> No hay módulos configurados en la base de datos.
-                            </div>
-                        <?php else: ?>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); gap: 20px;">
-                                <?php foreach ($all_roles as $role): ?>
-                                    <?php $isSuperAdmin = (strtolower($role['name']) === 'superadmin'); ?>
-                                    <form method="POST" class="fc-card" style="margin: 0; background: #ffffff; border: 1px solid var(--fc-border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                                        <input type="hidden" name="role_id" value="<?= $role['id'] ?>">
-                                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--fc-border);">
-                                            <h4 style="margin: 0; color: var(--fc-text-main);"><?= htmlspecialchars($role['name']) ?></h4>
-                                            <?php if ($isSuperAdmin): ?>
-                                                <span class="fc-badge fc-badge-primary">Acceso Total</span>
-                                            <?php endif; ?>
-                                        </div>
-                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
-                                            <?php foreach ($all_modules as $module): ?>
-                                                <label style="display: flex; align-items: center; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 10px; cursor: pointer; border: 1px solid var(--fc-border); transition: all 0.2s;">
-                                                    <input type="checkbox" name="module_ids[]" value="<?= $module['id'] ?>"
-                                                        <?= $isSuperAdmin ? 'checked disabled' : (in_array($module['id'], $role['modules']) ? 'checked' : '') ?>
-                                                        style="width: 16px; height: 16px; accent-color: var(--fc-primary);">
-                                                    <span style="font-size: 13px; color: var(--fc-text-sec); display: flex; align-items: center; gap: 6px;">
-                                                        <span style="font-size: 1.1rem;"><?= $module['icon'] ?></span> <?= htmlspecialchars($module['name']) ?>
-                                                    </span>
-                                                </label>
-                                            <?php endforeach; ?>
-                                        </div>
-                                        <?php if (!$isSuperAdmin): ?>
-                                            <button type="submit" name="update_modules" class="fc-btn fc-btn-primary fc-w100" style="margin-top: 20px; font-size: 13px;">
-                                                <i class='bx bx-check-double'></i> Actualizar Permisos
-                                            </button>
-                                        <?php else: ?>
-                                            <p style="font-size: 11px; color: var(--fc-text-sec); margin-top: 15px; text-align: center; font-style: italic;">Acceso restringido por configuración de SuperAdmin</p>
-                                        <?php endif; ?>
-                                    </form>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php endif; ?>
+        <!-- Roles & Modules Tab -->
+        <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules') || isRoleAdmin($pdo, $_SESSION['role_id'])): ?>
+            <div id="roles" class="tab-content">
+                <div class="fc-card" style="margin-bottom: 25px;">
+                    <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <h3 style="margin: 0;"><i class='bx bx-shield-quarter'></i> Gestión de Roles y Permisos</h3>
+                            <p style="color: var(--fc-text-sec); font-size: 13px; margin-top: 4px; margin-bottom: 0;">Administra los roles del sistema y asigna de manera modular qué elementos de la barra lateral y operaciones puede acceder cada uno.</p>
+                        </div>
+                        <div>
+                            <button type="button" onclick="openNewRoleModal()" class="fc-btn fc-btn-primary" style="display: inline-flex; align-items: center; gap: 8px; font-size: 13px; padding: 10px 18px;">
+                                <i class='bx bx-plus-circle'></i> Crear Nuevo Rol
+                            </button>
+                        </div>
                     </div>
                 </div>
+
+                <?php
+                $all_modules = getAllModules($pdo);
+                $sidebar_mods = array_filter($all_modules, fn($m) => $m['is_sidebar'] == 1);
+                $special_mods = array_filter($all_modules, fn($m) => $m['is_sidebar'] == 0);
+                $all_roles = getRolesWithModules($pdo);
+                ?>
+
+                <?php if (empty($all_roles)): ?>
+                    <div class="fc-badge fc-badge-outline" style="width: 100%; justify-content: center; padding: 20px;">
+                        <i class='bx bx-error-circle'></i> No hay roles configurados en la base de datos.
+                    </div>
+                <?php else: ?>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(460px, 1fr)); gap: 25px; align-items: start;">
+                        <?php foreach ($all_roles as $role): ?>
+                            <?php 
+                            $isAdminRole = $role['is_admin']; 
+                            $roleId = $role['id'];
+                            ?>
+                            <div class="fc-card" style="margin: 0; background: #ffffff; border: 1px solid var(--fc-border); box-shadow: 0 4px 12px rgba(0,0,0,0.03); border-radius: 18px; overflow: hidden;">
+                                <div style="background: #f8fafc; padding: 18px 22px; border-bottom: 1px solid var(--fc-border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                                    <div style="display: flex; align-items: center; gap: 12px;">
+                                        <div style="width: 38px; height: 38px; border-radius: 10px; background: <?= $isAdminRole ? 'linear-gradient(135deg, var(--fc-primary) 0%, #8b5cf6 100%)' : 'rgba(15,23,42,0.06)' ?>; display: flex; align-items: center; justify-content: center; color: <?= $isAdminRole ? '#ffffff' : 'var(--fc-primary)' ?>; font-size: 1.2rem;">
+                                            <i class='bx <?= $isAdminRole ? 'bx-crown' : 'bx-user-pin' ?>'></i>
+                                        </div>
+                                        <div>
+                                            <h4 style="margin: 0; color: var(--fc-text-main); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+                                                <?= htmlspecialchars($role['name']) ?>
+                                                <?php if (!$isAdminRole): ?>
+                                                    <button type="button" onclick="openEditRoleModal(<?= $role['id'] ?>, '<?= htmlspecialchars(addslashes($role['name'])) ?>')" style="background: none; border: none; cursor: pointer; color: var(--fc-text-sec); padding: 2px;" title="Editar nombre del rol">
+                                                        <i class='bx bx-edit' style="font-size: 14px;"></i>
+                                                    </button>
+                                                <?php endif; ?>
+                                            </h4>
+                                            <span style="font-size: 11px; color: var(--fc-text-sec);">ID Rol: #<?= $role['id'] ?></span>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; align-items: center; gap: 8px;">
+                                        <?php if ($isAdminRole): ?>
+                                            <span class="fc-badge fc-badge-primary" style="font-size: 11px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                                                <i class='bx bx-shield-alt-2'></i> Acceso Total (Inmune)
+                                            </span>
+                                        <?php else: ?>
+                                            <span class="fc-badge fc-badge-outline" style="font-size: 11px; padding: 4px 10px;">
+                                                <i class='bx bx-user'></i> <?= $role['user_count'] ?> usuario(s)
+                                            </span>
+                                            <?php if ($role['user_count'] == 0): ?>
+                                                <form method="POST" style="margin: 0; display: inline;" onsubmit="confirmDeleteRole(event, this, '<?= htmlspecialchars(addslashes($role['name'])) ?>')">
+                                                    <input type="hidden" name="role_id" value="<?= $role['id'] ?>">
+                                                    <button type="submit" name="delete_role" class="fc-btn fc-btn-outline" style="padding: 5px 8px; width: 30px; height: 30px; min-width: auto; border-color: #ef4444; color: #ef4444;" title="Eliminar este rol">
+                                                        <i class='bx bx-trash' style="font-size: 14px;"></i>
+                                                    </button>
+                                                </form>
+                                            <?php endif; ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+
+                                <div style="padding: 22px;">
+                                    <?php if ($isAdminRole): ?>
+                                        <div style="background: rgba(139, 92, 246, 0.07); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 12px; padding: 14px; margin-bottom: 20px; color: var(--fc-text-main); font-size: 12.5px; line-height: 1.5; display: flex; align-items: flex-start; gap: 10px;">
+                                            <i class='bx bx-info-circle' style="color: #8b5cf6; font-size: 1.2rem; margin-top: 1px;"></i>
+                                            <div>
+                                                <strong>Acceso Maestro:</strong> El rol Administrador cuenta con permisos completos e incondicionales sobre toda la barra lateral y operaciones del sistema.
+                                            </div>
+                                        </div>
+
+                                        <h5 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 12px;">
+                                            <i class='bx bx-layout'></i> Módulos de la Barra Lateral (Acceso Habilitado)
+                                        </h5>
+                                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+                                            <?php foreach ($sidebar_mods as $mod): ?>
+                                                <div style="display: flex; align-items: center; gap: 8px; padding: 8px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #e2e8f0; opacity: 0.9;">
+                                                    <i class='bx bx-check-circle' style="color: #10b981; font-size: 1.1rem;"></i>
+                                                    <span style="font-size: 12.5px; font-weight: 600; color: var(--fc-text-main);"><?= htmlspecialchars($mod['name']) ?></span>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php else: ?>
+                                        <form method="POST" id="form_role_<?= $role['id'] ?>">
+                                            <input type="hidden" name="role_id" value="<?= $role['id'] ?>">
+
+                                            <!-- Toolbar for Quick Selection -->
+                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: #f8fafc; padding: 8px 12px; border-radius: 10px; border: 1px solid #edf2f7;">
+                                                <span style="font-size: 11.5px; font-weight: 600; color: var(--fc-text-sec);">Selección Rápida:</span>
+                                                <div style="display: flex; gap: 6px;">
+                                                    <button type="button" onclick="selectAllRoleMods(<?= $role['id'] ?>, true)" class="fc-btn fc-btn-outline" style="padding: 3px 8px; font-size: 11px; height: auto; min-width: auto;">
+                                                        Todos
+                                                    </button>
+                                                    <button type="button" onclick="selectAllRoleMods(<?= $role['id'] ?>, false)" class="fc-btn fc-btn-outline" style="padding: 3px 8px; font-size: 11px; height: auto; min-width: auto;">
+                                                        Ninguno
+                                                    </button>
+                                                    <button type="button" onclick="selectSidebarOnly(<?= $role['id'] ?>)" class="fc-btn fc-btn-outline" style="padding: 3px 8px; font-size: 11px; height: auto; min-width: auto; border-color: var(--fc-primary); color: var(--fc-primary);">
+                                                        Solo Barra Lateral
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            <!-- 1. Sidebar Modules -->
+                                            <h5 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                                                <i class='bx bx-dock-left' style="color: var(--fc-primary);"></i> Módulos de Barra Lateral
+                                            </h5>
+                                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 22px;">
+                                                <?php foreach ($sidebar_mods as $module): ?>
+                                                    <?php $isChecked = in_array($module['id'], $role['modules']); ?>
+                                                    <label style="display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: <?= $isChecked ? 'rgba(79, 70, 229, 0.05)' : '#f8fafc' ?>; border-radius: 10px; cursor: pointer; border: 1px solid <?= $isChecked ? 'rgba(79, 70, 229, 0.3)' : 'var(--fc-border)' ?>; transition: all 0.2s;">
+                                                        <input type="checkbox" name="module_ids[]" value="<?= $module['id'] ?>" data-sidebar="1"
+                                                            <?= $isChecked ? 'checked' : '' ?>
+                                                            style="width: 16px; height: 16px; accent-color: var(--fc-primary); cursor: pointer;"
+                                                            onchange="updateCheckboxCardStyle(this)">
+                                                        <span style="font-size: 12.5px; font-weight: 600; color: var(--fc-text-main); display: flex; align-items: center; gap: 6px;">
+                                                            <i class='bx <?= htmlspecialchars($module['icon']) ?>' style="font-size: 1.1rem; color: var(--fc-primary);"></i> <?= htmlspecialchars($module['name']) ?>
+                                                        </span>
+                                                    </label>
+                                                <?php endforeach; ?>
+                                            </div>
+
+                                            <!-- 2. Special Permissions & Actions -->
+                                            <?php if (!empty($special_mods)): ?>
+                                                <h5 style="font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+                                                    <i class='bx bx-key' style="color: #f59e0b;"></i> Permisos y Acciones Especiales
+                                                </h5>
+                                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+                                                    <?php foreach ($special_mods as $module): ?>
+                                                        <?php $isChecked = in_array($module['id'], $role['modules']); ?>
+                                                        <label style="display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: <?= $isChecked ? 'rgba(245, 158, 11, 0.05)' : '#f8fafc' ?>; border-radius: 8px; cursor: pointer; border: 1px solid <?= $isChecked ? 'rgba(245, 158, 11, 0.3)' : 'var(--fc-border)' ?>; transition: all 0.2s;">
+                                                            <input type="checkbox" name="module_ids[]" value="<?= $module['id'] ?>" data-sidebar="0"
+                                                                <?= $isChecked ? 'checked' : '' ?>
+                                                                style="width: 15px; height: 15px; accent-color: #f59e0b; cursor: pointer;"
+                                                                onchange="updateCheckboxCardStyle(this)">
+                                                            <span style="font-size: 11.5px; color: var(--fc-text-main); display: flex; align-items: center; gap: 5px;">
+                                                                <i class='bx <?= htmlspecialchars($module['icon']) ?>' style="color: #f59e0b;"></i> <?= htmlspecialchars($module['name']) ?>
+                                                            </span>
+                                                        </label>
+                                                    <?php endforeach; ?>
+                                                </div>
+                                            <?php endif; ?>
+
+                                            <button type="submit" name="update_role_modules" class="fc-btn fc-btn-primary fc-w100" style="font-size: 13px; height: 42px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                                                <i class='bx bx-save'></i> Guardar Permisos de <?= htmlspecialchars($role['name']) ?>
+                                            </button>
+                                        </form>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
             </div>
         <?php endif; ?>
     </main>
+</div>
+
+<!-- Modal: Crear Nuevo Rol -->
+<div class="fc-modal-overlay" id="newRoleModal">
+    <div class="fc-modal" style="max-width: 500px;">
+        <div class="fc-modal-header">
+            <h3><i class='bx bx-shield-plus'></i> Crear Nuevo Rol</h3>
+            <button class="fc-modal-close" onclick="closeNewRoleModal()">&times;</button>
+        </div>
+        <div class="fc-modal-body">
+            <form method="POST" class="fc-form">
+                <p style="color: var(--fc-text-sec); font-size: 13px; margin-bottom: 20px;">Define el nombre del nuevo rol y asigna sus módulos de acceso iniciales.</p>
+                <div class="fc-form-group">
+                    <label class="fc-label">Denominación del Rol</label>
+                    <input type="text" name="role_name" class="fc-input" placeholder="Ej: Supervisor, Repartidor, Encargado" required autocomplete="off">
+                </div>
+
+                <div class="fc-form-group">
+                    <label class="fc-label" style="margin-bottom: 10px;">Módulos Iniciales de Barra Lateral</label>
+                    <div style="max-height: 220px; overflow-y: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px; background: #f8fafc; border-radius: 12px; border: 1px solid var(--fc-border);">
+                        <?php foreach ($sidebar_mods as $mod): ?>
+                            <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; cursor: pointer;">
+                                <input type="checkbox" name="module_ids[]" value="<?= $mod['id'] ?>" style="accent-color: var(--fc-primary);">
+                                <span><?= htmlspecialchars($mod['name']) ?></span>
+                            </label>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="fc-btn fc-btn-outline fc-w100" onclick="closeNewRoleModal()">Cancelar</button>
+                    <button type="submit" name="create_role" class="fc-btn fc-btn-primary fc-w100"><i class='bx bx-save'></i> Crear Rol</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Editar Denominación de Rol -->
+<div class="fc-modal-overlay" id="editRoleModal">
+    <div class="fc-modal" style="max-width: 450px;">
+        <div class="fc-modal-header">
+            <h3><i class='bx bx-edit'></i> Editar Nombre del Rol</h3>
+            <button class="fc-modal-close" onclick="closeEditRoleModal()">&times;</button>
+        </div>
+        <div class="fc-modal-body">
+            <form method="POST" class="fc-form">
+                <input type="hidden" name="role_id" id="edit_role_id_val">
+                <div class="fc-form-group">
+                    <label class="fc-label">Nombre del Rol</label>
+                    <input type="text" name="role_name" id="edit_role_name_val" class="fc-input" required autocomplete="off">
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 25px;">
+                    <button type="button" class="fc-btn fc-btn-outline fc-w100" onclick="closeEditRoleModal()">Cancelar</button>
+                    <button type="submit" name="update_role_name" class="fc-btn fc-btn-primary fc-w100"><i class='bx bx-save'></i> Actualizar Nombre</button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <!-- Reset Confirmation Modal -->
@@ -919,6 +1161,8 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
 <script>
     function switchTab(tabId) {
+        if (tabId === 'modules') tabId = 'roles';
+
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.fc-tab').forEach(el => el.classList.remove('active'));
 
@@ -932,7 +1176,10 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-        const activeTab = localStorage.getItem('configActiveTab') || 'general';
+        const hash = window.location.hash.replace('#', '');
+        let activeTab = hash || localStorage.getItem('configActiveTab') || 'general';
+        if (activeTab === 'modules') activeTab = 'roles';
+
         if (document.getElementById(activeTab)) {
             switchTab(activeTab);
         } else {
@@ -940,6 +1187,87 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             if (firstTab) switchTab(firstTab.id);
         }
     });
+
+    function openNewRoleModal() {
+        const m = document.getElementById('newRoleModal');
+        m.classList.add('show');
+        m.style.display = 'flex';
+    }
+    function closeNewRoleModal() {
+        const m = document.getElementById('newRoleModal');
+        m.classList.remove('show');
+        m.style.display = 'none';
+    }
+
+    function openEditRoleModal(id, name) {
+        document.getElementById('edit_role_id_val').value = id;
+        document.getElementById('edit_role_name_val').value = name;
+        const m = document.getElementById('editRoleModal');
+        m.classList.add('show');
+        m.style.display = 'flex';
+    }
+    function closeEditRoleModal() {
+        const m = document.getElementById('editRoleModal');
+        m.classList.remove('show');
+        m.style.display = 'none';
+    }
+
+    function selectAllRoleMods(roleId, selectAll) {
+        const form = document.getElementById(`form_role_${roleId}`);
+        if (!form) return;
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            cb.checked = selectAll;
+            updateCheckboxCardStyle(cb);
+        });
+    }
+
+    function selectSidebarOnly(roleId) {
+        const form = document.getElementById(`form_role_${roleId}`);
+        if (!form) return;
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+        checkboxes.forEach(cb => {
+            const isSidebar = cb.getAttribute('data-sidebar') === '1';
+            cb.checked = isSidebar;
+            updateCheckboxCardStyle(cb);
+        });
+    }
+
+    function updateCheckboxCardStyle(checkbox) {
+        const label = checkbox.closest('label');
+        if (!label) return;
+        const isSidebar = checkbox.getAttribute('data-sidebar') === '1';
+        if (checkbox.checked) {
+            label.style.background = isSidebar ? 'rgba(79, 70, 229, 0.05)' : 'rgba(245, 158, 11, 0.05)';
+            label.style.borderColor = isSidebar ? 'rgba(79, 70, 229, 0.3)' : 'rgba(245, 158, 11, 0.3)';
+        } else {
+            label.style.background = '#f8fafc';
+            label.style.borderColor = 'var(--fc-border)';
+        }
+    }
+
+    function confirmDeleteRole(e, form, name) {
+        e.preventDefault();
+        Swal.fire({
+            title: '¿Eliminar rol ' + name + '?',
+            text: 'Esta acción removerá el rol y sus permisos.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#64748b',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = 'delete_role';
+                hiddenInput.value = '1';
+                form.appendChild(hiddenInput);
+                form.submit();
+            }
+        });
+    }
 
     function openResetModal() { document.getElementById('resetModal').classList.add('show'); document.getElementById('resetModal').style.display='flex'; }
     function closeResetModal() { document.getElementById('resetModal').classList.remove('show'); document.getElementById('resetModal').style.display='none'; }
@@ -965,11 +1293,12 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     }
 
     <?php if ($success_msg): ?>
-        Swal.fire({ icon: 'success', title: '¡Hecho!', text: '<?= addslashes($success_msg) ?>', background: 'var(--fc-bg-dark)', color: 'var(--fc-text-main)', confirmButtonColor: 'var(--fc-primary)' });
+        Swal.fire({ icon: 'success', title: '¡Hecho!', text: '<?= addslashes($success_msg) ?>', confirmButtonColor: 'var(--fc-primary)' });
     <?php endif; ?>
     <?php if ($error_msg): ?>
-        Swal.fire({ icon: 'error', title: 'Error', text: '<?= addslashes($error_msg) ?>', background: 'var(--fc-bg-dark)', color: 'var(--fc-text-main)', confirmButtonColor: 'var(--fc-primary)' });
+        Swal.fire({ icon: 'error', title: 'Error', text: '<?= addslashes($error_msg) ?>', confirmButtonColor: 'var(--fc-primary)' });
     <?php endif; ?>
 </script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
+

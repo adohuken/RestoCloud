@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/includes/modules_helper.php';
 session_start();
 
 if (isset($_SESSION['user_id'])) {
@@ -24,19 +25,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['role_id'] = $user['role_id'];
             $_SESSION['is_super_admin'] = $user['is_super_admin'];
 
-            // Redirect based on role
-            if ($user['role_id'] == 4) {
-                // Kitchen user goes directly to kitchen
-                header('Location: cocina.php');
-            } elseif ($user['role_id'] == 3) {
-                // Cashier goes to cashier dashboard
-                header('Location: panel_cajero.php');
-            } elseif ($user['role_id'] == 2) {
-                // Waiter goes to tables
-                header('Location: mesas.php');
-            } else {
-                // Other users go to dashboard
+            // Intelligent redirect based on assigned modules
+            if (isRoleAdmin($pdo, $user['role_id'])) {
                 header('Location: inicio.php');
+            } else {
+                $user_modules = getUserModules($pdo, $user['role_id'], true);
+                if (!empty($user_modules)) {
+                    header('Location: ' . $user_modules[0]['file_path']);
+                } else {
+                    header('Location: sin_acceso.php');
+                }
             }
             exit();
         } else {

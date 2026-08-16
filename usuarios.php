@@ -367,14 +367,17 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                         </td>
                                         <td style="text-align: right;">
                                             <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                                                <a href="configuracion.php#roles" class="fc-btn fc-btn-outline" style="padding: 6px; width: 32px; height: 32px; min-width: auto; border-color: #8b5cf6; color: #8b5cf6; display: flex; align-items: center; justify-content: center; text-decoration: none;" title="Gestionar Módulos y Permisos">
+                                                    <i class='bx bx-shield-quarter'></i>
+                                                </a>
                                                 <?php if ($role['id'] == 1): ?>
-                                                    <i class='bx bxs-lock-alt' style="color: var(--fc-text-sec); padding: 10px;"></i>
+                                                    <i class='bx bxs-lock-alt' style="color: var(--fc-text-sec); padding: 10px;" title="Rol Maestro"></i>
                                                 <?php else: ?>
-                                                    <button onclick='editRole(<?= json_encode($role) ?>)' class="fc-btn fc-btn-outline" style="padding: 6px; width: 32px; height: 32px; min-width: auto;">
+                                                    <button onclick='editRole(<?= json_encode($role) ?>)' class="fc-btn fc-btn-outline" style="padding: 6px; width: 32px; height: 32px; min-width: auto;" title="Editar Nombre">
                                                         <i class='bx bx-edit-alt'></i>
                                                     </button>
                                                     <?php if ($u_count == 0): ?>
-                                                        <button onclick="deleteRole(<?= $role['id'] ?>, '<?= htmlspecialchars($role['name']) ?>')" class="fc-btn fc-btn-outline" style="padding: 6px; width: 32px; height: 32px; min-width: auto; border-color: var(--fc-primary); color: var(--fc-primary);">
+                                                        <button onclick="deleteRole(<?= $role['id'] ?>, '<?= htmlspecialchars($role['name']) ?>')" class="fc-btn fc-btn-outline" style="padding: 6px; width: 32px; height: 32px; min-width: auto; border-color: var(--fc-primary); color: var(--fc-primary);" title="Eliminar Rol">
                                                             <i class='bx bx-trash'></i>
                                                         </button>
                                                     <?php endif; ?>

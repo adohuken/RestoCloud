@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/inventory_helper.php';
 require_once __DIR__ . '/includes/modules_helper.php';
@@ -12,17 +12,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Check module access (will redirect if not authorized)
-// Check module access (will redirect if not authorized)
-if (!hasModuleAccess($pdo, $_SESSION['role_id'], 'pedidosya')) {
-    // Fallback for hardcoded roles (Admin, Kitchen, SuperAdmin) to match mesas.php
-    if (!in_array($_SESSION['role_id'], [1, 3, 5])) {
-        if (isset($_GET['clean'])) {
-            die('<div style="color:red;padding:20px;">No tienes acceso al módulo de PedidosYa.</div>');
-        }
-        checkModuleAccess($pdo, $_SESSION['role_id'], 'pedidosya'); // Redirects
-    }
-}
+// Check module access
+checkModuleAccess($pdo, $_SESSION['role_id'], 'pedidosya');
 
 // Ensure tables exist
 try {

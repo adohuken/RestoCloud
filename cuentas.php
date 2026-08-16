@@ -8,12 +8,8 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Check module access (using 'mesas' permission or strict 'cuentas' if we were to add it, for now 'mesas' or 'caja' participants)
-// Admin, Waiter, Cashier, SuperAdmin
-if (!in_array($_SESSION['role_id'], [1, 2, 3, 5])) {
-    header('Location: inicio.php');
-    exit();
-}
+// Check module access
+checkModuleAccess($pdo, $_SESSION['role_id'], 'cuentas');
 
 // Handle AJAX request for order details
 if (isset($_GET['ajax']) && $_GET['ajax'] === 'get_order_details') {

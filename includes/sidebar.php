@@ -1,14 +1,15 @@
 <?php
 /**
- * Dynamic Sidebar - Renders menu based on role module assignments
+ * Dynamic Modular Sidebar - RestoCloud
+ * Renders navigation based on user's role module permissions
  */
 
-// Include modules helper
 require_once __DIR__ . '/modules_helper.php';
 
 // Fetch company settings
-$company_name = 'Sistema Pizzería';
+$company_name = 'RestoCloud System';
 $company_logo = '';
+$show_company_name = '1';
 
 try {
     $stmt = $pdo->query("SHOW TABLES LIKE 'settings'");
@@ -23,27 +24,30 @@ try {
         if (!empty($settings['company_logo'])) {
             $company_logo = $settings['company_logo'];
         }
-        $show_company_name = $settings['show_company_name'] ?? '1';
+        if (isset($settings['show_company_name'])) {
+            $show_company_name = $settings['show_company_name'];
+        }
     }
 } catch (Exception $e) {
     // Silent fail, use defaults
 }
 
-// Get current page for active class
+// Current file detection
 $current_page = basename($_SERVER['PHP_SELF']);
 
-// Get user's modules (dynamic or fallback)
-$user_modules = [];
-if (modulesTableExists($pdo)) {
-    $user_modules = getUserModules($pdo, $_SESSION['role_id']);
-}
+// Retrieve user's assigned sidebar modules
+$user_role_id = $_SESSION['role_id'] ?? 0;
+$user_modules = getUserModules($pdo, $user_role_id, true);
 
-// Fallback: If no modules found (table empty or not migrated), use legacy logic
-$use_legacy = empty($user_modules);
-
-// Helper for icons (Legacy Mode) -> Now using Boxicons
-function getIcon($page)
+// Icon mapping helper
+function getSidebarIcon($module)
 {
+    $icon = $module['icon'] ?? '';
+    if (!empty($icon) && strpos($icon, 'bx') !== false) {
+        return "<i class='bx " . htmlspecialchars($icon) . "'></i>";
+    }
+
+    $page = $module['file_path'] ?? '';
     switch ($page) {
         case 'inicio.php':
             return "<i class='bx bxs-dashboard'></i>";
@@ -55,13 +59,12 @@ function getIcon($page)
             return "<i class='bx bx-food-menu'></i>";
         case 'mesas.php':
             return "<i class='bx bx-chair'></i>";
-        case 'venta.php':
-            // Redirect POS icon to Mesas (Pedido Libre tab) since it's embedded now
-            return "<i class='bx bx-cart'></i>";
         case 'cocina.php':
             return "<i class='bx bx-restaurant'></i>";
         case 'caja.php':
             return "<i class='bx bx-dollar-circle'></i>";
+        case 'cuentas.php':
+            return "<i class='bx bx-receipt'></i>";
         case 'pedidosya.php':
             return "<i class='bx bx-cycling'></i>";
         case 'reportes.php':
@@ -73,6 +76,25 @@ function getIcon($page)
         default:
             return "<i class='bx bx-circle'></i>";
     }
+}
+
+// Check if a module corresponds to active page
+function isModuleActive($module, $current_page)
+{
+    $target = $module['file_path'];
+    if ($current_page === $target) {
+        return true;
+    }
+
+    // Related page mappings
+    if ($target === 'productos.php' && $current_page === 'categorias.php') return true;
+    if ($target === 'pedidosya.php' && $current_page === 'factura_pedidosya.php') return true;
+    if ($target === 'caja.php' && $current_page === 'panel_cajero.php') return true;
+    if ($target === 'mesas.php' && in_array($current_page, ['venta.php', 'ver_pedido.php', 'procesar_pago_split.php'])) return true;
+    if ($target === 'reportes.php' && in_array($current_page, ['export_report.php', 'imprimir_reporte.php'])) return true;
+    if ($target === 'configuracion.php' && in_array($current_page, ['gestion_facturas.php', 'menu_init.php'])) return true;
+
+    return false;
 }
 ?>
 <aside class="sidebar">
@@ -90,90 +112,19 @@ function getIcon($page)
     </div>
 
     <ul class="sidebar-menu">
-        <?php if ($use_legacy): ?>
-            <!-- Legacy mode: hardcoded role checks (fallback) -->
-            <?php if ($_SESSION['role_id'] == 1 || $_SESSION['role_id'] == 5): // Admin & SuperAdmin ?>
-                <li><a href="inicio.php"
-                        class="<?= $current_page == 'inicio.php' ? 'active' : '' ?>"><?= getIcon('inicio.php') ?> Dashboard</a>
-                </li>
-                <li><a href="productos.php"
-                        class="<?= $current_page == 'productos.php' ? 'active' : '' ?>"><?= getIcon('productos.php') ?>
-                        Menú</a>
-                </li>
-                <li><a href="inventario_insumos.php"
-                        class="<?= $current_page == 'inventario_insumos.php' ? 'active' : '' ?>"><?= getIcon('inventario_insumos.php') ?>
-                        Insumos</a></li>
-                <li><a href="gestion_recetas.php"
-                        class="<?= $current_page == 'gestion_recetas.php' ? 'active' : '' ?>"><?= getIcon('gestion_recetas.php') ?>
-                        Recetas/Costos</a></li>
-            <?php endif; ?>
+        <?php foreach ($user_modules as $module): ?>
+            <?php $activeClass = isModuleActive($module, $current_page) ? 'active' : ''; ?>
+            <li>
+                <a href="<?= htmlspecialchars($module['file_path']) ?>" class="<?= $activeClass ?>">
+                    <?= getSidebarIcon($module) ?> <span><?= htmlspecialchars($module['name']) ?></span>
+                </a>
+            </li>
+        <?php endforeach; ?>
 
-            <?php if ($_SESSION['role_id'] == 1 || $_SESSION['role_id'] == 5 || $_SESSION['role_id'] == 2): // Admin, SuperAdmin & Waiter ?>
-                <li><a href="mesas.php" class="<?= $current_page == 'mesas.php' ? 'active' : '' ?>"><?= getIcon('mesas.php') ?>
-                        Mesas</a></li>
-            <?php endif; ?>
-
-            <?php if ($_SESSION['role_id'] == 1 || $_SESSION['role_id'] == 5): // Admin & SuperAdmin ?>
-                <!-- <li><a href="mesas.php?tab=libre"
-                        class="<?= $current_page == 'venta.php' ? 'active' : '' ?>"><?= getIcon('venta.php') ?>
-                        POS</a></li> -->
-                <li><a href="cocina.php"
-                        class="<?= $current_page == 'cocina.php' ? 'active' : '' ?>"><?= getIcon('cocina.php') ?> Cocina</a>
-                </li>
-                <li><a href="caja.php" class="<?= $current_page == 'caja.php' ? 'active' : '' ?>"><?= getIcon('caja.php') ?>
-                        Caja</a></li>
-                <li><a href="cuentas.php" class="<?= $current_page == 'cuentas.php' ? 'active' : '' ?>"><i
-                            class='bx bx-receipt'></i>
-                        Cuentas</a></li>
-                <li><a href="pedidosya.php"
-                        class="<?= $current_page == 'pedidosya.php' || $current_page == 'factura_pedidosya.php' ? 'active' : '' ?>"><?= getIcon('pedidosya.php') ?>
-                        PedidosYa</a></li>
-                <li><a href="reportes.php"
-                        class="<?= $current_page == 'reportes.php' ? 'active' : '' ?>"><?= getIcon('reportes.php') ?>
-                        Reportes</a></li>
-                <li><a href="usuarios.php"
-                        class="<?= $current_page == 'usuarios.php' ? 'active' : '' ?>"><?= getIcon('usuarios.php') ?>
-                        Usuarios</a></li>
-                <li><a href="configuracion.php"
-                        class="<?= $current_page == 'configuracion.php' ? 'active' : '' ?>"><?= getIcon('configuracion.php') ?>
-                        Configuración</a></li>
-            <?php endif; ?>
-        <?php else: ?>
-            <!-- Dynamic mode: render from database -->
-            <?php foreach ($user_modules as $module): ?>
-                <?php
-                if (
-                    strpos($module['module_key'], 'config_') === 0 ||
-                    in_array($module['module_key'], ['inventory_edit', 'inventory_delete', 'pedido_libre', 'pedidosya'])
-                ) {
-                    continue;
-                }
-
-                $is_active = ($current_page == $module['file_path']);
-                if ($module['module_key'] == 'pedidosya' && $current_page == 'factura_pedidosya.php') {
-                    $is_active = true;
-                }
-
-                // Ensure icons are boxicons if possible, simplified for now assuming database has emojis or we override
-                // Ideally, we'd map DB emojis to classes, but for now let's rely on the hardcoded list above if the DB stores emojis.
-                // Or better, let's use the helper if the DB icon is just an emoji
-                $icon = $module['icon'];
-                // Check if icon is emoji-like (rudimentary check), if so, try to map to class
-                // For this iteration, I'll trust the legacy map if it matches a known file, otherwise fallback
-                $mappedIcon = getIcon($module['file_path']);
-                // If mapped icon is circle (default), use database icon if available
-                if (strpos($mappedIcon, 'bx-circle') !== false && !empty($module['icon'])) {
-                    $mappedIcon = $module['icon']; // Fallback to DB icon
-                }
-                ?>
-                <li>
-                    <a href="<?= htmlspecialchars($module['file_path']) ?>" class="<?= $is_active ? 'active' : '' ?>">
-                        <?= $mappedIcon ?>         <?= htmlspecialchars($module['name']) ?>
-                    </a>
-                </li>
-            <?php endforeach; ?>
-        <?php endif; ?>
-
-        <li><a href="salir.php" class="logout-link"><i class='bx bx-log-out'></i> Cerrar Sesión</a></li>
+        <li>
+            <a href="salir.php" class="logout-link">
+                <i class='bx bx-log-out'></i> <span>Cerrar Sesión</span>
+            </a>
+        </li>
     </ul>
 </aside>

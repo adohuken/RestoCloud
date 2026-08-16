@@ -9,6 +9,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+// Check module access
+checkModuleAccess($pdo, $_SESSION['role_id'], 'insumos');
+
 // --- BACKEND LOGIC ---
 
 // 1. Fetch Categories
