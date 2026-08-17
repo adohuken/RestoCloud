@@ -42,8 +42,8 @@ if (!isset($page_title)) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Core Styles -->
-    <link rel="stylesheet" href="assets/css/style.css?v=3.3">
-    <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.6.7">
+    <link rel="stylesheet" href="assets/css/style.css?v=<?= filemtime(__DIR__ . '/../assets/css/style.css') ?>">
+    <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=<?= filemtime(__DIR__ . '/../assets/css/restocloud-theme.css') ?>">
     <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2): ?>
         <link rel="stylesheet" href="css/waiter-mobile.css?v=1.0">
     <?php endif; ?>
