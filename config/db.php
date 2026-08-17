@@ -11,7 +11,7 @@ if ($host_env === 'localhost' || strpos($host_env, '127.0.0.1') !== false || php
 } else {
     // LIVE CONFIG (InfinityFree)
     $host = 'sql107.infinityfree.com';
-    $db = 'if0_42662715_restocloud';
+    $db = 'if0_42662715_RestoCloud';
     $user = 'if0_42662715';
     $pass = '04D92Goz7fqXL';
 }
