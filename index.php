@@ -70,36 +70,51 @@ try {
 <?php include __DIR__ . '/includes/header.php'; ?>
 
 <div class="login-wrapper">
-    <div class="login-container">
-        <div class="login-header">
-            <?php if ($company_logo): ?>
-                <img src="<?= htmlspecialchars($company_logo) ?>" alt="Logo" class="login-logo">
-            <?php else: ?>
-                <h1><i class='bx bx-dish' style="color: var(--fc-primary);"></i> <?= htmlspecialchars($company_name) ?></h1>
-            <?php endif; ?>
+    <div class="login-split-card">
+        <!-- Left: Illustration Panel -->
+        <div class="login-illustration">
+            <img src="assets/img/login-bg.jpg" alt="Restaurant" class="login-bg-img">
+            <div class="login-illustration-overlay"></div>
         </div>
+        
+        <!-- Right: Form Panel -->
+        <div class="login-form-panel">
+            <div class="login-header">
+                <?php if ($company_logo): ?>
+                    <img src="<?= htmlspecialchars($company_logo) ?>" alt="Logo" class="login-logo">
+                <?php endif; ?>
+                <h1>¡Bienvenido!</h1>
+                <p class="login-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+            </div>
 
-        <?php if ($error): ?>
-            <div class="alert alert-danger" style="margin-bottom: 30px;">
-                <i class='bx bx-error-circle'></i> <?php echo htmlspecialchars($error); ?>
-            </div>
-        <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="alert alert-danger login-alert">
+                    <i class='bx bx-error-circle'></i> <?php echo htmlspecialchars($error); ?>
+                </div>
+            <?php endif; ?>
 
-        <form method="POST" action="">
-            <div class="login-input-wrapper">
-                <i class='bx bx-user'></i>
-                <input type="text" id="username" name="username" class="fc-input" placeholder="Usuario"
-                    required autocomplete="off">
-            </div>
+            <form method="POST" action="">
+                <div class="login-input-wrapper">
+                    <i class='bx bx-user'></i>
+                    <input type="text" id="username" name="username" class="fc-input" placeholder="Usuario"
+                        required autocomplete="off">
+                </div>
  
-            <div class="login-input-wrapper">
-                <i class='bx bx-lock-alt'></i>
-                <input type="password" id="password" name="password" class="fc-input"
-                    placeholder="Contraseña" required>
-            </div>
+                <div class="login-input-wrapper">
+                    <i class='bx bx-lock-alt'></i>
+                    <input type="password" id="password" name="password" class="fc-input"
+                        placeholder="Contraseña" required>
+                </div>
  
-            <button type="submit" class="fc-login-btn">Iniciar Sesión</button>
-        </form>
+                <button type="submit" class="fc-login-btn">
+                    Iniciar Sesión <i class='bx bx-right-arrow-alt'></i>
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <p>Powered by <strong>RestoCloud</strong></p>
+            </div>
+        </div>
     </div>
 </div>
 
