@@ -86,22 +86,24 @@ function ensureModulesSystem($pdo)
 
         // Default Modules Definitions
         $default_modules = [
-            // --- TOP LEVEL SIDEBAR MODULES (12 Modules matching Sidebar) ---
+            // --- TOP LEVEL SIDEBAR MODULES (13 Modules matching Sidebar) ---
             ['key' => 'dashboard',     'name' => 'Dashboard',      'icon' => 'bx bxs-dashboard',     'path' => 'inicio.php',             'order' => 1,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'menu',          'name' => 'Menú',           'icon' => 'bx bx-package',        'path' => 'productos.php',          'order' => 2,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'insumos',       'name' => 'Insumos',        'icon' => 'bx bx-layer',          'path' => 'inventario_insumos.php', 'order' => 3,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'recetas',       'name' => 'Recetas/Costos', 'icon' => 'bx bx-food-menu',      'path' => 'gestion_recetas.php',    'order' => 4,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'tables',        'name' => 'Mesas',          'icon' => 'bx bx-chair',          'path' => 'mesas.php',              'order' => 5,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'kitchen',       'name' => 'Cocina',         'icon' => 'bx bx-restaurant',     'path' => 'cocina.php',             'order' => 6,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'cashier',       'name' => 'Caja',           'icon' => 'bx bx-dollar-circle',  'path' => 'caja.php',               'order' => 7,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'cuentas',       'name' => 'Cuentas',        'icon' => 'bx bx-receipt',        'path' => 'cuentas.php',            'order' => 8,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'pedidosya',     'name' => 'PedidosYa',      'icon' => 'bx bx-cycling',        'path' => 'pedidosya.php',          'order' => 9,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'reports',       'name' => 'Reportes',       'icon' => 'bx bx-bar-chart-alt-2','path' => 'reportes.php',          'order' => 10, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'users',         'name' => 'Usuarios',       'icon' => 'bx bx-user',           'path' => 'usuarios.php',           'order' => 11, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'settings',      'name' => 'Configuración',  'icon' => 'bx bx-cog',            'path' => 'configuracion.php',      'order' => 12, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'barra',         'name' => 'Barra',          'icon' => 'bx bx-shopping-bag',   'path' => 'mesas.php?tab=barra',    'order' => 6,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'kitchen',       'name' => 'Cocina',         'icon' => 'bx bx-restaurant',     'path' => 'cocina.php',             'order' => 7,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'cashier',       'name' => 'Caja',           'icon' => 'bx bx-dollar-circle',  'path' => 'caja.php',               'order' => 8,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'cuentas',       'name' => 'Cuentas',        'icon' => 'bx bx-receipt',        'path' => 'cuentas.php',            'order' => 9,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'pedidosya',     'name' => 'PedidosYa',      'icon' => 'bx bx-cycling',        'path' => 'pedidosya.php',          'order' => 10,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'reports',       'name' => 'Reportes',       'icon' => 'bx bx-bar-chart-alt-2','path' => 'reportes.php',          'order' => 11, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'users',         'name' => 'Usuarios',       'icon' => 'bx bx-user',           'path' => 'usuarios.php',           'order' => 12, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'settings',      'name' => 'Configuración',  'icon' => 'bx bx-cog',            'path' => 'configuracion.php',      'order' => 13, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
 
             // --- SPECIAL ACTIONS & SUB-PERMISSIONS ---
             ['key' => 'pedido_libre',          'name' => 'Pedido Libre (POS)',     'icon' => 'bx bx-cart',         'path' => 'mesas.php',                  'order' => 15, 'is_sidebar' => 0, 'category' => 'Operaciones'],
+            ['key' => 'ver_asientos_barra',    'name' => 'Ver Asientos en Barra',  'icon' => 'bx bx-show',         'path' => 'mesas.php?tab=barra',        'order' => 15, 'is_sidebar' => 0, 'category' => 'Operaciones'],
             ['key' => 'inventory_edit',        'name' => 'Editar Productos',       'icon' => 'bx bx-edit',         'path' => 'productos.php',              'order' => 16, 'is_sidebar' => 0, 'category' => 'Menú'],
             ['key' => 'inventory_delete',      'name' => 'Eliminar Productos',     'icon' => 'bx bx-trash',        'path' => 'productos.php',              'order' => 17, 'is_sidebar' => 0, 'category' => 'Menú'],
             ['key' => 'config_invoices_manage','name' => 'Gestionar Facturas',     'icon' => 'bx bx-history',      'path' => 'gestion_facturas.php',       'order' => 18, 'is_sidebar' => 0, 'category' => 'Facturación'],
@@ -110,6 +112,7 @@ function ensureModulesSystem($pdo)
             ['key' => 'config_restore',        'name' => 'Restaurar BD',           'icon' => 'bx bx-cloud-upload',  'path' => 'configuracion.php#restore', 'order' => 22, 'is_sidebar' => 0, 'category' => 'Configuración'],
             ['key' => 'config_menu_init',      'name' => 'Inicialización Menú',    'icon' => 'bx bx-rocket',        'path' => 'configuracion.php#menu',    'order' => 23, 'is_sidebar' => 0, 'category' => 'Configuración'],
             ['key' => 'config_tables',         'name' => 'Gestión de Mesas',       'icon' => 'bx bx-chair',         'path' => 'configuracion.php#tables',  'order' => 24, 'is_sidebar' => 0, 'category' => 'Configuración'],
+            ['key' => 'config_barra',          'name' => 'Gestión de Barra',       'icon' => 'bx bx-coffee-togo',   'path' => 'configuracion.php#barra',   'order' => 24, 'is_sidebar' => 0, 'category' => 'Configuración'],
             ['key' => 'config_invoicing',      'name' => 'Config. Facturación',    'icon' => 'bx bx-receipt',       'path' => 'configuracion.php#invoicing','order' => 25, 'is_sidebar' => 0, 'category' => 'Configuración'],
             ['key' => 'config_reset',          'name' => 'Restablecer Sistema',    'icon' => 'bx bx-reset',         'path' => 'configuracion.php#reset',    'order' => 26, 'is_sidebar' => 0, 'category' => 'Configuración'],
             ['key' => 'config_modules',        'name' => 'Gestión Roles y Permisos','icon' => 'bx bx-shield-quarter','path' => 'configuracion.php#roles',   'order' => 27, 'is_sidebar' => 0, 'category' => 'Configuración'],

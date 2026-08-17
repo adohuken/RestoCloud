@@ -39,6 +39,24 @@ $current_page = basename($_SERVER['PHP_SELF']);
 $user_role_id = $_SESSION['role_id'] ?? 0;
 $user_modules = getUserModules($pdo, $user_role_id, true);
 
+// Get kitchen workflow to potentially hide the kitchen screen
+$kitchen_workflow = 'pantalla';
+if (isset($settings)) {
+    try {
+        $stmt_wf = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'kitchen_workflow'");
+        if ($wf = $stmt_wf->fetchColumn()) {
+            $kitchen_workflow = $wf;
+        }
+    } catch (Exception $e) {}
+}
+
+if ($kitchen_workflow === 'comandera') {
+    $user_modules = array_filter($user_modules, function($m) {
+        $key = $m['module_key'] ?? $m['file_path'];
+        return $key !== 'kitchen' && $key !== 'cocina.php';
+    });
+}
+
 // Icon mapping helper
 function getSidebarIcon($module)
 {
@@ -113,7 +131,20 @@ function isModuleActive($module, $current_page)
 
     <ul class="sidebar-menu">
         <?php foreach ($user_modules as $module): ?>
-            <?php $activeClass = isModuleActive($module, $current_page) ? 'active' : ''; ?>
+            <?php 
+                $activeClass = '';
+                if ($module['file_path'] === 'mesas.php') {
+                    $tab = $_GET['tab'] ?? 'mesas';
+                    if ($current_page === 'mesas.php' && $tab === 'mesas') $activeClass = 'active';
+                    if (in_array($current_page, ['venta.php', 'ver_pedido.php', 'procesar_pago_split.php']) && !isset($_GET['libre'])) $activeClass = 'active';
+                } elseif ($module['file_path'] === 'mesas.php?tab=barra') {
+                    $tab = $_GET['tab'] ?? 'mesas';
+                    if ($current_page === 'mesas.php' && $tab === 'barra') $activeClass = 'active';
+                    if (in_array($current_page, ['venta.php', 'ver_pedido.php', 'procesar_pago_split.php']) && isset($_GET['libre'])) $activeClass = 'active';
+                } else {
+                    $activeClass = isModuleActive($module, $current_page) ? 'active' : ''; 
+                }
+            ?>
             <li>
                 <a href="<?= htmlspecialchars($module['file_path']) ?>" class="<?= $activeClass ?>">
                     <?= getSidebarIcon($module) ?> <span><?= htmlspecialchars($module['name']) ?></span>

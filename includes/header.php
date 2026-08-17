@@ -43,7 +43,7 @@ if (!isset($page_title)) {
     
     <!-- Core Styles -->
     <link rel="stylesheet" href="assets/css/style.css?v=3.3">
-    <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.6.3">
+    <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.6.7">
     <?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2): ?>
         <link rel="stylesheet" href="css/waiter-mobile.css?v=1.0">
     <?php endif; ?>

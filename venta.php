@@ -58,6 +58,15 @@ if ($libre_order !== null) {
     }
 }
 
+// Fetch kitchen workflow setting
+$kitchen_workflow = 'pantalla';
+try {
+    $stmt_wf = $pdo->query("SELECT setting_value FROM settings WHERE setting_key = 'kitchen_workflow'");
+    if ($wf = $stmt_wf->fetchColumn()) {
+        $kitchen_workflow = $wf;
+    }
+} catch (Exception $e) {}
+
 // For libre orders, we need a special "Barra" table to satisfy foreign key
 $barra_table_id = null;
 if ($is_libre) {
@@ -248,14 +257,43 @@ if (isset($_GET['ajax'])) {
         $order = $stmt->fetch();
 
         if ($order) {
+            // Check workflow setting
+            $stmt_cfg = $pdo->query("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('kitchen_workflow', 'kitchen_printer_ip', 'kitchen_printer_port')");
+            $cfg = $stmt_cfg->fetchAll(PDO::FETCH_KEY_PAIR);
+            $workflow = $cfg['kitchen_workflow'] ?? 'pantalla';
+
             // If order is draft OR has been processed (ready/picked_up/delivered) but has new items
-            // We set it back to 'pending' so it shows up in Kitchen
             if (in_array($order['status'], ['draft', 'ready', 'picked_up', 'delivered'])) {
                 $stmt = $pdo->prepare('UPDATE orders SET status = "pending", date_created = NOW() WHERE id = ?');
                 $stmt->execute([$order['id']]);
             }
 
-            // Mark all draft items as pending (this makes them visible to the kitchen)
+            // Print to Comandera if configured
+            if ($workflow === 'comandera') {
+                // Fetch items to print
+                $stmt = $pdo->prepare('SELECT p.name as product_name, od.quantity, od.notes FROM order_details od JOIN products p ON od.product_id = p.id WHERE od.order_id = ? AND od.item_status = "draft"');
+                $stmt->execute([$order['id']]);
+                $items_to_print = $stmt->fetchAll();
+
+                if (!empty($items_to_print)) {
+                    // Fetch table name and waiter name
+                    $stmt_t = $pdo->prepare('SELECT name FROM tables WHERE id = ?');
+                    $stmt_t->execute([$table_id]);
+                    $table_name = $stmt_t->fetchColumn() ?: 'Mesa Desconocida';
+
+                    $stmt_w = $pdo->prepare('SELECT u.name FROM orders o JOIN users u ON o.user_id = u.id WHERE o.id = ?');
+                    $stmt_w->execute([$order['id']]);
+                    $waiter_name = $stmt_w->fetchColumn() ?: 'Mesero';
+
+                    require_once __DIR__ . '/includes/printer_helper.php';
+                    $ip = $cfg['kitchen_printer_ip'] ?? '192.168.1.100';
+                    $port = $cfg['kitchen_printer_port'] ?? '9100';
+                    
+                    sendToKitchenPrinter($ip, $port, $table_name, $waiter_name, $items_to_print);
+                }
+            }
+
+            // Mark all draft items as pending (this makes them visible to the kitchen or locks them in comandera mode)
             $stmt = $pdo->prepare('UPDATE order_details SET item_status = "pending" WHERE order_id = ? AND item_status = "draft"');
             $stmt->execute([$order['id']]);
 
@@ -359,7 +397,7 @@ if (!$clean_mode) {
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
-        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.6.3">
+        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.6.7">
         <!-- SweetAlert2 -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -394,16 +432,24 @@ if (!$clean_mode) {
  
         <div class="pos-header" style="margin-bottom: 20px;">
             <div>
-                <h1><i class='bx bx-store-alt'></i> <?= htmlspecialchars($table['name']) ?></h1>
-                <p><?= $is_libre ? 'Venta rápida / Barra' : 'Atención en salón' ?></p>
+                <h1 id="pos-header-title">
+                    <i class='bx bx-store-alt'></i> 
+                    <?= ($is_libre && $libre_order > 1) ? 'Pedido #' . htmlspecialchars($libre_order) : htmlspecialchars($table['name']) ?>
+                </h1>
+                <p><?= $is_libre ? 'Venta rápida / Mostrador' : 'Atención en salón' ?></p>
             </div>
             <div class="pos-header-actions">
+                <?php 
+                // Determinar a qué pestaña volver
+                $is_barra_view = $is_libre || (isset($table['name']) && strpos($table['name'], 'Barra') === 0);
+                $back_url = $is_barra_view ? 'mesas.php?tab=barra' : 'mesas.php';
+                ?>
                 <?php if ($clean_mode): ?>
-                    <button onclick="window.parent.switchOrdersTab('mesas')" class="fc-btn fc-btn-outline" title="Volver a Mesas">
+                    <button onclick="window.parent.switchOrdersTab('<?= $is_barra_view ? 'barra' : 'mesas' ?>')" class="fc-btn fc-btn-outline" title="Volver a Mesas">
                         <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
                     </button>
                 <?php else: ?>
-                    <a href="mesas.php" class="fc-btn fc-btn-outline" title="Volver a Mesas">
+                    <a href="<?= $back_url ?>" class="fc-btn fc-btn-outline" title="Volver a Mesas">
                         <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
                     </a>
                 <?php endif; ?>
@@ -500,12 +546,16 @@ if (!$clean_mode) {
                     <button class="tab-btn active" onclick="switchTab('tab-draft')" style="color: var(--fc-text-main);">
                         <i class='bx bx-plus-circle'></i> Nuevo
                     </button>
+                    <?php if ($kitchen_workflow !== 'comandera'): ?>
                     <button class="tab-btn" onclick="switchTab('tab-kitchen')" style="color: var(--fc-text-main);">
                         <i class='bx bx-time-five'></i> Cocina
                     </button>
+                    <?php endif; ?>
+                    <?php if (!$is_barra_view): ?>
                     <button class="tab-btn" onclick="switchTab('tab-billing')" style="color: var(--fc-text-main);">
                         <i class='bx bx-receipt'></i> Cuenta
                     </button>
+                    <?php endif; ?>
                 </div>
 
                 <div class="pos-cart-items" style="padding: 20px; flex: 1; overflow-y: auto;">
@@ -522,6 +572,7 @@ if (!$clean_mode) {
                         </div>
                     </div>
 
+                    <?php if ($kitchen_workflow !== 'comandera'): ?>
                     <!-- Tab 2: Kitchen Tracking -->
                     <div id="tab-kitchen" class="tab-content">
                         <div id="order-progress-wrapper"></div>
@@ -529,6 +580,7 @@ if (!$clean_mode) {
                             <!-- JS populated -->
                         </div>
                     </div>
+                    <?php endif; ?>
 
                     <!-- Tab 3: Billing -->
                     <div id="tab-billing" class="tab-content">
@@ -905,6 +957,12 @@ if (!$clean_mode) {
                     if (params.get('libre') === '1') {
                         params.set('libre', data.order_id);
                         history.replaceState(null, '', '?' + params.toString());
+                        
+                        // Actualizar título dinámicamente si estábamos en "Barra" genérica
+                        const titleEl = document.getElementById('pos-header-title');
+                        if (titleEl) {
+                            titleEl.innerHTML = `<i class='bx bx-store-alt'></i> Pedido #${data.order_id}`;
+                        }
                     }
                 }
                 updateOrder();
@@ -1026,30 +1084,32 @@ if (!$clean_mode) {
             }
 
             // Render Kitchen Tab
-            if (sentItems.length === 0) {
-                progressWrapper.innerHTML = '';
-                kitchenContainer.innerHTML = `
-                    <div class="empty-order" style="text-align: center; padding: 40px 10px;">
-                        <i class='bx bx-restaurant' style="font-size: 48px; color: var(--fc-primary); opacity: 0.1;"></i>
-                        <p style="color: var(--fc-text-sec); font-size: 14px;">Nada en cocina actualmente.</p>
-                    </div>`;
-            } else {
-                // Progress
-                const readyItems = data.items.filter(i => i.item_status === 'ready').length;
-                const progress = (readyItems / data.items.length) * 100;
-                
-                progressWrapper.innerHTML = `
-                    <div class="order-progress-container animate__animated animate__fadeIn">
-                        <div class="progress-header">
-                            <span style="font-size:12px; font-weight:700;">Progreso de Comanda</span>
-                            <span class="fc-text-rose">${Math.round(progress)}%</span>
-                        </div>
-                        <div class="progress-bar-bg">
-                            <div class="progress-bar-fill" style="width: ${progress}%"></div>
-                        </div>
-                    </div>`;
-                
-                kitchenContainer.innerHTML = sentItems.map(item => renderOrderItem(item, true)).join('');
+            if (kitchenContainer && progressWrapper) {
+                if (sentItems.length === 0) {
+                    progressWrapper.innerHTML = '';
+                    kitchenContainer.innerHTML = `
+                        <div class="empty-order" style="text-align: center; padding: 40px 10px;">
+                            <i class='bx bx-restaurant' style="font-size: 48px; color: var(--fc-primary); opacity: 0.1;"></i>
+                            <p style="color: var(--fc-text-sec); font-size: 14px;">Nada en cocina actualmente.</p>
+                        </div>`;
+                } else {
+                    // Progress
+                    const readyItems = data.items.filter(i => i.item_status === 'ready').length;
+                    const progress = (readyItems / data.items.length) * 100;
+                    
+                    progressWrapper.innerHTML = `
+                        <div class="order-progress-container animate__animated animate__fadeIn">
+                            <div class="progress-header">
+                                <span style="font-size:12px; font-weight:700;">Progreso de Comanda</span>
+                                <span class="fc-text-rose">${Math.round(progress)}%</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${progress}%"></div>
+                            </div>
+                        </div>`;
+                    
+                    kitchenContainer.innerHTML = sentItems.map(item => renderOrderItem(item, true)).join('');
+                }
             }
         });
     }

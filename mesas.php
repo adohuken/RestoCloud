@@ -95,10 +95,31 @@ $stmt = $pdo->query('
             AND o2.status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered")
         )
     ) o ON t.id = o.table_id
-    WHERE t.name != "Barra"
+    WHERE t.name != "Barra" AND t.name NOT LIKE "Barra - %"
     ORDER BY LENGTH(t.name), t.name
 ');
 $tables = $stmt->fetchAll();
+
+// Get bar seats (tables with prefix "Barra - ")
+$stmt = $pdo->query('
+    SELECT t.*, 
+           o.id as order_id, 
+           o.total as order_total,
+           o.status as order_status
+    FROM tables t
+    LEFT JOIN (
+        SELECT o1.* FROM orders o1
+        WHERE o1.status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered")
+        AND o1.id = (
+            SELECT MAX(o2.id) FROM orders o2 
+            WHERE o2.table_id = o1.table_id 
+            AND o2.status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered")
+        )
+    ) o ON t.id = o.table_id
+    WHERE t.name LIKE "Barra - %"
+    ORDER BY LENGTH(t.name), t.name
+');
+$barra_seats = $stmt->fetchAll();
 
 // Count ready orders for notification badge
 $stmt = $pdo->query('SELECT COUNT(*) FROM orders WHERE status = "ready"');
@@ -170,10 +191,16 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     <?php endif; ?>
 
     <main class="main-content">
+        <?php $current_tab = $_GET['tab'] ?? 'mesas'; ?>
         <div class="fc-header" style="margin-bottom: 30px;">
             <div class="fc-header-left">
-                <h1><i class='bx bx-grid-alt'></i> Gestión de Mesas</h1>
-                <p>Monitoreo y atención en tiempo real</p>
+                <?php if ($current_tab === 'barra'): ?>
+                    <h1><i class='bx bx-shopping-bag'></i> Gestión de Barra</h1>
+                    <p>Atención en mostrador y pedidos rápidos</p>
+                <?php else: ?>
+                    <h1><i class='bx bx-grid-alt'></i> Gestión de Mesas</h1>
+                    <p>Monitoreo y atención en tiempo real</p>
+                <?php endif; ?>
             </div>
             <div class="fc-header-right">
                 <div class="fc-user-pill">
@@ -203,40 +230,8 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
         <?php endif; ?>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
-            <?php if ($has_free_orders_access || $has_pedidosya_access): ?>
-                <div class="fc-tabs">
-                    <a href="mesas.php" class="fc-tab active" style="text-decoration: none;">
-                        <i class='bx bx-chair'></i> <span>Mesas</span>
-                    </a>
-                    <?php if ($has_free_orders_access): ?>
-                        <a href="venta.php?libre=1" class="fc-tab" style="text-decoration: none;">
-                            <i class='bx bx-shopping-bag'></i> <span>Barra</span>
-                            <?php if (count($free_orders) > 0): ?>
-                                <span class="fc-tab-badge"><?= count($free_orders) ?></span>
-                            <?php endif; ?>
-                        </a>
-                    <?php endif; ?>
-                    <?php if ($has_pedidosya_access): ?>
-                        <a href="pedidosya.php" class="fc-tab" style="text-decoration: none;">
-                            <i class='bx bxl-product-hunt'></i> <span>PedidosYa</span>
-                            <?php if (count($pedidosya_orders) > 0): ?>
-                                <span class="fc-tab-badge"><?= count($pedidosya_orders) ?></span>
-                            <?php endif; ?>
-                        </a>
-                    <?php endif; ?>
-                </div>
-            <?php endif; ?>
-            
-            <?php if (in_array($_SESSION['role_id'], [1, 5])): ?>
-                <button onclick="toggleGestionMesas()" class="fc-btn fc-btn-outline" style="height: 48px;">
-                    <i class='bx bx-cog'></i> Gestionar Mesas
-                </button>
-            <?php endif; ?>
-        </div>
-
         <!-- Tab: Mesas -->
-        <div id="tab-mesas" class="orders-tab-content active">
+        <div id="tab-mesas" class="orders-tab-content <?= $current_tab === 'mesas' ? 'active' : '' ?>">
             <div class="tables-grid">
                 <?php foreach ($tables as $table):
                     $status = $table['order_status'] ?? null;
@@ -326,7 +321,167 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
         </div> <!-- End Tab: Mesas -->
 
-        <!-- Separated Views: Barra and PedidosYa now load in their own pages instead of iframes -->
+        <!-- Tab: Barra -->
+        <?php if ($has_free_orders_access): ?>
+            <div id="tab-barra" class="orders-tab-content <?= $current_tab === 'barra' ? 'active' : '' ?>">
+                
+                <!-- Sección de Mostrador (Takeaway / Libre) -->
+                <div class="fc-card" style="padding: 25px; margin-bottom: 35px; border: 1px solid var(--fc-border); background: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.03);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; <?= count($free_orders) > 0 ? 'margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--fc-border);' : '' ?>">
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <div style="width: 48px; height: 48px; background: rgba(79, 70, 229, 0.1); color: var(--fc-primary); border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                <i class='bx bx-shopping-bag'></i>
+                            </div>
+                            <div>
+                                <h4 style="margin: 0; color: var(--fc-text-main); font-size: 18px; font-weight: 700;">Mostrador / Takeaway</h4>
+                                <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--fc-text-sec);">Para ventas rápidas y clientes sin asiento.</p>
+                            </div>
+                        </div>
+                        <a href="venta.php?libre=1" class="fc-btn fc-btn-primary" style="padding: 0 24px; height: 46px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
+                            <i class='bx bx-plus' style="font-size: 20px;"></i> Nueva Venta
+                        </a>
+                    </div>
+                    
+                    <!-- Mostrar ventas libres activas aquí -->
+                    <?php if (count($free_orders) > 0): ?>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px;">
+                            <?php foreach ($free_orders as $fo): ?>
+                                <div style="background: #f8fafc; padding: 16px; border-radius: 16px; border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 15px; transition: all 0.2s ease;">
+                                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                        <div>
+                                            <span style="background: #ffffff; color: var(--fc-primary); padding: 4px 10px; border-radius: 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.5px; border: 1px solid var(--fc-border); display: inline-block; margin-bottom: 8px;">
+                                                PEDIDO #<?= $fo['id'] ?>
+                                            </span>
+                                            <div style="font-size: 12px; color: var(--fc-text-sec); display: flex; align-items: center; gap: 5px;">
+                                                <i class='bx bx-user' style="color: #94a3b8;"></i> <?= htmlspecialchars($fo['waiter_name'] ?? 'Usuario') ?>
+                                            </div>
+                                        </div>
+                                        <div style="font-weight: 800; font-size: 18px; color: var(--fc-text-main);">
+                                            C$<?= number_format($fo['total'], 0) ?>
+                                        </div>
+                                    </div>
+                                    
+                                    <a href="venta.php?libre=<?= $fo['id'] ?>" class="fc-btn fc-btn-outline" style="width: 100%; justify-content: center; height: 38px; font-size: 13px; border-radius: 10px; background: white;">
+                                        Ver / Cobrar
+                                    </a>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+
+            <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'ver_asientos_barra')): ?>
+                <div style="margin-top: 40px;">
+                    <h3 style="margin-bottom: 20px; font-size: 18px; display: flex; align-items: center; gap: 8px;">
+                        <i class='bx bx-chair' style="color: var(--fc-primary);"></i> Asientos en Barra
+                    </h3>
+
+                    <div class="tables-grid">
+                        <?php if (empty($barra_seats)): ?>
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: rgba(255,255,255,0.5); border-radius: 20px; border: 1px dashed var(--fc-border); color: var(--fc-text-sec);">
+                                <i class='bx bx-info-circle' style="font-size: 32px; opacity: 0.5; margin-bottom: 10px;"></i>
+                                <p>No hay asientos configurados en la barra.</p>
+                                <?php if ($_SESSION['role_id'] == 1 || $_SESSION['role_id'] == 5): ?>
+                                    <a href="configuracion.php?tab=tables" style="color: var(--fc-primary); text-decoration: none; font-weight: 600;">Ir a configuración para añadirlos</a>
+                                <?php endif; ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php foreach ($barra_seats as $table):
+                            $status = $table['order_status'] ?? null;
+                            $cardClass = 'available';
+                            $icon = 'bx-user';
+                            
+                            if ($table['order_id']) {
+                                if ($status === 'ready') {
+                                    $cardClass = 'ready';
+                                    $icon = 'bx-bell';
+                                } elseif ($status === 'draft') {
+                                    $cardClass = 'draft';
+                                    $icon = 'bx-edit-alt';
+                                } else {
+                                    $cardClass = 'occupied';
+                                    $icon = 'bx-restaurant';
+                                }
+                            }
+                            
+                            // Extraer solo la parte "Asiento X" del nombre
+                            $display_name = str_replace('Barra - ', '', $table['name']);
+                            ?>
+                            <div class="table-card table-<?= $cardClass ?>" data-order-id="<?= $table['order_id'] ?? '' ?>">
+                                <div class="table-icon">
+                                    <i class='bx <?= $icon ?>'></i>
+                                </div>
+                                <div class="table-name"><?= htmlspecialchars($display_name) ?></div>
+                                <div class="table-status">
+                                    <?php if ($table['order_id']): ?>
+                                        <?php 
+                                            $status_map = [
+                                                'draft' => 'Tomando pedido',
+                                                'pending' => 'En cocina',
+                                                'preparing' => 'Preparando',
+                                                'ready' => '¡Listo p/ Servir!',
+                                                'picked_up' => 'Recogido',
+                                                'delivered' => 'Servido'
+                                            ];
+                                            echo $status_map[$status] ?? 'Ocupado';
+                                        ?>
+                                    <?php else: ?>
+                                        Disponible
+                                    <?php endif; ?>
+                                </div>
+                                
+                                <?php if ($table['order_id']): ?>
+                                    <div class="table-total">
+                                        C$<?= number_format($table['order_total'], 0) ?>
+                                    </div>
+                                <?php endif; ?>
+
+                                <div class="table-actions">
+                                    <?php if ($table['order_id']): ?>
+                                        <?php if ($status === 'ready'): ?>
+                                            <form method="POST">
+                                                <input type="hidden" name="action" value="pickup_order">
+                                                <input type="hidden" name="order_id" value="<?= $table['order_id'] ?>">
+                                                <button type="submit" class="fc-btn fc-btn-primary fc-w100" style="height: 45px;">
+                                                    <i class='bx bx-check-double'></i> SERVIR
+                                                </button>
+                                            </form>
+                                        <?php elseif ($status === 'picked_up'): ?>
+                                            <form method="POST">
+                                                <input type="hidden" name="action" value="deliver_order">
+                                                <input type="hidden" name="order_id" value="<?= $table['order_id'] ?>">
+                                                <button type="submit" class="fc-btn fc-btn-primary fc-w100" style="height: 45px;">
+                                                    <i class='bx bx-check'></i> FINALIZAR
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <a href="venta.php?table=<?= $table['id'] ?>" class="fc-btn fc-btn-primary fc-w100" style="height: 48px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--fc-border);">
+                                                <i class='bx <?= $status === 'draft' ? 'bx-edit' : 'bx-plus' ?>'></i> 
+                                                <?= $status === 'draft' ? 'COMPLETAR' : 'PEDIR MÁS' ?>
+                                            </a>
+                                        <?php endif; ?>
+                                    <?php else: ?>
+                                        <?php if ($active_register): ?>
+                                            <a href="venta.php?table=<?= $table['id'] ?>" class="fc-btn fc-btn-primary fc-w100" style="height: 45px;">
+                                                <i class='bx bx-plus-circle'></i> ASIGNAR
+                                            </a>
+                                        <?php else: ?>
+                                            <button class="fc-btn fc-btn-outline fc-w100" style="height: 45px; opacity: 0.5;" disabled>
+                                                <i class='bx bx-lock-alt'></i> CERRADO
+                                            </button>
+                                        <?php endif; ?>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div> <!-- End Tab: Barra -->
+    <?php endif; ?>
+
+    <!-- Separated Views: Barra and PedidosYa now load in their own pages instead of iframes -->
 
     </main>
 </div>

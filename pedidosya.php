@@ -196,7 +196,7 @@ if (!$clean_mode) {
         <title>PedidosYa</title>
         <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="assets/css/style.css?v=1.3">
-        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=1.0">
+        <link rel="stylesheet" href="assets/css/restocloud-theme.css?v=2.6.7">
         <style>
             body { background: var(--fc-bg); padding: 20px; color: var(--fc-text-main); }
             .dashboard-wrapper { display: block !important; }

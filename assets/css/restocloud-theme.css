@@ -21,7 +21,7 @@
     --fc-danger: #ef4444;
     
     /* Layout Constants */
-    --fc-sidebar-w: 300px; /* Expanded for larger logo */
+    --fc-sidebar-w: 240px; /* Reduced for better proportion */
     --fc-sidebar-collapsed-w: 80px;
     --fc-detail-w: 420px;
     --fc-header-h: 70px;
@@ -99,6 +99,7 @@ body {
     z-index: 1000;
     display: flex;
     flex-direction: column;
+    padding: 0; /* Anula el padding de style.css que empujaba todo hacia abajo */
     transition: var(--fc-sidebar-w) 0.3s ease;
     overflow-y: auto;
     overflow-x: hidden;
@@ -106,7 +107,7 @@ body {
 
 /* Sidebar Logo & Branding */
 .sidebar .sidebar-header {
-    padding: 15px 20px 15px !important;
+    padding: 25px 20px 25px !important; /* Padding vertical simétrico */
     border-bottom: 1px solid var(--fc-border);
     flex-shrink: 0;
     overflow: hidden;
@@ -126,19 +127,21 @@ body {
 
 .sidebar .sidebar-logo,
 .sidebar-header img {
-    max-width: 120px !important;
-    max-height: 120px !important;
-    width: auto !important;
-    height: auto !important;
+    width: 75px !important;
+    height: 75px !important;
+    max-width: 75px !important;
+    max-height: 75px !important;
     object-fit: contain;
-    border-radius: 0;
-    border: none;
-    box-shadow: none;
-    background: transparent;
-    padding: 0;
+    object-position: center;
+    border-radius: 50%; /* Ayuda a que se vea simétrico si el fondo es blanco */
+    border: 2px solid rgba(0,0,0,0.05); /* Borde sutil para simetría */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05); /* Sombra suave */
+    background: #ffffff; /* Fondo blanco consistente */
+    padding: 2px; /* Pequeño espacio para el borde */
     display: block;
-    mix-blend-mode: normal; /* effectively removes black backgrounds */
-    filter: none; /* Enhances logo clarity on dark theme */
+    margin: 0 auto; /* Asegura el centrado absoluto */
+    mix-blend-mode: normal;
+    filter: none;
     transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -469,7 +472,16 @@ body {
 }
 
 .fc-btn:active {
-    transform: scale(0.96);
+    transform: translateY(1px);
+}
+
+.fc-btn:disabled,
+.fc-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    box-shadow: none !important;
+    transform: none !important;
 }
 
 .fc-btn-primary {
