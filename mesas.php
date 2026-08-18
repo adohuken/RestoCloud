@@ -204,9 +204,9 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
             <div class="fc-header-right">
                 <div class="fc-user-pill">
-                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'], 0, 1)) ?></div>
+                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?></div>
                     <div class="fc-user-info">
-                        <span class="name"><?= htmlspecialchars($_SESSION['name']) ?></span>
+                        <span class="name"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></span>
                         <span class="role"><?= htmlspecialchars($user_role_name) ?></span>
                     </div>
                 </div>

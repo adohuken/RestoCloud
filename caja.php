@@ -130,87 +130,175 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
             <div class="fc-header-right no-print">
                 <div class="fc-user-pill">
-                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'], 0, 1)) ?></div>
+                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?></div>
                     <div class="fc-user-info">
-                        <span class="name"><?= htmlspecialchars($_SESSION['name']) ?></span>
+                        <span class="name"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></span>
                         <span class="role"><?= htmlspecialchars($user_role_name) ?></span>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px; margin-bottom: 30px;">
+        <div style="display: flex; flex-direction: column; gap: 30px; margin-bottom: 30px;">
             <?php if ($active_register): ?>
                 <!-- Active Register Panel -->
-                <div class="fc-card" style="margin: 0; border: 1px solid var(--fc-primary); background: rgba(225, 29, 72, 0.03);">
-                    <div class="fc-modal-header" style="background: var(--fc-primary); color: white;">
-                        <h3><i class='bx bx-lock-open-alt'></i> Turno en Curso</h3>
-                        <span style="font-size: 13px; opacity: 0.9;">Iniciado: <?= date('h:i A', strtotime($active_register['date_created'])) ?></span>
+                <div class="fc-card" style="margin: 0; border: none; background: #ffffff; box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05); border-radius: 16px; overflow: hidden;">
+                    <div style="padding: 20px 30px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #fff;">
+                        <h3 style="margin: 0; font-size: 18px; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+                            <i class='bx bx-lock-open-alt' style="color: #6366f1; background: rgba(99, 102, 241, 0.1); padding: 6px; border-radius: 8px;"></i> 
+                            Turno en Curso
+                        </h3>
+                        <span style="font-size: 12px; font-weight: 600; color: #64748b; background: #f8fafc; padding: 4px 10px; border-radius: 15px;">
+                            <i class='bx bx-time-five' style="margin-right: 4px;"></i> Iniciado: <?= date('h:i A', strtotime($active_register['date_created'])) ?>
+                        </span>
                     </div>
 
-                    <div class="fc-modal-body">
-                        <?php $is_admin = ($_SESSION['role_id'] == 1 || $_SESSION['role_id'] == 5); ?>
-                        
-                        <?php if($is_admin): ?>
-                            <div style="text-align: center; margin-bottom: 30px; padding: 25px; background: rgba(255,255,255,0.02); border-radius: 15px; border: 1px solid var(--fc-border);">
-                                <span style="color: var(--fc-text-sec); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Saldo Estimado Actual</span>
-                                <div style="color: var(--fc-text-main); font-size: 36px; font-weight: 800; margin-top: 10px;">C$<?= number_format($active_register['amount'] + $today_sales, 2) ?></div>
-                            </div>
-
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
-                                <div style="padding: 15px; background: rgba(255,255,255,0.03); border-radius: 12px; border: 1px solid var(--fc-border); text-align: center;">
-                                    <span style="display: block; color: var(--fc-text-sec); font-size: 12px;">Fondo Initial</span>
-                                    <span style="color: var(--fc-text-main); font-weight: 700;">C$<?= number_format($active_register['amount'], 2) ?></span>
-                                </div>
-                                <div style="padding: 15px; background: rgba(16, 185, 129, 0.05); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.2); text-align: center;">
-                                    <span style="display: block; color: var(--fc-text-sec); font-size: 12px;">Ventas (Hoy)</span>
-                                    <span style="color: #10b981; font-weight: 700;">+C$<?= number_format($today_sales, 2) ?></span>
-                                </div>
-                            </div>
-
-                            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 25px;">
-                                <?php
-                                $m_data = [
-                                    ['icon' => 'bx-money', 'label' => 'Efectivo', 'val' => $payment_breakdown['cash'], 'color' => '#10b981'],
-                                    ['icon' => 'bx-credit-card', 'label' => 'Tarjeta', 'val' => $payment_breakdown['card'], 'color' => '#3b82f6'],
-                                    ['icon' => 'bx-transfer-alt', 'label' => 'Transfer', 'val' => $payment_breakdown['transfer'], 'color' => '#8b5cf6']
-                                ];
-                                foreach($m_data as $m): ?>
-                                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 12px 15px; background: rgba(255,255,255,0.02); border-radius: 10px;">
-                                        <div style="display: flex; align-items: center; gap: 12px;">
-                                            <i class='bx <?= $m['icon'] ?>' style="font-size: 20px; color: <?= $m['color'] ?>;"></i>
-                                            <span style="font-size: 14px; color: var(--fc-text-sec);"><?= $m['label'] ?></span>
-                                        </div>
-                                        <strong style="color: var(--fc-text-main);">C$<?= number_format($m['val'], 2) ?></strong>
+                    <div class="fc-modal-body" style="padding: 25px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 30px; align-items: start;">
+                            
+                            <!-- Columna Izquierda: Resumen -->
+                            <div class="resumen-turno">
+                                <h4 style="margin-bottom: 15px; font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 1px;">Resumen Financiero</h4>
+                                <?php $is_admin = ($_SESSION['role_id'] == 1 || $_SESSION['role_id'] == 5); ?>
+                                
+                                <?php if($is_admin): ?>
+                                    <div style="margin-bottom: 20px;">
+                                        <span style="color: #94a3b8; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Saldo Estimado Actual</span>
+                                        <div style="color: #0f172a; font-size: 32px; font-weight: 900; margin-top: 2px; letter-spacing: -1px;">C$<?= number_format($active_register['amount'] + $today_sales, 2) ?></div>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        <?php else: ?>
-                            <div style="text-align: center; padding: 40px 20px; background: rgba(255,255,255,0.02); border-radius: 15px; border: 1px solid var(--fc-border); margin-bottom: 25px;">
-                                <div style="font-size: 40px; margin-bottom: 15px;"><i class='bx bx-user-circle'></i></div>
-                                <h4 style="color: var(--fc-text-main); margin-bottom: 10px;">Arqueo Ciego Activado</h4>
-                                <p style="color: var(--fc-text-sec); font-size: 13px; line-height: 1.5;">Como medida de seguridad, el balance del sistema está oculto. Por favor, cuente el efectivo físico real antes de proceder al cierre.</p>
-                            </div>
-                        <?php endif; ?>
 
-                        <form method="POST" class="fc-form" id="closeRegisterForm" style="margin-top: 20px;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
+                                        <div style="padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;">
+                                            <span style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Fondo Inicial</span>
+                                            <span style="color: #334155; font-weight: 800; font-size: 15px; margin-top: 4px; display: block;">C$<?= number_format($active_register['amount'], 2) ?></span>
+                                        </div>
+                                        <div style="padding: 12px; background: rgba(16, 185, 129, 0.05); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.1);">
+                                            <span style="display: block; color: #10b981; font-size: 11px; font-weight: 600;">Ventas (Hoy)</span>
+                                            <span style="color: #10b981; font-weight: 800; font-size: 15px; margin-top: 4px; display: block;">+C$<?= number_format($today_sales, 2) ?></span>
+                                        </div>
+                                    </div>
+
+                                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                                        <span style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Desglose de Ingresos</span>
+                                        <?php
+                                        $m_data = [
+                                            ['icon' => 'bx-money', 'label' => 'Efectivo Físico', 'val' => $payment_breakdown['cash'], 'color' => '#10b981', 'bg' => 'rgba(16, 185, 129, 0.1)'],
+                                            ['icon' => 'bx-credit-card', 'label' => 'Tarjetas (POS)', 'val' => $payment_breakdown['card'], 'color' => '#3b82f6', 'bg' => 'rgba(59, 130, 246, 0.1)'],
+                                            ['icon' => 'bx-transfer-alt', 'label' => 'Transferencias', 'val' => $payment_breakdown['transfer'], 'color' => '#8b5cf6', 'bg' => 'rgba(139, 92, 246, 0.1)']
+                                        ];
+                                        foreach($m_data as $m): ?>
+                                            <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
+                                                <div style="display: flex; align-items: center; gap: 10px;">
+                                                    <div style="width: 28px; height: 28px; border-radius: 8px; background: <?= $m['bg'] ?>; color: <?= $m['color'] ?>; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                                                        <i class='bx <?= $m['icon'] ?>'></i>
+                                                    </div>
+                                                    <span style="font-size: 13px; font-weight: 600; color: #475569;"><?= $m['label'] ?></span>
+                                                </div>
+                                                <strong style="color: #0f172a; font-size: 14px; font-weight: 700;">C$<?= number_format($m['val'], 2) ?></strong>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <div style="text-align: center; padding: 40px 15px;">
+                                        <div style="font-size: 36px; margin-bottom: 15px; color: #cbd5e1;"><i class='bx bx-low-vision'></i></div>
+                                        <h4 style="color: #334155; margin-bottom: 8px; font-size: 16px;">Arqueo Ciego Activado</h4>
+                                        <p style="color: #64748b; font-size: 13px; line-height: 1.5;">El balance del sistema está oculto por motivos de seguridad.</p>
+                                    </div>
+                                <?php endif; ?>
+                            </div>
+
+                            <!-- Columna Derecha: Formulario de Arqueo -->
+                            <div class="formulario-arqueo" style="background: #f8fafc; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0;">
+
+                        <form method="POST" id="closeRegisterForm">
                             <input type="hidden" name="action" value="close">
                             <input type="hidden" name="register_id" value="<?= $active_register['id'] ?>">
-                            <input type="hidden" name="expected_amount" value="<?= $active_register['amount'] + $today_sales ?>">
+                            <input type="hidden" id="sysExpectedCash" name="expected_amount" value="<?= $active_register['amount'] + $payment_breakdown['cash'] ?>">
+                            <input type="hidden" id="sysExpectedCard" value="<?= $payment_breakdown['card'] ?>">
+                            <input type="hidden" id="sysExpectedTransfer" value="<?= $payment_breakdown['transfer'] ?>">
 
-                            <div class="fc-form-group">
-                                <label class="fc-label">Monto Físico en Caja</label>
-                                <div style="position: relative;">
-                                    <span style="position: absolute; left: 15px; top: 13px; color: var(--fc-text-sec); font-weight: 700;">C$</span>
-                                    <input type="number" step="0.01" name="amount" class="fc-input" style="padding-left: 45px; height: 52px; font-size: 18px;" placeholder="0.00" required>
+                                <style>
+                                    /* Hide native number spinners for a cleaner look */
+                                    input[type=number].denom-input::-webkit-inner-spin-button, 
+                                    input[type=number].denom-input::-webkit-outer-spin-button,
+                                    input[type=number].electronic-input::-webkit-inner-spin-button, 
+                                    input[type=number].electronic-input::-webkit-outer-spin-button { 
+                                        -webkit-appearance: none; 
+                                        margin: 0; 
+                                    }
+                                    input[type=number].denom-input, input[type=number].electronic-input {
+                                        -moz-appearance: textfield; 
+                                    }
+                                </style>
+
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <i class='bx bx-money-withdraw' style="font-size: 16px; color: #10b981;"></i>
+                                    <h4 style="font-size: 12px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Billetes</h4>
                                 </div>
-                                <small style="color: #ef4444; font-size: 11px; display: block; margin-top: 8px;">* Ingrese el total contado en efectivo para finalizar el turno.</small>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin-bottom: 25px;">
+                                    <?php
+                                    $billetes = [1000, 500, 200, 100, 50, 20, 10];
+                                    foreach($billetes as $b): ?>
+                                    <div style="background: #fff; border-radius: 10px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 2px rgba(16,185,129,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                        <span style="font-size: 11px; font-weight: 800; color: #64748b;">C$ <?= $b ?></span>
+                                        <input type="number" min="0" class="denom-input" data-val="<?= $b ?>" style="width: 100%; text-align: center; font-size: 16px; font-weight: 700; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 6px; padding: 6px 0; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0">
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <i class='bx bx-coin-stack' style="font-size: 16px; color: #f59e0b;"></i>
+                                    <h4 style="font-size: 12px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Monedas</h4>
+                                </div>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin-bottom: 25px;">
+                                    <?php
+                                    $monedas = [5, 1, 0.50, 0.25];
+                                    foreach($monedas as $m): ?>
+                                    <div style="background: #fff; border-radius: 10px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 0 2px rgba(245,158,11,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                        <span style="font-size: 11px; font-weight: 800; color: #64748b;">C$ <?= number_format($m, 2) ?></span>
+                                        <input type="number" min="0" class="denom-input" data-val="<?= $m ?>" style="width: 100%; text-align: center; font-size: 16px; font-weight: 700; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 6px; padding: 6px 0; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0">
+                                    </div>
+                                    <?php endforeach; ?>
+                                </div>
+
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                    <i class='bx bx-credit-card-front' style="font-size: 16px; color: #3b82f6;"></i>
+                                    <h4 style="font-size: 12px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Arqueo Electrónico</h4>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                    <div style="background: #fff; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 2px rgba(59,130,246,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Lote POS (Tarjeta)</label>
+                                        <div style="position: relative;">
+                                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 800; font-size: 14px; pointer-events: none;">C$</span>
+                                            <input type="number" step="0.01" min="0" id="declCardAmount" class="electronic-input" style="width: 100%; padding: 8px 12px 8px 40px; font-size: 18px; font-weight: 800; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0.00">
+                                        </div>
+                                    </div>
+                                    <div style="background: #fff; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 2px rgba(139,92,246,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Transferencias (Banco)</label>
+                                        <div style="position: relative;">
+                                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 800; font-size: 14px; pointer-events: none;">C$</span>
+                                            <input type="number" step="0.01" min="0" id="declTransferAmount" class="electronic-input" style="width: 100%; padding: 8px 12px 8px 40px; font-size: 18px; font-weight: 800; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0.00">
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
 
-                            <button type="button" class="fc-btn fc-btn-primary fc-w100" style="height: 52px; font-weight: 700;" onclick="confirmCloseRegister()">
-                                <i class='bx bx-lock-alt'></i> Cerrar Caja y Finalizar Turno
+                            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
+                                <label style="display: block; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; text-align: center;">Total Físico Calculado</label>
+                                <div style="position: relative; max-width: 250px; margin: 0 auto;">
+                                    <span style="position: absolute; left: 15px; top: 10px; color: #94a3b8; font-weight: 900; font-size: 18px;">C$</span>
+                                    <input type="text" id="calcTotalAmountDisplay" style="width: 100%; padding: 10px 15px 10px 50px; font-size: 24px; font-weight: 900; color: #0f172a; text-align: center; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; pointer-events: none;" value="0.00" readonly>
+                                    <input type="hidden" name="amount" id="calcTotalAmount" value="0.00">
+                                </div>
+                                <div id="arqueoStatus" style="font-size: 14px; font-weight: 700; margin-top: 20px; padding: 15px; border-radius: 12px; display: none; text-align: center;"></div>
+                            </div>
+
+                            <button type="button" id="btnCerrarCaja" style="width: 100%; margin-top: 25px; background: #0f172a; color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: not-allowed; opacity: 0.3; transition: all 0.3s ease;" disabled onclick="confirmCloseRegister()">
+                                <i class='bx bx-lock-alt' style="font-size: 20px;"></i> Cerrar Caja Definitivamente
                             </button>
                         </form>
+                            </div> <!-- Cierre formulario-arqueo -->
+                        </div> <!-- Cierre del grid principal 2 columnas -->
                     </div>
                 </div>
             <?php else: ?>
@@ -309,6 +397,93 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 </div>
 
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const denomInputs = document.querySelectorAll('.denom-input');
+        const elecInputs = document.querySelectorAll('.electronic-input');
+        
+        const calcTotalHidden = document.getElementById('calcTotalAmount');
+        const calcTotalDisplay = document.getElementById('calcTotalAmountDisplay');
+        
+        const expectedCashInput = document.getElementById('sysExpectedCash');
+        const expectedCardInput = document.getElementById('sysExpectedCard');
+        const expectedTransferInput = document.getElementById('sysExpectedTransfer');
+        
+        const declCardInput = document.getElementById('declCardAmount');
+        const declTransferInput = document.getElementById('declTransferAmount');
+        
+        const btnCerrar = document.getElementById('btnCerrarCaja');
+        const statusDiv = document.getElementById('arqueoStatus');
+        
+        if (denomInputs.length > 0 && expectedCashInput) {
+            const expectedCash = parseFloat(expectedCashInput.value) || 0;
+            const expectedCard = parseFloat(expectedCardInput.value) || 0;
+            const expectedTransfer = parseFloat(expectedTransferInput.value) || 0;
+            
+            // Add listeners to all inputs
+            denomInputs.forEach(input => input.addEventListener('input', validateArqueo));
+            elecInputs.forEach(input => input.addEventListener('input', validateArqueo));
+            
+            function validateArqueo() {
+                // 1. Calculate Physical Cash
+                let totalCash = 0;
+                denomInputs.forEach(input => {
+                    const count = parseInt(input.value) || 0;
+                    const val = parseFloat(input.getAttribute('data-val'));
+                    totalCash += count * val;
+                });
+                
+                const formattedTotal = totalCash.toFixed(2);
+                if(calcTotalHidden) calcTotalHidden.value = formattedTotal;
+                if(calcTotalDisplay) calcTotalDisplay.value = formattedTotal;
+                
+                // 2. Get Electronic Declarations
+                const declaredCard = parseFloat(declCardInput.value) || 0;
+                const declaredTransfer = parseFloat(declTransferInput.value) || 0;
+                
+                // 3. Calculate Differences
+                const diffCash = totalCash - expectedCash;
+                const diffCard = declaredCard - expectedCard;
+                const diffTransfer = declaredTransfer - expectedTransfer;
+                
+                statusDiv.style.display = 'block';
+                
+                // If everything matches perfectly
+                if (Math.abs(diffCash) < 0.01 && Math.abs(diffCard) < 0.01 && Math.abs(diffTransfer) < 0.01) {
+                    statusDiv.innerHTML = '<i class="bx bx-check-circle"></i> Arqueo Cuadrado Perfecto (Efectivo y Electrónico)';
+                    statusDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                    statusDiv.style.color = '#10b981';
+                    
+                    btnCerrar.disabled = false;
+                    btnCerrar.style.opacity = '1';
+                    btnCerrar.style.cursor = 'pointer';
+                } else {
+                    // Build error messages
+                    let errors = [];
+                    if (Math.abs(diffCash) >= 0.01) {
+                        errors.push(`Efectivo: ${diffCash > 0 ? '+' : ''}${diffCash.toFixed(2)}`);
+                    }
+                    if (Math.abs(diffCard) >= 0.01) {
+                        errors.push(`Tarjeta: ${diffCard > 0 ? '+' : ''}${diffCard.toFixed(2)}`);
+                    }
+                    if (Math.abs(diffTransfer) >= 0.01) {
+                        errors.push(`Transfer: ${diffTransfer > 0 ? '+' : ''}${diffTransfer.toFixed(2)}`);
+                    }
+                    
+                    statusDiv.innerHTML = `<i class="bx bx-error"></i> Descuadre en: ${errors.join(' | ')}`;
+                    statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
+                    statusDiv.style.color = '#ef4444';
+                    
+                    btnCerrar.disabled = true;
+                    btnCerrar.style.opacity = '0.5';
+                    btnCerrar.style.cursor = 'not-allowed';
+                }
+            }
+            
+            // Initial call
+            validateArqueo();
+        }
+    });
+
     function confirmCloseRegister() {
         Swal.fire({
             title: '¿Confirmar Arqueo de Caja?',

@@ -353,10 +353,10 @@ $ui_total_with_iva = $ui_subtotal + $ui_iva_amount;
             </div>
             <div class="user-profile-header">
                 <div class="user-avatar">
-                    <?= strtoupper(substr($_SESSION['name'], 0, 1)) ?>
+                    <?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?>
                 </div>
                 <div class="user-details">
-                    <span class="user-name"><?= htmlspecialchars($_SESSION['name']) ?></span>
+                    <span class="user-name"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></span>
                     <span class="user-role"><?= htmlspecialchars($user_role_name) ?></span>
                 </div>
             </div>

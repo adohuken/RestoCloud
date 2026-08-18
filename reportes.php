@@ -206,9 +206,9 @@ if ($report_type === 'sales') {
             </div>
             <div class="fc-header-right no-print">
                 <div class="fc-user-pill">
-                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'], 0, 1)) ?></div>
+                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?></div>
                     <div class="fc-user-info">
-                        <span class="name"><?= htmlspecialchars($_SESSION['name']) ?></span>
+                        <span class="name"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></span>
                         <span class="role"><?= htmlspecialchars($_SESSION['role_name'] ?? 'Administrador') ?></span>
                     </div>
                 </div>

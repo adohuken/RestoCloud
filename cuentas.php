@@ -119,11 +119,11 @@ include __DIR__ . '/includes/header.php';
             </div>
             <div class="user-profile-header">
                 <div class="user-avatar">
-                    <?= strtoupper(substr($_SESSION['name'], 0, 1)) ?>
+                    <?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?>
                 </div>
                 <div class="user-details">
                     <span class="user-name">
-                        <?= htmlspecialchars($_SESSION['name']) ?>
+                        <?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?>
                     </span>
                     <span class="user-role">
                         <?= htmlspecialchars($user_role_name) ?>

@@ -256,7 +256,7 @@ $user_role_name = 'Cocinero';
 </div>
 
 <style>
-    /* Light Premium Theme CSS */
+    /* Classic Clean Theme CSS */
     :root {
         --kds-bg: #f4f7f6;
         --ticket-bg: #ffffff;
@@ -271,6 +271,7 @@ $user_role_name = 'Cocinero';
     body {
         background-color: var(--kds-bg);
         color: var(--text-primary);
+        font-family: 'Inter', system-ui, sans-serif;
     }
 
     .main-content {
@@ -290,6 +291,9 @@ $user_role_name = 'Cocinero';
         font-weight: 800;
         letter-spacing: -0.5px;
         color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
 
     .page-header p {
@@ -302,10 +306,9 @@ $user_role_name = 'Cocinero';
     .kds-tabs {
         display: flex;
         gap: 5px;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(0, 0, 0, 0.03);
         padding: 5px;
         border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .kds-tab {
@@ -331,38 +334,46 @@ $user_role_name = 'Cocinero';
         box-shadow: 0 4px 10px rgba(225, 29, 72, 0.3);
     }
 
-    /* Grid */
+    /* Override aggressive global centering from style.css */
+    .tab-content {
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+
+    /* Grid - Responsive Grid that fills all empty space */
     .kitchen-grid {
-        display: flex;
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
         gap: 20px;
         padding-bottom: 40px;
-        justify-content: flex-start;
-        align-items: flex-start;
+        width: 100%;
+        max-width: 100% !important;
     }
 
     /* Tickets */
     .kds-ticket {
         background: var(--ticket-bg);
-        border-radius: 16px;
+        border-radius: 12px;
         border: 1px solid var(--ticket-border);
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         display: flex;
         flex-direction: column;
+        width: 100%; /* Fill the grid column */
         border-top: 4px solid var(--ticket-border);
-        transition: all 0.3s ease;
-        animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
+        transition: all 0.2s ease;
+        text-align: left;
+        margin: 0;
     }
 
     .kds-ticket:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 20px 30px -10px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Override theme.css aggressive red glow for urgent tickets */
+    .kds-ticket.is-urgent {
+        border-color: #fca5a5 !important;
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15) !important;
+        animation: none !important; /* Stop the pulsing red glow */
     }
 
     /* Top Border Colors */
@@ -372,29 +383,49 @@ $user_role_name = 'Cocinero';
 
     /* Header inside Ticket */
     .ticket-header {
-        background: rgba(0, 0, 0, 0.02);
-        padding: 15px 20px;
+        padding: 15px;
         border-bottom: 1px solid var(--ticket-border);
         display: flex;
         justify-content: space-between;
+        align-items: flex-start;
+        background: rgba(0,0,0,0.01);
     }
 
     .ticket-meta {
         display: flex;
         flex-direction: column;
-        gap: 6px;
+        gap: 5px;
+    }
+
+    .ticket-body {
+        padding: 0 15px 15px 15px;
+        flex: 1;
+        max-height: 280px; /* Show approx 5 items before scrolling */
+        overflow-y: auto;
+    }
+
+    /* Custom Thin Scrollbar for Tickets */
+    .ticket-body::-webkit-scrollbar {
+        width: 4px;
+    }
+    .ticket-body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .ticket-body::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
     }
 
     .order-id {
         font-size: 1.4em;
-        font-weight: 900;
+        font-weight: 800;
         color: var(--text-primary);
-        letter-spacing: 0.5px;
+        letter-spacing: -0.5px;
     }
 
     .table-name {
         font-size: 1em;
-        font-weight: 600;
+        font-weight: 700;
         color: var(--text-primary);
     }
 
@@ -456,13 +487,6 @@ $user_role_name = 'Cocinero';
         background: #fee2e2;
         color: #dc2626;
         border-color: #fecaca;
-        animation: pulseUrgent 1.5s infinite;
-    }
-
-    @keyframes pulseUrgent {
-        0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-        70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
 
     .urgent-badge {
@@ -472,7 +496,6 @@ $user_role_name = 'Cocinero';
         font-weight: 800;
         padding: 4px 8px;
         border-radius: 6px;
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.5);
     }
 
     /* Items */
@@ -504,18 +527,11 @@ $user_role_name = 'Cocinero';
     }
 
     .item-qty {
-        background: #f1f5f9;
-        color: var(--text-primary);
-        border: 1px solid var(--ticket-border);
-        min-width: 32px;
-        height: 32px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         font-weight: 800;
-        font-size: 0.9em;
-        flex-shrink: 0;
+        font-size: 1.1em;
+        color: var(--fc-primary, #3b82f6);
+        min-width: 20px;
+        padding-top: 1px;
     }
 
     .item-details {
@@ -527,12 +543,7 @@ $user_role_name = 'Cocinero';
 
     .item-title {
         display: flex;
-        align-items: center;
-    }
-
-    .item-icon {
-        margin-right: 8px;
-        font-size: 1.1em;
+        align-items: flex-start;
     }
 
     .item-name {
@@ -543,20 +554,15 @@ $user_role_name = 'Cocinero';
     }
 
     .item-notes {
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.2);
-        color: #fbbf24;
-        padding: 6px 10px;
-        border-radius: 6px;
+        color: #dc2626;
         font-size: 0.85em;
         font-weight: 600;
-        margin-top: 4px;
+        margin-top: 2px;
     }
 
     /* History Specifics */
     .history-qty {
-        background: rgba(16, 185, 129, 0.15);
-        color: #34d399;
+        color: #10b981;
     }
     .history-name {
         color: var(--text-secondary);
@@ -565,14 +571,14 @@ $user_role_name = 'Cocinero';
     /* Action Buttons */
     .ticket-footer {
         padding: 15px 20px;
-        background: rgba(255, 255, 255, 0.02);
+        background: rgba(0, 0, 0, 0.015);
         border-top: 1px solid var(--ticket-border);
     }
 
     .kds-btn {
         width: 100%;
         padding: 12px;
-        border-radius: 10px;
+        border-radius: 8px;
         font-weight: 800;
         font-size: 1em;
         cursor: pointer;
@@ -589,40 +595,35 @@ $user_role_name = 'Cocinero';
     .btn-start {
         background: var(--color-prep);
         color: white;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
     }
 
     .btn-start:hover {
         background: #2563eb;
-        transform: translateY(-2px);
     }
 
     .btn-finish {
         background: var(--color-ready);
         color: white;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
     }
 
     .btn-finish:hover {
         background: #059669;
-        transform: translateY(-2px);
     }
 
     /* Empty State */
     .empty-state {
         text-align: center;
-        padding: 80px 20px;
-        background: var(--ticket-bg);
+        padding: 60px 20px;
+        background: transparent;
+        border: 2px dashed rgba(0, 0, 0, 0.1);
         border-radius: 16px;
-        border: 1px dashed rgba(255, 255, 255, 0.1);
         max-width: 600px;
         margin: 40px auto;
-        opacity: 0.8;
     }
 
     .empty-state h2 {
         margin: 0 0 10px 0;
-        color: white;
+        color: var(--text-primary);
         font-weight: 800;
     }
 
@@ -632,16 +633,17 @@ $user_role_name = 'Cocinero';
     }
 
     .alert-success {
-        background: rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.2);
-        color: #34d399;
-        padding: 15px 20px;
+        background: #ecfdf5;
+        border: 1px solid #a7f3d0;
+        color: #059669;
+        padding: 16px 24px;
         border-radius: 12px;
-        margin-bottom: 25px;
+        margin-bottom: 30px;
         font-weight: 600;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
 </style>
 

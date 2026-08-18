@@ -252,9 +252,9 @@ include __DIR__ . '/includes/header.php';
                     <div class="register-status closed"><i class='bx bx-x-circle'></i> Caja Cerrada</div>
                 <?php endif; ?>
                 <div class="fc-user-pill">
-                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'], 0, 1)) ?></div>
+                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?></div>
                     <div class="fc-user-info">
-                        <span class="name"><?= htmlspecialchars($_SESSION['name']) ?></span>
+                        <span class="name"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></span>
                         <span class="role"><?= htmlspecialchars($user_role_name) ?></span>
                     </div>
                 </div>
