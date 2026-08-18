@@ -233,7 +233,14 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         <!-- Tab: Mesas -->
         <div id="tab-mesas" class="orders-tab-content <?= $current_tab === 'mesas' ? 'active' : '' ?>">
             <div class="tables-grid">
-                <?php foreach ($tables as $table):
+                <?php if (empty($tables)): ?>
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--fc-text-sec); background: #ffffff; border-radius: 16px; border: 1px dashed var(--fc-border);">
+                        <i class='bx bx-info-circle' style="font-size: 32px; opacity: 0.5; margin-bottom: 10px;"></i>
+                        <p>No hay mesas configuradas en el sistema.</p>
+                        <a href="configuracion.php#tables" class="fc-btn fc-btn-outline" style="margin-top: 15px; display: inline-flex;">Ir a configuración para añadirlas</a>
+                    </div>
+                <?php else: ?>
+                    <?php foreach ($tables as $table):
                     $status = $table['order_status'] ?? null;
                     $cardClass = 'available';
                     $icon = 'bx-chair';
@@ -317,7 +324,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                             <?php endif; ?>
                         </div>
                     </div>
-                <?php endforeach; ?>
+                <?php endforeach; endif; ?>
             </div>
         </div> <!-- End Tab: Mesas -->
 
@@ -337,9 +344,15 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                 <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--fc-text-sec);">Para ventas rápidas y clientes sin asiento.</p>
                             </div>
                         </div>
-                        <a href="venta.php?libre=1" class="fc-btn fc-btn-primary" style="padding: 0 24px; height: 46px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
-                            <i class='bx bx-plus' style="font-size: 20px;"></i> Nueva Venta
-                        </a>
+                        <?php if ($active_register): ?>
+                            <a href="venta.php?libre=1" class="fc-btn fc-btn-primary" style="padding: 0 24px; height: 46px; border-radius: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);">
+                                <i class='bx bx-plus' style="font-size: 20px;"></i> Nueva Venta
+                            </a>
+                        <?php else: ?>
+                            <button class="fc-btn fc-btn-outline" style="padding: 0 24px; height: 46px; border-radius: 12px; font-weight: 600; opacity: 0.5; cursor: not-allowed;" disabled>
+                                <i class='bx bx-lock-alt' style="font-size: 20px;"></i> Caja Cerrada
+                            </button>
+                        <?php endif; ?>
                     </div>
                     
                     <!-- Mostrar ventas libres activas aquí -->

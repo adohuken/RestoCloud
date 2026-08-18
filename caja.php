@@ -1,4 +1,7 @@
 <?php
+if (function_exists('opcache_reset')) { opcache_reset(); }
+header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0");
+header("Cache-Control: post-check=0, pre-check=0", false);
 require_once __DIR__ . '/config/db.php';
 require_once __DIR__ . '/includes/modules_helper.php';
 session_start();
@@ -168,14 +171,14 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                         <div style="color: #0f172a; font-size: 32px; font-weight: 900; margin-top: 2px; letter-spacing: -1px;">C$<?= number_format($active_register['amount'] + $today_sales, 2) ?></div>
                                     </div>
 
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
-                                        <div style="padding: 12px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9;">
-                                            <span style="display: block; color: #64748b; font-size: 11px; font-weight: 600;">Fondo Inicial</span>
-                                            <span style="color: #334155; font-weight: 800; font-size: 15px; margin-top: 4px; display: block;">C$<?= number_format($active_register['amount'], 2) ?></span>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 25px; border-bottom: 1px dashed #e2e8f0; padding-bottom: 20px;">
+                                        <div style="padding: 10px 12px; background: #f8fafc; border-radius: 8px; border: 1px solid #f8fafc;">
+                                            <span style="display: block; color: #94a3b8; font-size: 10px; font-weight: 800;">Fondo Inicial</span>
+                                            <span style="color: #0f172a; font-weight: 800; font-size: 14px; margin-top: 4px; display: block;">C$<?= number_format($active_register['amount'], 2) ?></span>
                                         </div>
-                                        <div style="padding: 12px; background: rgba(16, 185, 129, 0.05); border-radius: 12px; border: 1px solid rgba(16, 185, 129, 0.1);">
-                                            <span style="display: block; color: #10b981; font-size: 11px; font-weight: 600;">Ventas (Hoy)</span>
-                                            <span style="color: #10b981; font-weight: 800; font-size: 15px; margin-top: 4px; display: block;">+C$<?= number_format($today_sales, 2) ?></span>
+                                        <div style="padding: 10px 12px; background: #ecfdf5; border-radius: 8px; border: 1px solid #ecfdf5;">
+                                            <span style="display: block; color: #059669 !important; font-size: 10px; font-weight: 800; text-transform: uppercase;">Ventas (Hoy)</span>
+                                            <span style="color: #059669 !important; font-weight: 800; font-size: 14px; margin-top: 4px; display: block;">+C$<?= number_format($today_sales, 2) ?></span>
                                         </div>
                                     </div>
 
@@ -190,8 +193,8 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                         foreach($m_data as $m): ?>
                                             <div style="display: flex; align-items: center; justify-content: space-between; padding: 8px 0;">
                                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                                    <div style="width: 28px; height: 28px; border-radius: 8px; background: <?= $m['bg'] ?>; color: <?= $m['color'] ?>; display: flex; align-items: center; justify-content: center; font-size: 16px;">
-                                                        <i class='bx <?= $m['icon'] ?>'></i>
+                                                    <div style="width: 28px; height: 28px; border-radius: 8px; background: <?= $m['bg'] ?>; display: flex; align-items: center; justify-content: center; font-size: 16px;">
+                                                        <i class='bx <?= $m['icon'] ?>' style="color: <?= $m['color'] ?> !important;"></i>
                                                     </div>
                                                     <span style="font-size: 13px; font-weight: 600; color: #475569;"><?= $m['label'] ?></span>
                                                 </div>
@@ -209,7 +212,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                             </div>
 
                             <!-- Columna Derecha: Formulario de Arqueo -->
-                            <div class="formulario-arqueo" style="background: #f8fafc; padding: 25px; border-radius: 16px; border: 1px solid #e2e8f0;">
+                            <div class="formulario-arqueo" style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
 
                         <form method="POST" id="closeRegisterForm">
                             <input type="hidden" name="action" value="close">
@@ -233,70 +236,70 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                     }
                                 </style>
 
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <i class='bx bx-money-withdraw' style="font-size: 16px; color: #10b981;"></i>
-                                    <h4 style="font-size: 12px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Billetes</h4>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                                    <i class='bx bx-money' style="font-size: 18px; color: #10b981 !important;"></i>
+                                    <h4 style="font-size: 11px; font-weight: 800; color: #10b981 !important; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Billetes</h4>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin-bottom: 25px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 10px; margin-bottom: 25px;">
                                     <?php
                                     $billetes = [1000, 500, 200, 100, 50, 20, 10];
                                     foreach($billetes as $b): ?>
-                                    <div style="background: #fff; border-radius: 10px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#10b981'; this.style.boxShadow='0 0 0 2px rgba(16,185,129,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                    <div style="background: #ffffff; border-radius: 8px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#10b981'" onfocusout="this.style.borderColor='#e2e8f0'">
                                         <span style="font-size: 11px; font-weight: 800; color: #64748b;">C$ <?= $b ?></span>
-                                        <input type="number" min="0" class="denom-input" data-val="<?= $b ?>" style="width: 100%; text-align: center; font-size: 16px; font-weight: 700; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 6px; padding: 6px 0; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0">
+                                        <input type="number" min="0" class="denom-input" data-val="<?= $b ?>" style="width: 100%; text-align: center; font-size: 14px; font-weight: 700; background: #f8fafc; border: none !important; border-radius: 6px; padding: 6px 0; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#f1f5f9'" onblur="this.style.background='#f8fafc'" placeholder="0">
                                     </div>
                                     <?php endforeach; ?>
                                 </div>
 
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <i class='bx bx-coin-stack' style="font-size: 16px; color: #f59e0b;"></i>
-                                    <h4 style="font-size: 12px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Monedas</h4>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                                    <i class='bx bx-coin-stack' style="font-size: 18px; color: #f59e0b !important;"></i>
+                                    <h4 style="font-size: 11px; font-weight: 800; color: #f59e0b !important; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Monedas</h4>
                                 </div>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin-bottom: 25px;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(75px, 1fr)); gap: 10px; margin-bottom: 25px;">
                                     <?php
                                     $monedas = [5, 1, 0.50, 0.25];
                                     foreach($monedas as $m): ?>
-                                    <div style="background: #fff; border-radius: 10px; padding: 10px 8px; display: flex; flex-direction: column; align-items: center; gap: 8px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#f59e0b'; this.style.boxShadow='0 0 0 2px rgba(245,158,11,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
+                                    <div style="background: #ffffff; border-radius: 8px; padding: 8px 6px; display: flex; flex-direction: column; align-items: center; gap: 6px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#f59e0b'" onfocusout="this.style.borderColor='#e2e8f0'">
                                         <span style="font-size: 11px; font-weight: 800; color: #64748b;">C$ <?= number_format($m, 2) ?></span>
-                                        <input type="number" min="0" class="denom-input" data-val="<?= $m ?>" style="width: 100%; text-align: center; font-size: 16px; font-weight: 700; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 6px; padding: 6px 0; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0">
+                                        <input type="number" min="0" class="denom-input" data-val="<?= $m ?>" style="width: 100%; text-align: center; font-size: 14px; font-weight: 700; background: #f8fafc; border: none !important; border-radius: 6px; padding: 6px 0; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#f1f5f9'" onblur="this.style.background='#f8fafc'" placeholder="0">
                                     </div>
                                     <?php endforeach; ?>
                                 </div>
 
-                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                                    <i class='bx bx-credit-card-front' style="font-size: 16px; color: #3b82f6;"></i>
-                                    <h4 style="font-size: 12px; font-weight: 700; color: #475569; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Arqueo Electrónico</h4>
+                                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
+                                    <i class='bx bx-credit-card-front' style="font-size: 18px; color: #3b82f6 !important;"></i>
+                                    <h4 style="font-size: 11px; font-weight: 800; color: #3b82f6 !important; margin: 0; text-transform: uppercase; letter-spacing: 1px;">Arqueo Electrónico</h4>
                                 </div>
                                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                    <div style="background: #fff; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#3b82f6'; this.style.boxShadow='0 0 0 2px rgba(59,130,246,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Lote POS (Tarjeta)</label>
+                                    <div style="background: #ffffff; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#3b82f6'" onfocusout="this.style.borderColor='#e2e8f0'">
+                                        <label style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">Lote POS (Tarjeta)</label>
                                         <div style="position: relative;">
-                                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 800; font-size: 14px; pointer-events: none;">C$</span>
-                                            <input type="number" step="0.01" min="0" id="declCardAmount" class="electronic-input" style="width: 100%; padding: 8px 12px 8px 40px; font-size: 18px; font-weight: 800; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0.00">
+                                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 800; font-size: 13px; pointer-events: none;">C$</span>
+                                            <input type="number" step="0.01" min="0" id="declCardAmount" class="electronic-input" style="width: 100%; padding: 8px 10px 8px 35px; font-size: 14px; font-weight: 700; background: #f8fafc; border: none !important; border-radius: 6px; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#f1f5f9'" onblur="this.style.background='#f8fafc'" placeholder="0.00">
                                         </div>
                                     </div>
-                                    <div style="background: #fff; border-radius: 12px; padding: 12px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#8b5cf6'; this.style.boxShadow='0 0 0 2px rgba(139,92,246,0.1)'" onfocusout="this.style.borderColor='#e2e8f0'; this.style.boxShadow='none'">
-                                        <label style="display: block; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Transferencias (Banco)</label>
+                                    <div style="background: #ffffff; border-radius: 8px; padding: 12px; border: 1px solid #e2e8f0; transition: all 0.2s;" onfocusin="this.style.borderColor='#8b5cf6'" onfocusout="this.style.borderColor='#e2e8f0'">
+                                        <label style="display: block; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 10px;">Transferencias (Banco)</label>
                                         <div style="position: relative;">
-                                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 800; font-size: 14px; pointer-events: none;">C$</span>
-                                            <input type="number" step="0.01" min="0" id="declTransferAmount" class="electronic-input" style="width: 100%; padding: 8px 12px 8px 40px; font-size: 18px; font-weight: 800; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 8px; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#fff'" onblur="this.style.background='#f8fafc'" placeholder="0.00">
+                                            <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 800; font-size: 13px; pointer-events: none;">C$</span>
+                                            <input type="number" step="0.01" min="0" id="declTransferAmount" class="electronic-input" style="width: 100%; padding: 8px 10px 8px 35px; font-size: 14px; font-weight: 700; background: #f8fafc; border: none !important; border-radius: 6px; outline: none; color: #0f172a; transition: background 0.2s;" onfocus="this.style.background='#f1f5f9'" onblur="this.style.background='#f8fafc'" placeholder="0.00">
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #cbd5e1;">
-                                <label style="display: block; font-size: 11px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; text-align: center;">Total Físico Calculado</label>
-                                <div style="position: relative; max-width: 250px; margin: 0 auto;">
-                                    <span style="position: absolute; left: 15px; top: 10px; color: #94a3b8; font-weight: 900; font-size: 18px;">C$</span>
-                                    <input type="text" id="calcTotalAmountDisplay" style="width: 100%; padding: 10px 15px 10px 50px; font-size: 24px; font-weight: 900; color: #0f172a; text-align: center; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; pointer-events: none;" value="0.00" readonly>
+                            <div style="margin-top: 25px; padding-top: 20px; border-top: 1px dashed #e2e8f0;">
+                                <label style="display: block; font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; text-align: center;">Total Físico Calculado</label>
+                                <div style="position: relative; max-width: 220px; margin: 0 auto;">
+                                    <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-weight: 800; font-size: 16px;">C$</span>
+                                    <input type="text" id="calcTotalAmountDisplay" style="width: 100%; padding: 10px 15px 10px 45px; font-size: 20px; font-weight: 800; color: #0f172a; text-align: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; outline: none; pointer-events: none;" value="0.00" readonly>
                                     <input type="hidden" name="amount" id="calcTotalAmount" value="0.00">
                                 </div>
-                                <div id="arqueoStatus" style="font-size: 14px; font-weight: 700; margin-top: 20px; padding: 15px; border-radius: 12px; display: none; text-align: center;"></div>
+                                <div id="arqueoStatus" style="font-size: 12px; font-weight: 700; margin-top: 15px; padding: 10px; border-radius: 6px; display: none; text-align: center;"></div>
                             </div>
 
-                            <button type="button" id="btnCerrarCaja" style="width: 100%; margin-top: 25px; background: #0f172a; color: white; border: none; padding: 18px; border-radius: 16px; font-size: 16px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 10px; cursor: not-allowed; opacity: 0.3; transition: all 0.3s ease;" disabled onclick="confirmCloseRegister()">
-                                <i class='bx bx-lock-alt' style="font-size: 20px;"></i> Cerrar Caja Definitivamente
+                            <button type="button" id="btnCerrarCaja" style="width: 100%; margin-top: 20px; background: #94a3b8; color: white !important; border: none; padding: 14px; border-radius: 8px; font-size: 14px; font-weight: 700; display: flex; justify-content: center; align-items: center; gap: 8px; cursor: not-allowed; transition: all 0.3s ease;" disabled onclick="confirmCloseRegister()">
+                                <i class='bx bx-lock-alt' style="color: white !important; font-size: 18px;"></i> Cerrar Caja Definitivamente
                             </button>
                         </form>
                             </div> <!-- Cierre formulario-arqueo -->
@@ -305,29 +308,41 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 </div>
             <?php else: ?>
                 <!-- Open Register Panel -->
-                <div class="fc-card" style="margin: 0;">
-                    <div class="fc-modal-header" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white;">
-                        <h3><i class='bx bx-store-alt'></i> Apertura de Terminal</h3>
-                        <span style="font-size: 13px; opacity: 0.9;">Inicia un nuevo ciclo de ventas</span>
+                <div style="display: flex; justify-content: center; padding: 20px 0 40px 0;">
+                    <div class="fc-card" style="margin: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px 40px; text-align: center; border: 1px solid #e2e8f0; background: #ffffff; border-radius: 24px; box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05); max-width: 480px; width: 100%;">
+                    
+                    <div style="position: relative; margin-bottom: 25px;">
+                        <div style="width: 90px; height: 90px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 2px 4px rgba(255,255,255,0.5), 0 4px 10px rgba(59,130,246,0.1);">
+                            <i class='bx bx-store-alt' style="font-size: 45px; color: var(--fc-primary);"></i>
+                        </div>
+                        <div style="position: absolute; bottom: 0; right: -5px; width: 32px; height: 32px; background: #10b981; border: 3px solid #ffffff; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px;">
+                            <i class='bx bx-check'></i>
+                        </div>
                     </div>
-                    <div class="fc-modal-body" style="padding: 40px 30px;">
-                        <form method="POST" class="fc-form">
-                            <input type="hidden" name="action" value="open">
-                            
-                            <div class="fc-form-group">
-                                <label class="fc-label">Fondo de Apertura (Caja Chica)</label>
-                                <div style="position: relative;">
-                                    <span style="position: absolute; left: 15px; top: 18px; color: var(--fc-text-sec); font-weight: 700; font-size: 20px;">C$</span>
-                                    <input type="number" step="0.01" name="amount" class="fc-input" style="padding-left: 55px; height: 64px; font-size: 24px; font-weight: 800;" placeholder="0.00" required autofocus>
-                                </div>
-                                <p style="color: var(--fc-text-sec); font-size: 12px; margin-top: 15px;">Monto total de efectivo disponible para cambio al inicio del turno.</p>
-                            </div>
 
-                            <button type="submit" class="fc-btn fc-btn-primary fc-w100" style="height: 60px; font-size: 18px; font-weight: 800; background: #10b981; border-color: #10b981;">
-                                <i class='bx bx-rocket'></i> Iniciar Turno de Trabajo
-                            </button>
-                        </form>
-                    </div>
+                    <h3 style="font-size: 26px; font-weight: 800; color: var(--fc-text-main); margin-bottom: 12px; letter-spacing: -0.5px;">Apertura de Terminal</h3>
+                    <p style="color: var(--fc-text-sec); font-size: 16px; margin-bottom: 40px; max-width: 450px; line-height: 1.5;">Ingresa el monto del <strong style="color: var(--fc-text-main);">fondo inicial (caja chica)</strong> para comenzar un nuevo ciclo de ventas de forma segura.</p>
+                    
+                    <form method="POST" style="width: 100%; max-width: 420px; text-align: left;">
+                        <input type="hidden" name="action" value="open">
+                        
+                        <div class="fc-form-group" style="margin-bottom: 30px;">
+                            <label class="fc-label" style="text-align: left; display: block; margin-bottom: 12px; font-size: 15px; font-weight: 600; color: var(--fc-text-main);">Monto Inicial a Declarar</label>
+                            <div style="position: relative;">
+                                <span style="position: absolute; left: 25px; top: 50%; transform: translateY(-50%); color: var(--fc-primary); font-weight: 800; font-size: 24px;">C$</span>
+                                <input type="number" step="0.01" name="amount" class="fc-input" style="padding-left: 75px; height: 75px; font-size: 32px; font-weight: 800; background: #f8fafc; border: 2px solid #cbd5e1; border-radius: 16px; transition: all 0.2s ease; color: var(--fc-text-main);" placeholder="0.00" onfocus="this.style.borderColor='var(--fc-primary)'; this.style.backgroundColor='#ffffff'; this.style.boxShadow='0 0 0 4px rgba(79,70,229,0.1)'" onblur="this.style.borderColor='#cbd5e1'; this.style.backgroundColor='#f8fafc'; this.style.boxShadow='none'" required autofocus>
+                            </div>
+                            <div style="margin-top: 12px; display: flex; align-items: center; gap: 8px; color: #64748b; font-size: 13px;">
+                                <i class='bx bx-info-circle'></i>
+                                <span>Asegúrate de contar físicamente el dinero.</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="fc-btn" style="width: 100%; height: 60px; font-size: 17px; font-weight: 700; background: var(--fc-primary); color: white; border: none; border-radius: 14px; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: transform 0.2s, box-shadow 0.2s; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 16px rgba(79,70,229,0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(79,70,229,0.25)'">
+                            <i class='bx bx-power-off' style="font-size: 20px;"></i> Iniciar Turno de Trabajo
+                        </button>
+                    </form>
+                </div>
                 </div>
             <?php endif; ?>
 
@@ -469,7 +484,8 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     statusDiv.style.color = '#10b981';
                     
                     btnCerrar.disabled = false;
-                    btnCerrar.style.opacity = '1';
+                    btnCerrar.style.background = '#0f172a';
+                    btnCerrar.style.setProperty('color', 'white', 'important');
                     btnCerrar.style.cursor = 'pointer';
                 } else {
                     // Build error messages
@@ -489,7 +505,8 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     statusDiv.style.color = '#ef4444';
                     
                     btnCerrar.disabled = true;
-                    btnCerrar.style.opacity = '0.5';
+                    btnCerrar.style.background = '#94a3b8';
+                    btnCerrar.style.setProperty('color', 'white', 'important');
                     btnCerrar.style.cursor = 'not-allowed';
                 }
             }
@@ -539,6 +556,13 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             color: '#f8fafc'
         });
     <?php endif; ?>
-</script>
 
+    // Clear URL parameters so alerts don't show on reload
+    if (window.history.replaceState) {
+        const url = new URL(window.location);
+        url.searchParams.delete('success');
+        url.searchParams.delete('error');
+        window.history.replaceState(null, null, url.pathname);
+    }
+</script>
 <?php include __DIR__ . '/includes/footer.php'; ?>

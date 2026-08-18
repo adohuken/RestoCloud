@@ -66,7 +66,7 @@
                 <span style="color: #e11d48 !important;">Zona de Peligro: Reinicio Total</span>
             </h4>
             <p style="color: #1e293b !important; margin-bottom: 20px; line-height: 1.6;">Esta acción restablecerá el sistema a su estado inicial, eliminando permanentemente todos los productos, facturas, configuración de mesas y usuarios (excepto tu sesión).</p>
-            <button type="button" onclick="openResetModal()" class="fc-btn fc-w100" style="height: 48px; border-radius: 14px; font-weight: 800; background: linear-gradient(135deg, #e11d48, #be123c) !important; color: #ffffff !important; border: none; box-shadow: 0 6px 20px rgba(225, 29, 72, 0.3) !important; font-size: 15px; cursor: pointer;">
+            <button type="button" onclick="openSystemResetModal()" class="fc-btn fc-w100" style="height: 48px; border-radius: 14px; font-weight: 800; background: linear-gradient(135deg, #e11d48, #be123c) !important; color: #ffffff !important; border: none; box-shadow: 0 6px 20px rgba(225, 29, 72, 0.3) !important; font-size: 15px; cursor: pointer;">
                 <i class='bx bx-error-alt' style="font-size: 20px; color: #ffffff !important;"></i> REINICIAR SISTEMA COMPLETO
             </button>
         </div>

@@ -321,12 +321,9 @@ if (isset($_POST['restore_db'])) {
 
 // Handle Reset
 if (isset($_POST['reset_system'])) {
-    // Security check: Only SuperAdmin can reset system
-    if (!isset($_SESSION['is_super_admin']) || $_SESSION['is_super_admin'] != 1) {
-        $error_msg = 'Acceso denegado. Solo el SuperAdmin puede restablecer el sistema.';
-    } else {
-        $super_admin_username = $_POST['super_admin_username'] ?? '';
-        $super_admin_password = $_POST['super_admin_password'] ?? '';
+    // Security check is done by verifying credentials below
+    $super_admin_username = $_POST['super_admin_username'] ?? '';
+    $super_admin_password = $_POST['super_admin_password'] ?? '';
 
         // Verify Super Admin credentials
         $stmt = $pdo->prepare('SELECT id, password FROM users WHERE username = ? AND is_super_admin = 1');
@@ -338,27 +335,42 @@ if (isset($_POST['reset_system'])) {
                 // Disable foreign key checks
                 $pdo->exec('SET FOREIGN_KEY_CHECKS = 0');
 
-                // Truncate transactional tables (TRUNCATE auto-commits in MySQL)
-                $pdo->exec('TRUNCATE TABLE order_details');
-                $pdo->exec('TRUNCATE TABLE payments');
-                $pdo->exec('TRUNCATE TABLE orders');
+                // Use DELETE FROM instead of TRUNCATE because InnoDB prevents TRUNCATE on tables with foreign keys even if FOREIGN_KEY_CHECKS=0
+                $tables_to_clear = [
+                    'order_details',
+                    'payments',
+                    'orders',
+                    'cash_register',
+                    'products',
+                    'categories',
+                    'tables',
+                    'deleted_invoices_log',
+                    'ingredient_categories',
+                    'ingredient_movements',
+                    'ingredients',
+                    'invoice_payments',
+                    'pedidosya_order_details',
+                    'pedidosya_orders',
+                    'product_recipes',
+                    'stock_movements'
+                ];
 
-                // Check if invoices table exists before truncating
-                $stmt = $pdo->query("SHOW TABLES LIKE 'invoices'");
-                if ($stmt->rowCount() > 0) {
-                    $pdo->exec('TRUNCATE TABLE invoices');
+                foreach ($tables_to_clear as $table) {
+                    $pdo->exec("DELETE FROM $table");
+                    $pdo->exec("ALTER TABLE $table AUTO_INCREMENT = 1");
                 }
 
-                $pdo->exec('TRUNCATE TABLE cash_register');
+                // Check if invoices table exists before clearing
+                $stmt = $pdo->query("SHOW TABLES LIKE 'invoices'");
+                if ($stmt->rowCount() > 0) {
+                    $pdo->exec("DELETE FROM invoices");
+                    $pdo->exec("ALTER TABLE invoices AUTO_INCREMENT = 1");
+                }
 
-                // Delete non-super-admin users (using DELETE instead of TRUNCATE to preserve Super Admin)
+                // Delete non-super-admin users
                 $stmt = $pdo->prepare('DELETE FROM users WHERE is_super_admin != 1 OR is_super_admin IS NULL');
                 $stmt->execute();
-
-                // Reset other tables
-                $pdo->exec('TRUNCATE TABLE products');
-                $pdo->exec('TRUNCATE TABLE categories');
-                $pdo->exec('TRUNCATE TABLE tables');
+                $pdo->exec("ALTER TABLE users AUTO_INCREMENT = 1");
 
                 // Re-enable foreign key checks
                 $pdo->exec('SET FOREIGN_KEY_CHECKS = 1');
@@ -376,7 +388,6 @@ if (isset($_POST['reset_system'])) {
         } else {
             $error_msg = 'Credenciales de Super Admin incorrectas. No se realizaron cambios.';
         }
-    }
 }
 
 // Handle IVA Update
@@ -1645,11 +1656,11 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 </div>
 
 <!-- Reset Confirmation Modal -->
-<div class="fc-modal-overlay" id="resetModal">
+<div class="fc-modal-overlay" id="systemResetModal">
     <div class="fc-modal" style="max-width: 450px;">
         <div class="fc-modal-header">
             <h3><i class='bx bx-lock-alt'></i> Confirmación requerida</h3>
-            <button class="fc-modal-close" onclick="closeResetModal()">&times;</button>
+            <button type="button" class="fc-modal-close" onclick="closeSystemResetModal()">&times;</button>
         </div>
         <div class="fc-modal-body">
             <form method="POST" class="fc-form">
@@ -1665,7 +1676,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
                     <button type="button" class="fc-btn fc-btn-outline fc-w100"
-                        onclick="closeResetModal()">Cancelar</button>
+                        onclick="closeSystemResetModal()">Cancelar</button>
                     <button type="submit" name="reset_system" class="fc-btn fc-btn-primary fc-w100">Confirmar
                         Borrado</button>
                 </div>
@@ -1679,7 +1690,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     <div class="fc-modal" style="max-width: 450px;">
         <div class="fc-modal-header">
             <h3><i class='bx bx-lock-alt'></i> Restauración Segura</h3>
-            <button class="fc-modal-close" onclick="closeRestoreModal()">&times;</button>
+            <button type="button" class="fc-modal-close" onclick="closeRestoreModal()">&times;</button>
         </div>
         <div class="fc-modal-body">
             <form method="POST" enctype="multipart/form-data" class="fc-form">
@@ -1880,10 +1891,18 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         });
     }
 
-    function openResetModal() { document.getElementById('resetModal').classList.add('show'); document.getElementById('resetModal').style.display = 'flex'; }
-    function closeResetModal() { document.getElementById('resetModal').classList.remove('show'); document.getElementById('resetModal').style.display = 'none'; }
+    function openSystemResetModal() { document.getElementById('systemResetModal').classList.add('show'); document.getElementById('systemResetModal').style.display = 'flex'; }
+    function closeSystemResetModal() { document.getElementById('systemResetModal').classList.remove('show'); document.getElementById('systemResetModal').style.display = 'none'; }
     function openRestoreModal() { document.getElementById('restoreModal').classList.add('show'); document.getElementById('restoreModal').style.display = 'flex'; }
     function closeRestoreModal() { document.getElementById('restoreModal').classList.remove('show'); document.getElementById('restoreModal').style.display = 'none'; }
+
+    // Close modals when clicking outside
+    window.addEventListener('click', function(e) {
+        if (e.target.classList.contains('fc-modal-overlay')) {
+            e.target.classList.remove('show');
+            e.target.style.display = 'none';
+        }
+    });
 
     function confirmDeleteTable(e, form, name) {
         e.preventDefault();
