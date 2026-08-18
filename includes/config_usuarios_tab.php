@@ -1,9 +1,9 @@
 <div id="users" class="tab-content">
             <div style="display: grid; grid-template-columns: 350px 1fr; gap: 30px; align-items: start;">
                 <!-- Create User Sidebar -->
-                <div class="fc-card" style="margin: 0;">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-user-plus'></i> Nuevo Colaborador</h3>
+                <div class="glass-card" style="margin: 0;">
+                    <div class="fc-modal-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h3><i class='bx bx-user-plus' style="color: var(--fc-primary); background: rgba(79, 70, 229, 0.1); padding: 8px; border-radius: 12px; margin-right: 8px;"></i> Nuevo Colaborador</h3>
                     </div>
                     <div class="fc-modal-body">
                         <form method="POST" class="fc-form">
@@ -46,19 +46,19 @@
                 </div>
 
                 <!-- Users List -->
-                <div class="fc-card" style="margin: 0;">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-list-ul'></i> Directorio de Usuarios</h3>
+                <div class="glass-card" style="margin: 0;">
+                    <div class="fc-modal-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h3><i class='bx bx-list-ul' style="color: #8b5cf6; background: rgba(139, 92, 246, 0.1); padding: 8px; border-radius: 12px; margin-right: 8px;"></i> Directorio de Usuarios</h3>
                     </div>
-                    <div class="fc-table-responsive">
+                    <div class="fc-table-responsive" style="margin-top: 20px;">
                         <table class="fc-table">
                             <thead>
-                                <tr>
-                                    <th>Colaborador</th>
+                                <tr style="background: rgba(255,255,255,0.4);">
+                                    <th style="border-top-left-radius: 12px;">Colaborador</th>
                                     <th>Acceso / Email</th>
                                     <th style="text-align: center;">Rol</th>
                                     <th style="text-align: center;">Estado</th>
-                                    <th style="text-align: right;">Acciones</th>
+                                    <th style="text-align: right; border-top-right-radius: 12px;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -283,17 +283,7 @@
         });
     }
 
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
-        document.querySelectorAll('.fc-tab').forEach(btn => btn.classList.remove('active'));
-        document.getElementById(tabName + '-tab').classList.add('active');
-        event.currentTarget.classList.add('active');
-        
-        // Update URL without reload
-        const url = new URL(window.location);
-        url.searchParams.set('tab', tabName);
-        window.history.pushState({}, '', url);
-    }
+    // function switchTab(tabName) was removed to prevent conflicts with configuracion.php
 
     function closeModal(modalId) {
         document.getElementById(modalId).classList.remove('show');

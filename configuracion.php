@@ -33,7 +33,7 @@ if (isset($_GET['ajax']) && $_GET['ajax'] === 'test_printer') {
     }
 
     require_once __DIR__ . '/includes/printer_helper.php';
-    
+
     // Create dummy items for the test
     $dummy_items = [
         ['quantity' => 1, 'product_name' => 'Hamburguesa Clásica', 'notes' => 'Sin cebolla'],
@@ -399,7 +399,7 @@ if (isset($_POST['update_general'])) {
     $company_name = $_POST['company_name'];
     $theme_effects_enabled = isset($_POST['theme_effects_enabled']) && $_POST['theme_effects_enabled'] === '1' ? '1' : '0';
     $show_company_name = isset($_POST['show_company_name']) && $_POST['show_company_name'] === '1' ? '1' : '0';
-    
+
     // Kitchen Workflow Settings
     $kitchen_workflow = $_POST['kitchen_workflow'] ?? 'pantalla';
     $kitchen_printer_ip = $_POST['kitchen_printer_ip'] ?? '192.168.1.100';
@@ -420,10 +420,10 @@ if (isset($_POST['update_general'])) {
     // Update Kitchen Settings
     $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('kitchen_workflow', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
     $stmt->execute([$kitchen_workflow, $kitchen_workflow]);
-    
+
     $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('kitchen_printer_ip', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
     $stmt->execute([$kitchen_printer_ip, $kitchen_printer_ip]);
-    
+
     $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('kitchen_printer_port', ?) ON DUPLICATE KEY UPDATE setting_value = ?");
     $stmt->execute([$kitchen_printer_port, $kitchen_printer_port]);
 
@@ -600,16 +600,17 @@ if (isset($_POST['add_bar_seat'])) {
         // Find highest existing seat number
         $stmt = $pdo->query('SELECT name FROM tables WHERE name LIKE "Barra - Asiento %"');
         $seats = $stmt->fetchAll(PDO::FETCH_COLUMN);
-        
+
         $max_num = 0;
         foreach ($seats as $seat_name) {
-            $num = (int)str_replace('Barra - Asiento ', '', $seat_name);
-            if ($num > $max_num) $max_num = $num;
+            $num = (int) str_replace('Barra - Asiento ', '', $seat_name);
+            if ($num > $max_num)
+                $max_num = $num;
         }
-        
+
         $new_seat_num = $max_num + 1;
         $table_name = "Barra - Asiento " . $new_seat_num;
-        
+
         $stmt = $pdo->prepare('INSERT INTO tables (name, status) VALUES (?, "available")');
         $stmt->execute([$table_name]);
         $success_msg = 'Asiento de barra agregado correctamente.';
@@ -673,12 +674,48 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
     <main class="main-content">
         <style>
-        .tab-content { max-width: 1150px !important; margin: 0 auto !important; align-items: flex-start !important; }
-        .role-list-item { padding: 14px 18px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease; border: 1px solid #f1f5f9; display: flex; align-items: center; gap: 14px; margin-bottom: 10px; background: #ffffff; }
-        .role-list-item:hover { background: #f8fafc; border-color: #e2e8f0; transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.03); }
-        .role-list-item.active { background: rgba(79, 70, 229, 0.04); border-color: rgba(79, 70, 229, 0.3); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08); }
-        .role-detail-view { display: none; height: 100%; }
-        .role-detail-view.active { display: flex; flex-direction: column; animation: fadeIn 0.3s ease; }
+            .tab-content {
+                max-width: 1150px !important;
+                margin: 0 auto !important;
+                align-items: flex-start !important;
+            }
+
+            .role-list-item {
+                padding: 14px 18px;
+                border-radius: 12px;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                border: 1px solid #f1f5f9;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+                margin-bottom: 10px;
+                background: #ffffff;
+            }
+
+            .role-list-item:hover {
+                background: #f8fafc;
+                border-color: #e2e8f0;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.03);
+            }
+
+            .role-list-item.active {
+                background: rgba(79, 70, 229, 0.04);
+                border-color: rgba(79, 70, 229, 0.3);
+                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.08);
+            }
+
+            .role-detail-view {
+                display: none;
+                height: 100%;
+            }
+
+            .role-detail-view.active {
+                display: flex;
+                flex-direction: column;
+                animation: fadeIn 0.3s ease;
+            }
         </style>
         <div class="fc-header" style="margin-bottom: 30px;">
             <div class="fc-header-left">
@@ -711,15 +748,9 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 </button>
             <?php endif; ?>
 
-            <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_backup') || hasModuleAccess($pdo, $_SESSION['role_id'], 'config_restore') || !modulesTableExists($pdo)): ?>
-                <button class="fc-tab" onclick="switchTab('backup')" data-tab="backup">
-                    <i class='bx bx-cloud-download'></i> <span>Backup</span>
-                </button>
-            <?php endif; ?>
-
-            <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_menu_init') || !modulesTableExists($pdo)): ?>
-                <button class="fc-tab" onclick="switchTab('menu_init')" data-tab="menu_init">
-                    <i class='bx bx-rocket'></i> <span>Menú</span>
+            <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_backup') || hasModuleAccess($pdo, $_SESSION['role_id'], 'config_restore') || hasModuleAccess($pdo, $_SESSION['role_id'], 'config_menu_init') || hasModuleAccess($pdo, $_SESSION['role_id'], 'config_reset') || !modulesTableExists($pdo)): ?>
+                <button class="fc-tab" onclick="switchTab('sistema')" data-tab="sistema">
+                    <i class='bx bx-data'></i> <span>Sistema & Datos</span>
                 </button>
             <?php endif; ?>
 
@@ -741,12 +772,6 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 </button>
             <?php endif; ?>
 
-            <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_reset') || !modulesTableExists($pdo)): ?>
-                <button class="fc-tab" onclick="switchTab('reset')" data-tab="reset">
-                    <i class='bx bx-reset'></i> <span>Restablecer</span>
-                </button>
-            <?php endif; ?>
-
             <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules') || isRoleAdmin($pdo, $_SESSION['role_id'])): ?>
                 <button class="fc-tab" onclick="switchTab('roles')" data-tab="roles">
                     <i class='bx bx-shield-quarter'></i> <span>Roles y Permisos</span>
@@ -764,38 +789,104 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         <!-- General Settings Tab -->
         <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_general') || !modulesTableExists($pdo)): ?>
             <div id="general" class="tab-content active">
-                <style>
-                    /* Premium Settings Styles */
-                    .premium-card { background: #ffffff; border-radius: 24px; padding: 30px; border: 1px solid rgba(0,0,0,0.03); box-shadow: 0 10px 40px rgba(0,0,0,0.03); transition: transform 0.3s ease, box-shadow 0.3s ease; }
-                    .premium-card:hover { transform: translateY(-2px); box-shadow: 0 15px 40px rgba(0,0,0,0.06); }
-                    .premium-card h4 { margin-top: 0; margin-bottom: 25px; font-size: 18px; font-weight: 700; color: var(--fc-text-main); display: flex; align-items: center; gap: 14px; }
-                    .p-icon { width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-                    .p-icon-1 { background: linear-gradient(135deg, rgba(79, 70, 229, 0.15), rgba(79, 70, 229, 0.05)); color: var(--fc-primary); }
-                    .p-icon-2 { background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.05)); color: #f59e0b; }
-                    .p-icon-3 { background: linear-gradient(135deg, rgba(225, 29, 72, 0.15), rgba(225, 29, 72, 0.05)); color: var(--fc-rose); }
-                    
-                    /* Custom Toggle Switch (iOS Style) */
-                    .fc-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
-                    .fc-switch input { opacity: 0; width: 0; height: 0; }
-                    .fc-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #e2e8f0; transition: .3s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
-                    .fc-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-                    .fc-switch input:checked + .fc-slider { background-color: var(--fc-primary); }
-                    .fc-switch input:checked + .fc-slider:before { transform: translateX(22px); }
 
-                    /* Custom File Upload */
-                    .custom-file-upload { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; cursor: pointer; background: var(--fc-primary-light); color: var(--fc-primary); border-radius: 12px; font-weight: 600; font-size: 14px; transition: all 0.2s; border: 1px dashed var(--fc-primary); width: 100%; text-align: center; }
-                    .custom-file-upload:hover { background: var(--fc-primary); color: white; border-style: solid; }
-                    .file-input-hidden { display: none; }
-                    
-                    /* Option Row Hover */
-                    .option-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px solid var(--fc-border); transition: all 0.2s; cursor: pointer; }
-                    .option-row:hover { border-color: var(--fc-primary); background: #ffffff; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.05); }
-                </style>
+        <!-- Premium Settings & Crisp Modern Styles -->
+        <style>
+            /* Force the gradient background on the whole view */
+            body, .dashboard-wrapper, .fc-main-content, .main-content {
+                background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #f3e8ff 100%) !important;
+                background-attachment: fixed !important;
+            }
+            
+            /* Changed from Glassmorphism to Crisp Premium White Cards to avoid "opaco" look */
+            .glass-card { 
+                background: #ffffff !important; 
+                border: 1px solid #e2e8f0 !important; 
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.02) !important; 
+                border-radius: 20px; 
+                padding: 30px; 
+                transition: transform 0.3s ease, box-shadow 0.3s ease; 
+                position: relative; 
+                overflow: hidden; 
+            }
+            
+            .glass-card:hover { 
+                transform: translateY(-4px); 
+                box-shadow: 0 20px 35px rgba(79, 70, 229, 0.1), 0 8px 15px rgba(0, 0, 0, 0.03) !important; 
+                border-color: #c7d2fe !important; 
+            }
+            
+            /* Aggressive Text Contrast Fixes (Pure Black and Very Dark Greys) */
+            .glass-card, 
+            .glass-card p, 
+            .glass-card span, 
+            .glass-card div, 
+            .glass-card label, 
+            .glass-card td, 
+            .glass-card th {
+                color: #000000 !important; /* Pure black for maximum contrast */
+                text-shadow: none !important;
+            }
+            
+            .glass-card .fc-text-sec, 
+            .glass-card p[style*="fc-text-sec"], 
+            .glass-card span[style*="fc-text-sec"], 
+            .glass-card div[style*="fc-text-sec"],
+            .glass-card small {
+                color: #1e293b !important; /* Very dark slate for secondary text */
+                font-weight: 600 !important;
+            }
+
+            .glass-card h3, .glass-card h4 { 
+                margin-top: 0; margin-bottom: 25px; font-size: 19px; font-weight: 900 !important; color: #000000 !important; display: flex; align-items: center; gap: 14px; position: relative; z-index: 1; 
+            }
+            
+            .p-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; transition: all 0.3s ease; }
+            .glass-card:hover .p-icon { transform: scale(1.1) rotate(5deg); }
+            .p-icon-1 { background: #e0e7ff; color: #4f46e5 !important; border: 1px solid #c7d2fe; }
+            .p-icon-2 { background: #fef3c7; color: #d97706 !important; border: 1px solid #fde68a; }
+            .p-icon-3 { background: #ffe4e6; color: #e11d48 !important; border: 1px solid #fecdd3; }
+            
+            /* Custom Toggle Switch (iOS Style) */
+            .fc-switch { position: relative; display: inline-block; width: 48px; height: 26px; flex-shrink: 0; }
+            .fc-switch input { opacity: 0; width: 0; height: 0; }
+            .fc-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 34px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); }
+            .fc-slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .3s; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+            .fc-switch input:checked + .fc-slider { background-color: #4f46e5; }
+            .fc-switch input:checked + .fc-slider:before { transform: translateX(22px); }
+            
+            /* Inputs and Tables overriding background for contrast */
+            .fc-input { 
+                background: #f8fafc !important; 
+                border: 2px solid #cbd5e1 !important; 
+                color: #000000 !important; 
+                font-weight: 700 !important; 
+                border-radius: 10px !important;
+            }
+            .fc-input::placeholder { color: #475569 !important; font-weight: 500 !important; }
+            .fc-input:focus { border-color: #4f46e5 !important; background: #ffffff !important; box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important; }
+            
+            /* Table inside glass card */
+            .glass-card table { color: #000000 !important; border-collapse: separate; border-spacing: 0; }
+            .glass-card th { background: #f1f5f9 !important; color: #000000 !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important; padding: 12px !important; }
+            .glass-card td { border-bottom: 1px solid #e2e8f0 !important; font-weight: 600 !important; padding: 12px !important; }
+            
+            /* Custom File Upload */
+            .custom-file-upload { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 20px; cursor: pointer; background: #e0e7ff !important; color: #4f46e5 !important; border-radius: 10px; font-weight: 800 !important; font-size: 14px; transition: all 0.2s; border: 2px dashed #818cf8 !important; width: 100%; text-align: center; }
+            .custom-file-upload:hover { background: #c7d2fe !important; border-color: #4f46e5 !important; }
+            .file-input-hidden { display: none; }
+            
+            /* Option Row Hover */
+            .option-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; background: #f8fafc; border-radius: 14px; border: 2px solid #e2e8f0; transition: all 0.2s; cursor: pointer; }
+            .option-row:hover { border-color: #4f46e5; background: #ffffff; box-shadow: 0 6px 15px rgba(79, 70, 229, 0.1); transform: translateY(-2px); }
+        </style>
 
                 <div style="margin-bottom: 35px; display: flex; justify-content: space-between; align-items: flex-end;">
                     <div>
-                        <h2 style="font-size: 26px; font-weight: 700; color: var(--fc-text-main); margin-bottom: 8px;">Configuración General</h2>
-                        <p style="color: var(--fc-text-sec); font-size: 15px;">Administra la identidad y el comportamiento principal de tu sistema RestoCloud.</p>
+                        <h2 style="font-size: 26px; font-weight: 700; color: var(--fc-text-main); margin-bottom: 8px;">
+                            Configuración General</h2>
+                        <p style="color: var(--fc-text-sec); font-size: 15px;">Administra la identidad y el comportamiento
+                            principal de tu sistema RestoCloud.</p>
                     </div>
                 </div>
 
@@ -811,58 +902,71 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 $kitchen_printer_ip = $settings['kitchen_printer_ip'] ?? '192.168.1.100';
                 $kitchen_printer_port = $settings['kitchen_printer_port'] ?? '9100';
                 ?>
-                
+
                 <form method="POST" enctype="multipart/form-data">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 30px;">
-                        
+
                         <!-- Tarjeta Identidad -->
-                        <div class="premium-card">
+                        <div class="glass-card">
                             <h4>
                                 <div class="p-icon p-icon-1"><i class='bx bx-store-alt'></i></div>
                                 Identidad del Negocio
                             </h4>
-                            
+
                             <div class="fc-form-group">
-                                <label class="fc-label" style="font-weight: 600; margin-bottom: 8px;">Nombre Comercial</label>
-                                <input type="text" name="company_name" class="fc-input" value="<?= htmlspecialchars($current_name) ?>" required style="padding: 14px; border-radius: 12px; font-size: 15px;">
+                                <label class="fc-label" style="font-weight: 600; margin-bottom: 8px;">Nombre
+                                    Comercial</label>
+                                <input type="text" name="company_name" class="fc-input"
+                                    value="<?= htmlspecialchars($current_name) ?>" required
+                                    style="padding: 14px; border-radius: 12px; font-size: 15px;">
                             </div>
 
                             <div class="fc-form-group" style="margin-bottom: 0;">
-                                <label class="fc-label" style="font-weight: 600; margin-bottom: 8px;">Logotipo Institucional</label>
+                                <label class="fc-label" style="font-weight: 600; margin-bottom: 8px;">Logotipo
+                                    Institucional</label>
                                 <?php if ($current_logo): ?>
                                     <div style="margin-bottom: 20px; text-align: center;">
-                                        <div style="padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px dashed #cbd5e1; display: inline-flex; align-items: center; justify-content: center; min-width: 120px;">
-                                            <img src="<?= htmlspecialchars($current_logo) ?>" alt="Logo" style="max-height: 70px; display: block; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                                        <div
+                                            style="padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px dashed #cbd5e1; display: inline-flex; align-items: center; justify-content: center; min-width: 120px;">
+                                            <img src="<?= htmlspecialchars($current_logo) ?>" alt="Logo"
+                                                style="max-height: 70px; display: block; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
                                         </div>
                                     </div>
                                 <?php endif; ?>
-                                
+
                                 <label class="custom-file-upload">
-                                    <i class='bx bx-cloud-upload' style="font-size: 20px;"></i> 
+                                    <i class='bx bx-cloud-upload' style="font-size: 20px;"></i>
                                     <span id="file-chosen">Subir Nuevo Logo</span>
-                                    <input type="file" name="company_logo" class="file-input-hidden" accept="image/*" onchange="document.getElementById('file-chosen').textContent = this.files[0] ? this.files[0].name : 'Subir Nuevo Logo'">
+                                    <input type="file" name="company_logo" class="file-input-hidden" accept="image/*"
+                                        onchange="document.getElementById('file-chosen').textContent = this.files[0] ? this.files[0].name : 'Subir Nuevo Logo'">
                                 </label>
-                                <small style="color: var(--fc-text-sec); margin-top: 10px; display: block; text-align: center; font-size: 13px;">Formatos aceptados: PNG, JPG, WEBP (Max: 5MB)</small>
+                                <small
+                                    style="color: var(--fc-text-sec); margin-top: 10px; display: block; text-align: center; font-size: 13px;">Formatos
+                                    aceptados: PNG, JPG, WEBP (Max: 5MB)</small>
                             </div>
                         </div>
 
                         <!-- Tarjeta Interfaz -->
-                        <div class="premium-card">
+                        <div class="glass-card">
                             <h4>
                                 <div class="p-icon p-icon-2"><i class='bx bx-palette'></i></div>
                                 Personalización Visual
                             </h4>
-                            
+
                             <div style="display: flex; flex-direction: column; gap: 15px;">
                                 <!-- Toggle 1 -->
                                 <label class="option-row">
                                     <div style="display: flex; gap: 15px; align-items: center;">
-                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: white; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--fc-text-main);">
+                                        <div
+                                            style="width: 40px; height: 40px; border-radius: 10px; background: white; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--fc-text-main);">
                                             <i class='bx bx-text'></i>
                                         </div>
                                         <div>
-                                            <span style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; display: block;">Mostrar nombre en menú</span>
-                                            <span style="font-size: 13px; color: var(--fc-text-sec);">Visualiza el texto debajo del logo.</span>
+                                            <span
+                                                style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; display: block;">Mostrar
+                                                nombre en menú</span>
+                                            <span style="font-size: 13px; color: var(--fc-text-sec);">Visualiza el texto
+                                                debajo del logo.</span>
                                         </div>
                                     </div>
                                     <div class="fc-switch">
@@ -874,71 +978,98 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                 <!-- Toggle 2 -->
                                 <label class="option-row">
                                     <div style="display: flex; gap: 15px; align-items: center;">
-                                        <div style="width: 40px; height: 40px; border-radius: 10px; background: white; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--fc-text-main);">
+                                        <div
+                                            style="width: 40px; height: 40px; border-radius: 10px; background: white; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--fc-text-main);">
                                             <i class='bx bx-party'></i>
                                         </div>
                                         <div>
-                                            <span style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; display: block;">Efectos Visuales</span>
-                                            <span style="font-size: 13px; color: var(--fc-text-sec);">Animaciones dinámicas en el sistema.</span>
+                                            <span
+                                                style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; display: block;">Efectos
+                                                Visuales</span>
+                                            <span style="font-size: 13px; color: var(--fc-text-sec);">Animaciones dinámicas
+                                                en el sistema.</span>
                                         </div>
                                     </div>
                                     <div class="fc-switch">
-                                        <input type="checkbox" name="theme_effects_enabled" value="1" <?= $effects_enabled == '1' ? 'checked' : '' ?>>
+                                        <input type="checkbox" name="theme_effects_enabled" value="1"
+                                            <?= $effects_enabled == '1' ? 'checked' : '' ?>>
                                         <span class="fc-slider"></span>
                                     </div>
                                 </label>
                             </div>
                         </div>
 
-                        <!-- Tarjeta Cocina -->
-                        <div class="premium-card" style="grid-column: 1 / -1;">
+                        <!-- Tarjeta Operativa -->
+                        <div class="glass-card" style="grid-column: 1 / -1;">
                             <h4>
                                 <div class="p-icon p-icon-3"><i class='bx bx-restaurant'></i></div>
                                 Operativa de Cocina
                             </h4>
-                            
+
                             <div class="fc-form-group" style="margin-bottom: 25px;">
-                                <label class="fc-label" style="font-weight: 600; margin-bottom: 10px;">Flujo de Trabajo Principal</label>
+                                <label class="fc-label" style="font-weight: 600; margin-bottom: 10px;">Flujo de Trabajo
+                                    Principal</label>
                                 <div style="position: relative;">
-                                    <select name="kitchen_workflow" class="fc-input" onchange="document.getElementById('printer_settings').style.display = this.value === 'comandera' ? 'block' : 'none'" style="cursor: pointer; font-weight: 600; padding: 16px; border-radius: 12px; font-size: 15px; background: #f8fafc; border: 1px solid #cbd5e1; appearance: none;">
-                                        <option value="pantalla" <?= $kitchen_workflow === 'pantalla' ? 'selected' : '' ?>>💻 Modo Pantalla Interactiva (Flujo Completo con Tablet)</option>
-                                        <option value="comandera" <?= $kitchen_workflow === 'comandera' ? 'selected' : '' ?>>🖨️ Modo Comandera Física (Impresión Directa por Red)</option>
+                                    <select name="kitchen_workflow" class="fc-input"
+                                        onchange="document.getElementById('printer_settings').style.display = this.value === 'comandera' ? 'block' : 'none'"
+                                        style="cursor: pointer; font-weight: 600; padding: 16px; border-radius: 12px; font-size: 15px; background: #f8fafc; border: 1px solid #cbd5e1; appearance: none;">
+                                        <option value="pantalla" <?= $kitchen_workflow === 'pantalla' ? 'selected' : '' ?>>💻
+                                            Modo Pantalla Interactiva (Flujo Completo con Tablet)</option>
+                                        <option value="comandera" <?= $kitchen_workflow === 'comandera' ? 'selected' : '' ?>>
+                                            🖨️ Modo Comandera Física (Impresión Directa por Red)</option>
                                     </select>
-                                    <i class='bx bx-chevron-down' style="position: absolute; right: 15px; top: 18px; font-size: 20px; color: var(--fc-text-sec); pointer-events: none;"></i>
+                                    <i class='bx bx-chevron-down'
+                                        style="position: absolute; right: 15px; top: 18px; font-size: 20px; color: var(--fc-text-sec); pointer-events: none;"></i>
                                 </div>
                             </div>
 
-                            <div id="printer_settings" style="display: <?= $kitchen_workflow === 'comandera' ? 'block' : 'none' ?>; background: #f8fafc; padding: 25px; border-radius: 16px; border: 1px solid var(--fc-border);">
-                                <h5 style="margin-top:0; margin-bottom: 20px; font-size: 15px; font-weight: 700; color: var(--fc-text-main); display: flex; align-items: center; gap: 8px;">
+                            <div id="printer_settings"
+                                style="display: <?= $kitchen_workflow === 'comandera' ? 'block' : 'none' ?>; background: #f8fafc; padding: 25px; border-radius: 16px; border: 1px solid var(--fc-border);">
+                                <h5
+                                    style="margin-top:0; margin-bottom: 20px; font-size: 15px; font-weight: 700; color: var(--fc-text-main); display: flex; align-items: center; gap: 8px;">
                                     <i class='bx bx-wifi' style="color: var(--fc-primary); font-size: 20px;"></i>
                                     Ajustes de Impresora de Red Térmica (ESC/POS)
                                 </h5>
-                                
+
                                 <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
                                     <div class="fc-form-group" style="margin-bottom: 0;">
                                         <label class="fc-label" style="font-weight: 600;">Dirección IP (Red Local)</label>
                                         <div style="position: relative;">
-                                            <i class='bx bx-network-chart' style="position: absolute; left: 16px; top: 15px; color: var(--fc-primary); font-size: 20px;"></i>
-                                            <input type="text" name="kitchen_printer_ip" class="fc-input" value="<?= htmlspecialchars($kitchen_printer_ip) ?>" placeholder="Ej: 192.168.1.100" style="padding: 14px 14px 14px 45px; border-radius: 10px; font-family: monospace; font-size: 15px;">
+                                            <i class='bx bx-network-chart'
+                                                style="position: absolute; left: 16px; top: 15px; color: var(--fc-primary); font-size: 20px;"></i>
+                                            <input type="text" name="kitchen_printer_ip" class="fc-input"
+                                                value="<?= htmlspecialchars($kitchen_printer_ip) ?>"
+                                                placeholder="Ej: 192.168.1.100"
+                                                style="padding: 14px 14px 14px 45px; border-radius: 10px; font-family: monospace; font-size: 15px;">
                                         </div>
                                     </div>
                                     <div class="fc-form-group" style="margin-bottom: 0;">
                                         <label class="fc-label" style="font-weight: 600;">Puerto Socket</label>
                                         <div style="position: relative;">
-                                            <i class='bx bx-plug' style="position: absolute; left: 16px; top: 15px; color: var(--fc-primary); font-size: 20px;"></i>
-                                            <input type="number" name="kitchen_printer_port" class="fc-input" value="<?= htmlspecialchars($kitchen_printer_port) ?>" placeholder="9100" style="padding: 14px 14px 14px 45px; border-radius: 10px; font-family: monospace; font-size: 15px;">
+                                            <i class='bx bx-plug'
+                                                style="position: absolute; left: 16px; top: 15px; color: var(--fc-primary); font-size: 20px;"></i>
+                                            <input type="number" name="kitchen_printer_port" class="fc-input"
+                                                value="<?= htmlspecialchars($kitchen_printer_port) ?>" placeholder="9100"
+                                                style="padding: 14px 14px 14px 45px; border-radius: 10px; font-family: monospace; font-size: 15px;">
                                         </div>
                                     </div>
                                 </div>
-                                
+
                                 <div style="margin-top: 20px; display: flex; gap: 15px;">
-                                    <div style="flex: 1; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
-                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #fef3c7; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;"><i class='bx bx-info-circle'></i></div>
-                                        <span style="font-size: 13px; color: #92400e; font-weight: 500; line-height: 1.4;">El servidor web (PHP) debe tener acceso de red a esta IP local.</span>
+                                    <div
+                                        style="flex: 1; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
+                                        <div
+                                            style="width: 32px; height: 32px; border-radius: 50%; background: #fef3c7; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+                                            <i class='bx bx-info-circle'></i></div>
+                                        <span
+                                            style="font-size: 13px; color: #92400e; font-weight: 500; line-height: 1.4;">El
+                                            servidor web (PHP) debe tener acceso de red a esta IP local.</span>
                                     </div>
-                                    
-                                    <button type="button" onclick="testKitchenPrinter()" class="fc-btn" style="flex-shrink: 0; background: white; color: var(--fc-primary); border: 2px solid var(--fc-primary); padding: 0 25px; border-radius: 12px; font-weight: 700; transition: all 0.2s;">
-                                        <i class='bx bx-printer' style="font-size: 20px; margin-right: 6px;"></i> Ticket de Prueba
+
+                                    <button type="button" onclick="testKitchenPrinter()" class="fc-btn"
+                                        style="flex-shrink: 0; background: white; color: var(--fc-primary); border: 2px solid var(--fc-primary); padding: 0 25px; border-radius: 12px; font-weight: 700; transition: all 0.2s;">
+                                        <i class='bx bx-printer' style="font-size: 20px; margin-right: 6px;"></i> Ticket de
+                                        Prueba
                                     </button>
                                 </div>
                             </div>
@@ -947,8 +1078,10 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     </div>
 
                     <!-- Bottom Sticky Action Bar -->
-                    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--fc-border); display: flex; justify-content: flex-end;">
-                        <button type="submit" name="update_general" class="fc-btn fc-btn-primary" style="padding: 16px 40px; font-size: 16px; font-weight: 700; border-radius: 14px; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3); transition: all 0.3s; transform: translateY(0);">
+                    <div
+                        style="margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--fc-border); display: flex; justify-content: flex-end;">
+                        <button type="submit" name="update_general" class="fc-btn fc-btn-primary"
+                            style="padding: 16px 40px; font-size: 16px; font-weight: 700; border-radius: 14px; box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3); transition: all 0.3s; transform: translateY(0);">
                             <i class='bx bx-save' style="font-size: 22px; margin-right: 8px;"></i> Guardar Configuración
                         </button>
                     </div>
@@ -956,133 +1089,84 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
         <?php endif; ?>
 
-        <!-- Backup & Restore Tab -->
-        <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_backup') || hasModuleAccess($pdo, $_SESSION['role_id'], 'config_restore') || !modulesTableExists($pdo)): ?>
-            <div id="backup" class="tab-content">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;">
-                    <!-- Backup Section -->
-                    <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_backup') || !modulesTableExists($pdo)): ?>
-                        <div class="fc-card">
-                            <div class="fc-modal-header">
-                                <h3><i class='bx bxs-data'></i> Respaldo SQL</h3>
-                            </div>
-                            <div class="fc-modal-body">
-                                <p style="color: var(--fc-text-sec); margin-bottom: 20px;">Descarga una copia completa de la
-                                    base de datos para auditorías o migraciones manuales.</p>
-                                <form method="POST">
-                                    <button type="submit" name="backup" class="fc-btn fc-btn-primary fc-w100">
-                                        <i class='bx bx-download'></i> Generar Respaldo
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-
-                    <!-- Restore Section -->
-                    <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_restore') || !modulesTableExists($pdo)): ?>
-                        <div class="fc-card">
-                            <div class="fc-modal-header">
-                                <h3><i class='bx bx-cloud-upload'></i> Restauración</h3>
-                            </div>
-                            <div class="fc-modal-body">
-                                <p style="color: var(--fc-text-sec); margin-bottom: 20px;">Sube un archivo de respaldo .sql para
-                                    restaurar el estado previo del sistema.</p>
-                                <div
-                                    style="padding: 12px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; margin-bottom: 20px;">
-                                    <span style="color: #f59e0b; font-weight: 700; font-size: 13px;"><i class='bx bx-error'></i>
-                                        PELIGRO:</span>
-                                    <p style="font-size: 12px; color: var(--fc-text-sec); margin-top: 4px;">Esta acción
-                                        sobrescribirá permanentemente todos los datos actuales.</p>
-                                </div>
-                                <button type="button" onclick="openRestoreModal()" class="fc-btn fc-btn-outline fc-w100">
-                                    <i class='bx bx-upload'></i> Subir y Restaurar
-                                </button>
-                            </div>
-                        </div>
-                    <?php endif; ?>
-                </div>
-            </div>
-        <?php endif; ?>
-
-        <!-- Menu Initialization Tab -->
-        <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_menu_init') || !modulesTableExists($pdo)): ?>
-            <div id="menu_init" class="tab-content">
-                <div class="fc-card" style="max-width: 800px;">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-rocket'></i> Configuración Inicial</h3>
-                    </div>
-                    <div class="fc-modal-body" style="text-align: center;">
-                        <div style="font-size: 50px; color: var(--fc-primary); margin-bottom: 20px;">
-                            <i class='bx bx-archive-in'></i>
-                        </div>
-                        <p style="color: var(--fc-text-main); font-weight: 600; margin-bottom: 10px;">Carga Masiva de Menú
-                        </p>
-                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Utiliza nuestra herramienta de
-                            inicialización para cargar rápidamente categorías y productos desde una interfaz simplificada.
-                        </p>
-
-                        <a href="menu_init.php" class="fc-btn fc-btn-primary fc-w100"
-                            style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px;">
-                            <i class='bx bx-edit-alt'></i> Abrir Asistente de Menú
-                        </a>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
+        <!-- Sistema & Datos Tab Included Here -->
+        <?php include 'includes/config_sistema_tab.php'; ?>
 
         <!-- Table Management Tab -->
         <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_tables') || !modulesTableExists($pdo)): ?>
             <div id="tables" class="tab-content">
-                <div class="fc-card" style="max-width: 800px;">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-chair'></i> Gestión de Salón</h3>
+                <div class="glass-card" style="max-width: 900px; margin: 0 auto;">
+                    <div class="fc-modal-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h3><i class='bx bx-chair'
+                                style="color: var(--fc-primary); background: rgba(79, 70, 229, 0.1); padding: 8px; border-radius: 12px; margin-right: 8px;"></i>
+                            Gestión de Salón</h3>
                     </div>
                     <div class="fc-modal-body">
                         <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Administra las mesas disponibles para el
-                            servicio en salón.</p>
+                            servicio en el salón principal y terraza.</p>
 
                         <!-- Add New Table Form -->
                         <form method="POST" class="fc-form"
-                            style="background: #f8fafc; padding: 25px; border-radius: 20px; border: 1px dashed var(--fc-border); margin-bottom: 30px;">
-                            <label class="fc-label">Nueva Mesa / Área</label>
+                            style="background: rgba(255,255,255,0.5); padding: 25px; border-radius: 20px; border: 1px dashed rgba(79, 70, 229, 0.3); margin-bottom: 30px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02);"
+                            onmouseover="this.style.background='rgba(255,255,255,0.8)'; this.style.borderColor='rgba(79, 70, 229, 0.6)';"
+                            onmouseout="this.style.background='rgba(255,255,255,0.5)'; this.style.borderColor='rgba(79, 70, 229, 0.3)';">
+                            <label class="fc-label" style="font-weight: 600; color: var(--fc-primary);">Añadir Nueva Mesa /
+                                Área</label>
                             <div style="display: flex; gap: 12px;">
                                 <input type="text" name="table_name" class="fc-input"
-                                    placeholder="Ej: Mesa 15, Terraza 2, VIP" required style="flex: 1;">
+                                    placeholder="Ej: Mesa 15, Terraza 2, VIP" required
+                                    style="flex: 1; border-radius: 14px; background: rgba(255,255,255,0.7);">
                                 <button type="submit" name="add_table" class="fc-btn fc-btn-primary"
-                                    style="padding: 0 25px; height: 48px;">
-                                    <i class='bx bx-plus'></i> <span>Crear</span>
+                                    style="padding: 0 30px; height: 50px; border-radius: 14px; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);">
+                                    <i class='bx bx-plus' style="font-size: 20px;"></i> <span>Crear Mesa</span>
                                 </button>
                             </div>
                         </form>
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--fc-border);">
-                            <h4 style="margin: 0; color: var(--fc-text-main); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--fc-border);">
+                            <h4
+                                style="margin: 0; color: var(--fc-text-main); font-size: 16px; display: flex; align-items: center; gap: 8px;">
                                 <i class='bx bx-restaurant' style="color: var(--fc-primary);"></i> Salón
-                                <span class="fc-badge fc-badge-outline" style="margin-left: 10px;"><?= count($salon_tables) ?> Mesas</span>
+                                <span class="fc-badge fc-badge-outline"
+                                    style="margin-left: 10px;"><?= count($salon_tables) ?> Mesas</span>
                             </h4>
                         </div>
 
                         <?php if (empty($salon_tables)): ?>
-                            <div style="text-align: center; padding: 40px 20px; color: var(--fc-text-sec); background: #f8fafc; border-radius: 20px; border: 1px dashed var(--fc-border);">
-                                <i class='bx bx-chair' style="font-size: 40px; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+                            <div
+                                style="text-align: center; padding: 40px 20px; color: var(--fc-text-sec); background: #f8fafc; border-radius: 20px; border: 1px dashed var(--fc-border);">
+                                <i class='bx bx-chair'
+                                    style="font-size: 40px; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
                                 <p style="font-size: 13px;">No hay mesas de salón.</p>
                             </div>
                         <?php else: ?>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
                                 <?php foreach ($salon_tables as $table): ?>
-                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.05)';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='none'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
+                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"
+                                        onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.05)';"
+                                        onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='none'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
                                         <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-                                            <div style="width: 42px; height: 42px; background: rgba(225, 29, 72, 0.08); color: var(--fc-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+                                            <div
+                                                style="width: 42px; height: 42px; background: rgba(225, 29, 72, 0.08); color: var(--fc-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
                                                 <i class='bx bx-chair'></i>
                                             </div>
-                                            <span style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <span
+                                                style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 <?= htmlspecialchars($table['name']) ?>
                                             </span>
                                         </div>
-                                        <form method="POST" onsubmit="confirmDeleteTable(event, this, '<?= htmlspecialchars($table['name']) ?>')" style="margin: 0; flex-shrink: 0;">
+                                        <form method="POST"
+                                            onsubmit="confirmDeleteTable(event, this, '<?= htmlspecialchars($table['name']) ?>')"
+                                            style="margin: 0; flex-shrink: 0;">
                                             <input type="hidden" name="table_id" value="<?= $table['id'] ?>">
                                             <input type="hidden" name="delete_table" value="1">
-                                            <button type="submit" style="background: #fff1f2; border: 1px solid #ffe4e6; width: 34px; height: 34px; border-radius: 10px; color: #f43f5e; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#ffe4e6'; this.style.color='#e11d48';" onmouseout="this.style.background='#fff1f2'; this.style.color='#f43f5e';" title="Eliminar">
+                                            <button type="submit"
+                                                style="background: #fff1f2; border: 1px solid #ffe4e6; width: 34px; height: 34px; border-radius: 10px; color: #f43f5e; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                                                onmouseover="this.style.background='#ffe4e6'; this.style.color='#e11d48';"
+                                                onmouseout="this.style.background='#fff1f2'; this.style.color='#f43f5e';"
+                                                title="Eliminar">
                                                 <i class='bx bx-trash' style="font-size: 16px;"></i>
                                             </button>
                                         </form>
@@ -1098,46 +1182,66 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         <!-- Barra Management Tab -->
         <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_barra') || !modulesTableExists($pdo)): ?>
             <div id="barra" class="tab-content">
-                <div class="fc-card" style="max-width: 800px;">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-coffee-togo'></i> Gestión de Barra</h3>
+                <div class="glass-card" style="max-width: 900px; margin: 0 auto;">
+                    <div class="fc-modal-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h3><i class='bx bx-coffee-togo'
+                                style="color: #f59e0b; background: rgba(245, 158, 11, 0.1); padding: 8px; border-radius: 12px; margin-right: 8px;"></i>
+                            Gestión de Barra</h3>
                     </div>
                     <div class="fc-modal-body">
-                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Administra los asientos disponibles en la barra / mostrador.</p>
+                        <p style="color: var(--fc-text-sec); margin-bottom: 25px;">Administra los asientos disponibles en la
+                            barra o mostrador para atención rápida.</p>
 
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--fc-border);">
-                            <h4 style="margin: 0; color: var(--fc-text-main); font-size: 16px; display: flex; align-items: center; gap: 8px;">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--fc-border);">
+                            <h4
+                                style="margin: 0; color: var(--fc-text-main); font-size: 16px; display: flex; align-items: center; gap: 8px;">
                                 <i class='bx bx-coffee-togo' style="color: var(--fc-primary);"></i> Barra
-                                <span class="fc-badge fc-badge-outline" style="margin-left: 10px;"><?= count($barra_seats) ?> Asientos</span>
+                                <span class="fc-badge fc-badge-outline"
+                                    style="margin-left: 10px;"><?= count($barra_seats) ?> Asientos</span>
                             </h4>
                             <form method="POST" style="margin: 0;">
-                                <button type="submit" name="add_bar_seat" class="fc-btn fc-btn-primary" style="padding: 6px 12px; font-size: 12px; height: auto;">
-                                    <i class='bx bx-plus'></i> Añadir Asiento
+                                <button type="submit" name="add_bar_seat" class="fc-btn fc-btn-primary"
+                                    style="padding: 10px 20px; font-size: 13px; font-weight: 600; border-radius: 12px; height: auto; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.2);">
+                                    <i class='bx bx-plus' style="font-size: 16px;"></i> Añadir Asiento
                                 </button>
                             </form>
                         </div>
 
                         <?php if (empty($barra_seats)): ?>
-                            <div style="text-align: center; padding: 40px 20px; color: var(--fc-text-sec); background: #f8fafc; border-radius: 20px; border: 1px dashed var(--fc-border);">
-                                <i class='bx bx-user' style="font-size: 40px; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
+                            <div
+                                style="text-align: center; padding: 40px 20px; color: var(--fc-text-sec); background: #f8fafc; border-radius: 20px; border: 1px dashed var(--fc-border);">
+                                <i class='bx bx-user'
+                                    style="font-size: 40px; opacity: 0.3; display: block; margin-bottom: 10px;"></i>
                                 <p style="font-size: 13px;">No hay asientos en barra.</p>
                             </div>
                         <?php else: ?>
-                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
+                            <div
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;">
                                 <?php foreach ($barra_seats as $seat): ?>
-                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);" onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.05)';" onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='none'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
+                                    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px; display: flex; align-items: center; justify-content: space-between; transition: all 0.2s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.02);"
+                                        onmouseover="this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 12px rgba(0,0,0,0.05)';"
+                                        onmouseout="this.style.borderColor='#e2e8f0'; this.style.transform='none'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)';">
                                         <div style="display: flex; align-items: center; gap: 12px; overflow: hidden;">
-                                            <div style="width: 42px; height: 42px; background: rgba(79, 70, 229, 0.08); color: #4f46e5; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
+                                            <div
+                                                style="width: 42px; height: 42px; background: rgba(79, 70, 229, 0.08); color: #4f46e5; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0;">
                                                 <i class='bx bx-user'></i>
                                             </div>
-                                            <span style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                            <span
+                                                style="font-weight: 700; color: var(--fc-text-main); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                                 <?= htmlspecialchars(str_replace('Barra - ', '', $seat['name'])) ?>
                                             </span>
                                         </div>
-                                        <form method="POST" onsubmit="confirmDeleteTable(event, this, '<?= htmlspecialchars($seat['name']) ?>')" style="margin: 0; flex-shrink: 0;">
+                                        <form method="POST"
+                                            onsubmit="confirmDeleteTable(event, this, '<?= htmlspecialchars($seat['name']) ?>')"
+                                            style="margin: 0; flex-shrink: 0;">
                                             <input type="hidden" name="table_id" value="<?= $seat['id'] ?>">
                                             <input type="hidden" name="delete_table" value="1">
-                                            <button type="submit" style="background: #fff1f2; border: 1px solid #ffe4e6; width: 34px; height: 34px; border-radius: 10px; color: #f43f5e; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#ffe4e6'; this.style.color='#e11d48';" onmouseout="this.style.background='#fff1f2'; this.style.color='#f43f5e';" title="Eliminar">
+                                            <button type="submit"
+                                                style="background: #fff1f2; border: 1px solid #ffe4e6; width: 34px; height: 34px; border-radius: 10px; color: #f43f5e; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;"
+                                                onmouseover="this.style.background='#ffe4e6'; this.style.color='#e11d48';"
+                                                onmouseout="this.style.background='#fff1f2'; this.style.color='#f43f5e';"
+                                                title="Eliminar">
                                                 <i class='bx bx-trash' style="font-size: 16px;"></i>
                                             </button>
                                         </form>
@@ -1153,9 +1257,11 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         <!-- VAT Configuration Tab -->
         <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_invoicing') || !modulesTableExists($pdo)): ?>
             <div id="invoicing" class="tab-content">
-                <div class="fc-card" style="max-width: 800px;">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-receipt'></i> Parámetros de Facturación</h3>
+                <div class="glass-card" style="max-width: 900px; margin: 0 auto;">
+                    <div class="fc-modal-header" style="border-bottom: none; padding-bottom: 0;">
+                        <h3><i class='bx bx-receipt'
+                                style="color: #10b981; background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 12px; margin-right: 8px;"></i>
+                            Parámetros de Facturación</h3>
                     </div>
                     <div class="fc-modal-body">
                         <?php
@@ -1175,14 +1281,19 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                             </div>
 
                             <div class="fc-form-group"
-                                style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid var(--fc-border); margin: 20px 0;">
+                                style="background: rgba(255,255,255,0.5); padding: 20px; border-radius: 16px; border: 1px solid rgba(16, 185, 129, 0.2); margin: 25px 0; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.02);"
+                                onmouseover="this.style.background='rgba(255,255,255,0.8)'; this.style.borderColor='rgba(16, 185, 129, 0.5)';"
+                                onmouseout="this.style.background='rgba(255,255,255,0.5)'; this.style.borderColor='rgba(16, 185, 129, 0.2)';">
                                 <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
-                                    <input type="checkbox" name="enable_tips" value="1" <?= $enable_tips == '1' ? 'checked' : '' ?>
-                                        style="width: 20px; height: 20px; accent-color: var(--fc-primary); margin-top: 2px;">
+                                    <input type="checkbox" name="enable_tips" value="1" <?= $enable_tips == '1' ? 'checked' : '' ?> style="width: 22px; height: 22px; accent-color: #10b981; margin-top: 2px;">
                                     <div>
-                                        <span style="font-weight: 700; color: var(--fc-text-main); display: block;"><i
-                                                class='bx bx-coin-stack'></i> Sugerir Propina (10%)</span>
-                                        <p style="font-size: 13px; color: var(--fc-text-sec); margin-top: 4px;">Habilita el
+                                        <span
+                                            style="font-weight: 700; color: var(--fc-text-main); display: block; font-size: 15px;"><i
+                                                class='bx bx-coin-stack' style="color: #10b981;"></i> Sugerir Propina
+                                            (10%)</span>
+                                        <p
+                                            style="font-size: 13px; color: var(--fc-text-sec); margin-top: 6px; line-height: 1.5;">
+                                            Habilita el
                                             cálculo sugerido de propina en el cierre de cuenta.</p>
                                     </div>
                                 </label>
@@ -1208,51 +1319,23 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             </div>
         <?php endif; ?>
 
-        <!-- Reset Tab -->
-        <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_reset') || !modulesTableExists($pdo)): ?>
-            <div id="reset" class="tab-content">
-                <div class="fc-card" style="max-width: 800px; border: 1px solid rgba(225, 29, 72, 0.3);">
-                    <div class="fc-modal-header" style="background: rgba(225, 29, 72, 0.1);">
-                        <h3 style="color: var(--fc-primary);"><i class='bx bx-error'></i> Zona de Peligro</h3>
-                    </div>
-                    <div class="fc-modal-body">
-                        <div
-                            style="background: rgba(225, 29, 72, 0.05); padding: 20px; border-radius: 16px; border: 1px solid rgba(225, 29, 72, 0.1); margin-bottom: 25px;">
-                            <p
-                                style="color: var(--fc-text-main); font-weight: 700; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                <i class='bx bx-info-circle'></i> ACCIÓN IRREVERSIBLE
-                            </p>
-                            <p style="color: var(--fc-text-sec); font-size: 14px; margin-bottom: 15px;">Esta acción
-                                restablecerá el sistema a su estado inicial, eliminando permanentemente:</p>
-                            <ul
-                                style="color: var(--fc-text-sec); font-size: 13px; padding-left: 20px; gap: 8px; display: flex; flex-direction: column;">
-                                <li><i class='bx bx-chevron-right'></i> Todos los productos, categorías e insumos.</li>
-                                <li><i class='bx bx-chevron-right'></i> Historial completo de ventas, facturas y pagos.</li>
-                                <li><i class='bx bx-chevron-right'></i> Configuración de mesas y pedidos activos.</li>
-                                <li><i class='bx bx-chevron-right'></i> Todos los usuarios (excepto la sesión actual del
-                                    sistema).</li>
-                            </ul>
-                        </div>
-
-                        <button onclick="openResetModal()" class="fc-btn fc-btn-primary fc-w100"
-                            style="height: 54px; letter-spacing: 1px;">
-                            <i class='bx bx-trash'></i> REINICIAR SISTEMA COMPLETO
-                        </button>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
+        <!-- Removed Reset Tab (now in sistema) -->
 
         <!-- Roles & Modules Tab -->
         <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules') || isRoleAdmin($pdo, $_SESSION['role_id'])): ?>
             <div id="roles" class="tab-content">
-                <div style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 15px;">
+                <div
+                    style="margin-bottom: 30px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 15px;">
                     <div>
-                        <h3 style="margin: 0; font-size: 20px; color: var(--fc-text-main); display: flex; align-items: center; gap: 8px;">
-                            <i class='bx bx-shield-quarter' style="color: var(--fc-primary);"></i> Gestión de Roles y Permisos
+                        <h3
+                            style="margin: 0; font-size: 26px; font-weight: 700; color: var(--fc-text-main); display: flex; align-items: center; gap: 12px;">
+                            <i class='bx bx-shield-quarter'
+                                style="color: var(--fc-primary); background: rgba(79, 70, 229, 0.1); padding: 10px; border-radius: 14px;"></i>
+                            Gestión de Roles y Permisos
                         </h3>
-                        <p style="color: var(--fc-text-sec); font-size: 13px; margin-top: 6px; margin-bottom: 0;">
-                            Administra los roles del sistema y asigna de manera modular a qué elementos puede acceder cada uno.
+                        <p style="color: var(--fc-text-sec); font-size: 15px; margin-top: 10px; margin-bottom: 0;">
+                            Administra los roles del sistema y asigna de manera modular a qué elementos puede acceder cada
+                            uno.
                         </p>
                     </div>
                     <div>
@@ -1276,20 +1359,29 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     </div>
                 <?php else: ?>
                     <!-- Selector de Roles Superior -->
-                    <div class="fc-card" style="margin-bottom: 25px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+                    <div class="glass-card"
+                        style="margin-bottom: 25px; padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
                         <div style="display: flex; align-items: center; gap: 18px; flex: 1; min-width: 300px;">
-                            <div style="width: 54px; height: 54px; border-radius: 14px; background: rgba(79,70,229,0.08); display: flex; align-items: center; justify-content: center; color: var(--fc-primary); font-size: 1.8rem;">
+                            <div
+                                style="width: 54px; height: 54px; border-radius: 14px; background: rgba(79,70,229,0.08); display: flex; align-items: center; justify-content: center; color: var(--fc-primary); font-size: 1.8rem;">
                                 <i class='bx bx-user-circle'></i>
                             </div>
                             <div style="flex: 1;">
-                                <label style="display: block; font-size: 13px; font-weight: 800; color: var(--fc-text-sec); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Seleccionar Rol a Configurar</label>
+                                <label
+                                    style="display: block; font-size: 13px; font-weight: 800; color: var(--fc-text-sec); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Seleccionar
+                                    Rol a Configurar</label>
                                 <div style="position: relative; max-width: 400px;">
-                                    <select id="roleSelectMenu" onchange="switchRoleView(this.value)" style="width: 100%; padding: 14px 20px; font-size: 16px; font-weight: 700; color: var(--fc-text-main); border: 2px solid #e2e8f0; border-radius: 12px; appearance: none; background: #f8fafc; cursor: pointer; outline: none; transition: border-color 0.2s;" onfocus="this.style.borderColor='var(--fc-primary)'" onblur="this.style.borderColor='#e2e8f0'">
+                                    <select id="roleSelectMenu" onchange="switchRoleView(this.value)"
+                                        style="width: 100%; padding: 14px 20px; font-size: 16px; font-weight: 700; color: var(--fc-text-main); border: 2px solid #e2e8f0; border-radius: 12px; appearance: none; background: #f8fafc; cursor: pointer; outline: none; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='var(--fc-primary)'"
+                                        onblur="this.style.borderColor='#e2e8f0'">
                                         <?php foreach ($all_roles as $role): ?>
-                                            <option value="<?= $role['id'] ?>"><?= htmlspecialchars($role['name']) ?> <?= $role['is_admin'] ? '(Administrador Maestro)' : '' ?></option>
+                                            <option value="<?= $role['id'] ?>"><?= htmlspecialchars($role['name']) ?>
+                                                <?= $role['is_admin'] ? '(Administrador Maestro)' : '' ?></option>
                                         <?php endforeach; ?>
                                     </select>
-                                    <i class='bx bx-chevron-down' style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 24px; color: #94a3b8; pointer-events: none;"></i>
+                                    <i class='bx bx-chevron-down'
+                                        style="position: absolute; right: 18px; top: 50%; transform: translateY(-50%); font-size: 24px; color: #94a3b8; pointer-events: none;"></i>
                                 </div>
                             </div>
                         </div>
@@ -1298,57 +1390,79 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <!-- Vistas de los Roles -->
                     <div id="rolesViewsContainer">
                         <?php foreach ($all_roles as $index => $role): ?>
-                            <?php 
-                            $isAdminRole = $role['is_admin']; 
+                            <?php
+                            $isAdminRole = $role['is_admin'];
                             $isActive = $index === 0;
                             ?>
-                            <div id="role_view_<?= $role['id'] ?>" class="role-view-panel" style="display: <?= $isActive ? 'block' : 'none' ?>; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); overflow: hidden; animation: fadeIn 0.3s ease-in-out;">
+                            <div id="role_view_<?= $role['id'] ?>" class="role-view-panel glass-card"
+                                style="display: <?= $isActive ? 'block' : 'none' ?>; padding: 0; animation: fadeIn 0.3s ease-in-out;">
                                 <!-- Cabecera del Panel del Rol -->
-                                <div style="padding: 24px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: <?= $isAdminRole ? 'linear-gradient(to right, rgba(139,92,246,0.05), #ffffff)' : '#f8fafc' ?>; flex-wrap: wrap; gap: 15px;">
+                                <div
+                                    style="padding: 24px 30px; border-bottom: 1px solid rgba(255,255,255,0.4); display: flex; justify-content: space-between; align-items: center; background: <?= $isAdminRole ? 'linear-gradient(to right, rgba(139,92,246,0.1), rgba(255,255,255,0.5))' : 'rgba(255,255,255,0.5)' ?>; flex-wrap: wrap; gap: 15px;">
                                     <div>
-                                        <h4 style="margin: 0; font-size: 20px; color: var(--fc-text-main); display: flex; align-items: center; gap: 10px; font-weight: 800;">
-                                            <i class='bx <?= $isAdminRole ? 'bx-crown' : 'bx-user-pin' ?>' style="color: <?= $isAdminRole ? '#8b5cf6' : 'var(--fc-primary)' ?>; font-size: 1.4rem;"></i>
+                                        <h4
+                                            style="margin: 0; font-size: 20px; color: var(--fc-text-main); display: flex; align-items: center; gap: 10px; font-weight: 800;">
+                                            <i class='bx <?= $isAdminRole ? 'bx-crown' : 'bx-user-pin' ?>'
+                                                style="color: <?= $isAdminRole ? '#8b5cf6' : 'var(--fc-primary)' ?>; font-size: 1.4rem;"></i>
                                             <?= htmlspecialchars($role['name']) ?>
                                             <?php if (!$isAdminRole): ?>
-                                                <button type="button" onclick="openEditRoleModal(<?= $role['id'] ?>, '<?= htmlspecialchars(addslashes($role['name'])) ?>')" style="background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px; display: flex; align-items: center; transition: color 0.2s;" title="Editar nombre del rol" onmouseover="this.style.color='var(--fc-primary)'" onmouseout="this.style.color='#94a3b8'">
+                                                <button type="button"
+                                                    onclick="openEditRoleModal(<?= $role['id'] ?>, '<?= htmlspecialchars(addslashes($role['name'])) ?>')"
+                                                    style="background: none; border: none; cursor: pointer; color: #94a3b8; padding: 4px; display: flex; align-items: center; transition: color 0.2s;"
+                                                    title="Editar nombre del rol" onmouseover="this.style.color='var(--fc-primary)'"
+                                                    onmouseout="this.style.color='#94a3b8'">
                                                     <i class='bx bx-edit' style="font-size: 20px;"></i>
                                                 </button>
                                             <?php endif; ?>
                                         </h4>
-                                        <span style="font-size: 13.5px; color: var(--fc-text-sec); margin-top: 6px; display: block;">
-                                            <i class='bx bx-hash'></i> ID Rol: <?= $role['id'] ?> <span style="opacity: 0.5; margin: 0 6px;">•</span> 
-                                            <i class='bx bx-user'></i> <?= $isAdminRole ? 'Acceso Maestro Inmune' : $role['user_count'] . ' usuario(s) asignados' ?>
+                                        <span
+                                            style="font-size: 13.5px; color: var(--fc-text-sec); margin-top: 6px; display: block;">
+                                            <i class='bx bx-hash'></i> ID Rol: <?= $role['id'] ?> <span
+                                                style="opacity: 0.5; margin: 0 6px;">•</span>
+                                            <i class='bx bx-user'></i>
+                                            <?= $isAdminRole ? 'Acceso Maestro Inmune' : $role['user_count'] . ' usuario(s) asignados' ?>
                                         </span>
                                     </div>
                                     <?php if (!$isAdminRole && $role['user_count'] == 0): ?>
-                                        <form method="POST" style="margin: 0;" onsubmit="confirmDeleteRole(event, this, '<?= htmlspecialchars(addslashes($role['name'])) ?>')">
+                                        <form method="POST" style="margin: 0;"
+                                            onsubmit="confirmDeleteRole(event, this, '<?= htmlspecialchars(addslashes($role['name'])) ?>')">
                                             <input type="hidden" name="role_id" value="<?= $role['id'] ?>">
-                                            <button type="submit" name="delete_role" class="fc-btn fc-btn-outline" style="border-color: #ef4444; color: #ef4444; display: flex; align-items: center; gap: 6px;">
+                                            <button type="submit" name="delete_role" class="fc-btn fc-btn-outline"
+                                                style="border-color: #ef4444; color: #ef4444; display: flex; align-items: center; gap: 6px;">
                                                 <i class='bx bx-trash' style="font-size: 16px;"></i> Eliminar Rol
                                             </button>
                                         </form>
                                     <?php endif; ?>
                                 </div>
-                                
+
                                 <!-- Contenido de Permisos -->
                                 <div style="padding: 30px;">
                                     <?php if ($isAdminRole): ?>
-                                        <div style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 25px; color: var(--fc-text-main); font-size: 14px; line-height: 1.6; display: flex; align-items: flex-start; gap: 15px;">
-                                            <i class='bx bx-info-circle' style="color: #8b5cf6; font-size: 1.5rem; margin-top: 2px;"></i>
+                                        <div
+                                            style="background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 25px; color: var(--fc-text-main); font-size: 14px; line-height: 1.6; display: flex; align-items: flex-start; gap: 15px;">
+                                            <i class='bx bx-info-circle'
+                                                style="color: #8b5cf6; font-size: 1.5rem; margin-top: 2px;"></i>
                                             <div>
-                                                <strong style="color: #7c3aed; display: block; margin-bottom: 4px; font-size: 15px;">Acceso Maestro</strong> 
-                                                El rol Administrador cuenta con permisos completos e incondicionales sobre toda la barra lateral y operaciones del sistema. No se puede restringir.
+                                                <strong
+                                                    style="color: #7c3aed; display: block; margin-bottom: 4px; font-size: 15px;">Acceso
+                                                    Maestro</strong>
+                                                El rol Administrador cuenta con permisos completos e incondicionales sobre toda la barra
+                                                lateral y operaciones del sistema. No se puede restringir.
                                             </div>
                                         </div>
 
-                                        <h5 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 15px;">
+                                        <h5
+                                            style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 15px;">
                                             <i class='bx bx-layout'></i> Módulos de la Barra Lateral Habilitados
                                         </h5>
-                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 25px;">
+                                        <div
+                                            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-bottom: 25px;">
                                             <?php foreach ($sidebar_mods as $mod): ?>
-                                                <div style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
+                                                <div
+                                                    style="display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0;">
                                                     <i class='bx bx-check-circle' style="color: #10b981; font-size: 1.3rem;"></i>
-                                                    <span style="font-size: 14px; font-weight: 600; color: var(--fc-text-main);"><?= htmlspecialchars($mod['name']) ?></span>
+                                                    <span
+                                                        style="font-size: 14px; font-weight: 600; color: var(--fc-text-main);"><?= htmlspecialchars($mod['name']) ?></span>
                                                 </div>
                                             <?php endforeach; ?>
                                         </div>
@@ -1357,35 +1471,50 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                             <input type="hidden" name="role_id" value="<?= $role['id'] ?>">
 
                                             <!-- Barra de Selección Rápida -->
-                                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #edf2f7;">
-                                                <span style="font-size: 13px; font-weight: 700; color: var(--fc-text-sec);"><i class='bx bx-pointer'></i> Selección Rápida:</span>
+                                            <div
+                                                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #edf2f7;">
+                                                <span style="font-size: 13px; font-weight: 700; color: var(--fc-text-sec);"><i
+                                                        class='bx bx-pointer'></i> Selección Rápida:</span>
                                                 <div style="display: flex; gap: 8px;">
-                                                    <button type="button" onclick="selectAllRoleMods(<?= $role['id'] ?>, true)" class="fc-btn fc-btn-outline" style="padding: 6px 14px; font-size: 12px; height: auto;">
+                                                    <button type="button" onclick="selectAllRoleMods(<?= $role['id'] ?>, true)"
+                                                        class="fc-btn fc-btn-outline"
+                                                        style="padding: 6px 14px; font-size: 12px; height: auto;">
                                                         Todos
                                                     </button>
-                                                    <button type="button" onclick="selectAllRoleMods(<?= $role['id'] ?>, false)" class="fc-btn fc-btn-outline" style="padding: 6px 14px; font-size: 12px; height: auto;">
+                                                    <button type="button" onclick="selectAllRoleMods(<?= $role['id'] ?>, false)"
+                                                        class="fc-btn fc-btn-outline"
+                                                        style="padding: 6px 14px; font-size: 12px; height: auto;">
                                                         Ninguno
                                                     </button>
-                                                    <button type="button" onclick="selectSidebarOnly(<?= $role['id'] ?>)" class="fc-btn fc-btn-outline" style="padding: 6px 14px; font-size: 12px; height: auto; border-color: var(--fc-primary); color: var(--fc-primary);">
+                                                    <button type="button" onclick="selectSidebarOnly(<?= $role['id'] ?>)"
+                                                        class="fc-btn fc-btn-outline"
+                                                        style="padding: 6px 14px; font-size: 12px; height: auto; border-color: var(--fc-primary); color: var(--fc-primary);">
                                                         Solo Barra Lateral
                                                     </button>
                                                 </div>
                                             </div>
 
                                             <!-- Módulos de Barra Lateral -->
-                                            <h5 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                                <i class='bx bx-dock-left' style="color: var(--fc-primary); font-size: 16px;"></i> Módulos de Barra Lateral
+                                            <h5
+                                                style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                                <i class='bx bx-dock-left' style="color: var(--fc-primary); font-size: 16px;"></i>
+                                                Módulos de Barra Lateral
                                             </h5>
-                                            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 30px;">
+                                            <div
+                                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 30px;">
                                                 <?php foreach ($sidebar_mods as $module): ?>
                                                     <?php $isChecked = in_array($module['id'], $role['modules']); ?>
-                                                    <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: <?= $isChecked ? 'rgba(79, 70, 229, 0.05)' : '#f8fafc' ?>; border-radius: 12px; cursor: pointer; border: 1px solid <?= $isChecked ? 'rgba(79, 70, 229, 0.3)' : '#e2e8f0' ?>; transition: all 0.2s;">
-                                                        <span style="font-size: 14px; font-weight: 600; color: var(--fc-text-main); display: flex; align-items: center; gap: 10px;">
-                                                            <i class='bx <?= htmlspecialchars($module['icon']) ?>' style="font-size: 1.3rem; color: <?= $isChecked ? 'var(--fc-primary)' : '#94a3b8' ?>;"></i> <?= htmlspecialchars($module['name']) ?>
+                                                    <label
+                                                        style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: <?= $isChecked ? 'rgba(79, 70, 229, 0.05)' : '#f8fafc' ?>; border-radius: 12px; cursor: pointer; border: 1px solid <?= $isChecked ? 'rgba(79, 70, 229, 0.3)' : '#e2e8f0' ?>; transition: all 0.2s;">
+                                                        <span
+                                                            style="font-size: 14px; font-weight: 600; color: var(--fc-text-main); display: flex; align-items: center; gap: 10px;">
+                                                            <i class='bx <?= htmlspecialchars($module['icon']) ?>'
+                                                                style="font-size: 1.3rem; color: <?= $isChecked ? 'var(--fc-primary)' : '#94a3b8' ?>;"></i>
+                                                            <?= htmlspecialchars($module['name']) ?>
                                                         </span>
                                                         <div class="custom-switch">
-                                                            <input type="checkbox" name="module_ids[]" value="<?= $module['id'] ?>" data-sidebar="1"
-                                                                <?= $isChecked ? 'checked' : '' ?>
+                                                            <input type="checkbox" name="module_ids[]" value="<?= $module['id'] ?>"
+                                                                data-sidebar="1" <?= $isChecked ? 'checked' : '' ?>
                                                                 onchange="updateCheckboxCardStyle(this)" class="switch-checkbox">
                                                             <div class="switch-slider"></div>
                                                         </div>
@@ -1395,19 +1524,26 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 
                                             <!-- Permisos Especiales -->
                                             <?php if (!empty($special_mods)): ?>
-                                                <h5 style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                                                    <i class='bx bx-key' style="color: #f59e0b; font-size: 16px;"></i> Permisos y Acciones Especiales
+                                                <h5
+                                                    style="font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--fc-text-sec); margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                                                    <i class='bx bx-key' style="color: #f59e0b; font-size: 16px;"></i> Permisos y Acciones
+                                                    Especiales
                                                 </h5>
-                                                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 30px;">
+                                                <div
+                                                    style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 30px;">
                                                     <?php foreach ($special_mods as $module): ?>
                                                         <?php $isChecked = in_array($module['id'], $role['modules']); ?>
-                                                        <label style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: <?= $isChecked ? 'rgba(245, 158, 11, 0.05)' : '#f8fafc' ?>; border-radius: 12px; cursor: pointer; border: 1px solid <?= $isChecked ? 'rgba(245, 158, 11, 0.3)' : '#e2e8f0' ?>; transition: all 0.2s;">
-                                                            <span style="font-size: 14px; font-weight: 600; color: var(--fc-text-main); display: flex; align-items: center; gap: 10px;">
-                                                                <i class='bx <?= htmlspecialchars($module['icon']) ?>' style="font-size: 1.3rem; color: <?= $isChecked ? '#f59e0b' : '#94a3b8' ?>;"></i> <?= htmlspecialchars($module['name']) ?>
+                                                        <label
+                                                            style="display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: <?= $isChecked ? 'rgba(245, 158, 11, 0.05)' : '#f8fafc' ?>; border-radius: 12px; cursor: pointer; border: 1px solid <?= $isChecked ? 'rgba(245, 158, 11, 0.3)' : '#e2e8f0' ?>; transition: all 0.2s;">
+                                                            <span
+                                                                style="font-size: 14px; font-weight: 600; color: var(--fc-text-main); display: flex; align-items: center; gap: 10px;">
+                                                                <i class='bx <?= htmlspecialchars($module['icon']) ?>'
+                                                                    style="font-size: 1.3rem; color: <?= $isChecked ? '#f59e0b' : '#94a3b8' ?>;"></i>
+                                                                <?= htmlspecialchars($module['name']) ?>
                                                             </span>
                                                             <div class="custom-switch switch-warning">
-                                                                <input type="checkbox" name="module_ids[]" value="<?= $module['id'] ?>" data-sidebar="0"
-                                                                    <?= $isChecked ? 'checked' : '' ?>
+                                                                <input type="checkbox" name="module_ids[]" value="<?= $module['id'] ?>"
+                                                                    data-sidebar="0" <?= $isChecked ? 'checked' : '' ?>
                                                                     onchange="updateCheckboxCardStyle(this)" class="switch-checkbox">
                                                                 <div class="switch-slider"></div>
                                                             </div>
@@ -1417,8 +1553,10 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                             <?php endif; ?>
 
                                             <div style="padding-top: 15px; border-top: 1px solid #e2e8f0;">
-                                                <button type="submit" name="update_role_modules" class="fc-btn fc-btn-primary fc-w100" style="font-size: 15px; height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 12px;">
-                                                    <i class='bx bx-save' style="font-size: 20px;"></i> Guardar Permisos de <?= htmlspecialchars($role['name']) ?>
+                                                <button type="submit" name="update_role_modules" class="fc-btn fc-btn-primary fc-w100"
+                                                    style="font-size: 15px; height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px; border-radius: 12px;">
+                                                    <i class='bx bx-save' style="font-size: 20px;"></i> Guardar Permisos de
+                                                    <?= htmlspecialchars($role['name']) ?>
                                                 </button>
                                             </div>
                                         </form>
@@ -1429,7 +1567,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     </div>
                 <?php endif; ?>
             </div>
-            
+
             <!-- Users Management Tab -->
             <?php require_once __DIR__ . '/includes/config_usuarios_tab.php'; ?>
 
@@ -1569,51 +1707,57 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
 </div>
 
 <style>
-/* Estilos para los interruptores tipo iOS */
-.custom-switch {
-    position: relative;
-    display: inline-block;
-    width: 44px;
-    height: 24px;
-    flex-shrink: 0;
-}
-.custom-switch input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-.switch-slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: #cbd5e1;
-    transition: .3s;
-    border-radius: 24px;
-}
-.switch-slider:before {
-    position: absolute;
-    content: "";
-    height: 18px;
-    width: 18px;
-    left: 3px;
-    bottom: 3px;
-    background-color: white;
-    transition: .3s;
-    border-radius: 50%;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-input:checked + .switch-slider {
-    background-color: var(--fc-primary);
-}
-.switch-warning input:checked + .switch-slider {
-    background-color: #f59e0b;
-}
-input:checked + .switch-slider:before {
-    transform: translateX(20px);
-}
+    /* Estilos para los interruptores tipo iOS */
+    .custom-switch {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+        flex-shrink: 0;
+    }
+
+    .custom-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .switch-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #cbd5e1;
+        transition: .3s;
+        border-radius: 24px;
+    }
+
+    .switch-slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    input:checked+.switch-slider {
+        background-color: var(--fc-primary);
+    }
+
+    .switch-warning input:checked+.switch-slider {
+        background-color: #f59e0b;
+    }
+
+    input:checked+.switch-slider:before {
+        transform: translateX(20px);
+    }
 </style>
 
 <script>
@@ -1762,7 +1906,7 @@ input:checked + .switch-slider:before {
     function testKitchenPrinter() {
         const ip = document.querySelector('input[name="kitchen_printer_ip"]').value;
         const port = document.querySelector('input[name="kitchen_printer_port"]').value || '9100';
-        
+
         if (!ip) {
             Swal.fire({ icon: 'warning', title: 'IP Inválida', text: 'Por favor ingresa la IP de la impresora.' });
             return;
@@ -1783,17 +1927,17 @@ input:checked + .switch-slider:before {
             method: 'POST',
             body: formData
         })
-        .then(r => r.json())
-        .then(data => {
-            if(data.success) {
-                Swal.fire({ icon: 'success', title: '¡Éxito!', text: 'El ticket de prueba ha sido enviado. Revisa tu impresora térmica.' });
-            } else {
-                Swal.fire({ icon: 'error', title: 'Fallo de Conexión', text: data.message });
-            }
-        })
-        .catch(e => {
-            Swal.fire({ icon: 'error', title: 'Error de Red', text: 'No se pudo contactar al servidor para hacer la prueba.' });
-        });
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({ icon: 'success', title: '¡Éxito!', text: 'El ticket de prueba ha sido enviado. Revisa tu impresora térmica.' });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Fallo de Conexión', text: data.message });
+                }
+            })
+            .catch(e => {
+                Swal.fire({ icon: 'error', title: 'Error de Red', text: 'No se pudo contactar al servidor para hacer la prueba.' });
+            });
     }
 
     <?php if ($success_msg): ?>

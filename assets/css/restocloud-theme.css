@@ -39,7 +39,8 @@
 }
 
 body {
-    background-color: var(--fc-bg-main);
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #f3e8ff 100%) !important;
+    background-attachment: fixed !important;
     color: var(--fc-text-main);
     font-family: 'Outfit', 'Inter', sans-serif;
     line-height: 1.5;

@@ -68,6 +68,61 @@ if (!isset($page_title)) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Global Premium Redesign Styles (Injected to bypass cache) -->
+    <style>
+        /* Force the beautiful blue-lilac gradient background on the whole system */
+        body, .dashboard-wrapper, .fc-main-content, .main-content {
+            background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 50%, #f3e8ff 100%) !important;
+            background-attachment: fixed !important;
+        }
+
+        /* Redesign all cards globally to be crisp white premium cards instead of milky glass */
+        .glass-card, .fc-card, .dashboard-card, .kpi-card, .pos-order-item { 
+            background: #ffffff !important; 
+            border: 1px solid #e2e8f0 !important; 
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05), 0 4px 6px rgba(0, 0, 0, 0.02) !important; 
+            border-radius: 20px !important; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease !important; 
+        }
+        
+        /* Aggressive Text Contrast Fixes for all cards globally */
+        .glass-card *, .fc-card *, .dashboard-card *, .kpi-card * {
+            color: #000000 !important;
+            text-shadow: none !important;
+        }
+        
+        .glass-card .fc-text-sec, .fc-card .fc-text-sec, .kpi-card .fc-text-sec,
+        .glass-card p[style*="fc-text-sec"], .fc-card p[style*="fc-text-sec"],
+        .glass-card span[style*="fc-text-sec"], .fc-card span[style*="fc-text-sec"] {
+            color: #1e293b !important;
+            font-weight: 600 !important;
+        }
+        
+        /* Modern Inputs globally */
+        .fc-input, .form-control, input[type="text"], input[type="password"], input[type="number"], select { 
+            background: #f8fafc !important; 
+            border: 2px solid #cbd5e1 !important; 
+            color: #000000 !important; 
+            font-weight: 700 !important; 
+            border-radius: 10px !important;
+        }
+        .fc-input:focus, .form-control:focus, input:focus, select:focus { 
+            border-color: #4f46e5 !important; 
+            background: #ffffff !important; 
+            box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.15) !important; 
+        }
+        
+        /* Tables globally inside cards */
+        .glass-card table, .fc-card table { border-collapse: separate !important; border-spacing: 0 !important; }
+        .glass-card th, .fc-card th { background: #f1f5f9 !important; color: #000000 !important; font-weight: 800 !important; border-bottom: 2px solid #cbd5e1 !important; padding: 12px !important; }
+        .glass-card td, .fc-card td { border-bottom: 1px solid #e2e8f0 !important; font-weight: 600 !important; padding: 12px !important; }
+        
+        /* Sidebar redesign for high contrast against gradient */
+        .sidebar { background: #ffffff !important; border-right: 1px solid #e2e8f0 !important; box-shadow: 2px 0 15px rgba(0,0,0,0.03) !important; }
+        .sidebar .nav-link { color: #1e293b !important; font-weight: 600 !important; }
+        .sidebar .nav-link:hover { background: #e0e7ff !important; color: #4f46e5 !important; }
+        .sidebar .nav-link.active { background: #4f46e5 !important; color: #ffffff !important; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3) !important; }
+    </style>
 
 </head>
 <body<?php if (isset($_SESSION['role_id']) && $_SESSION['role_id'] == 2): ?> class="waiter-mobile" <?php endif; ?>>
