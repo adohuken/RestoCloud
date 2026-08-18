@@ -122,6 +122,12 @@ if (!isset($page_title)) {
         .sidebar .nav-link { color: #1e293b !important; font-weight: 600 !important; }
         .sidebar .nav-link:hover { background: #e0e7ff !important; color: #4f46e5 !important; }
         .sidebar .nav-link.active { background: #4f46e5 !important; color: #ffffff !important; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3) !important; }
+        
+        /* Push 'Cerrar Sesión' to the absolute bottom of the sidebar */
+        .sidebar-menu { display: flex !important; flex-direction: column !important; flex: 1 !important; padding-bottom: 0 !important; }
+        .sidebar-menu li:last-child { margin-top: auto !important; margin-bottom: 0 !important; padding-bottom: 20px !important; }
+        .sidebar-menu .logout-link { color: #ef4444 !important; font-weight: 700 !important; border: 1px solid rgba(239, 68, 68, 0.2) !important; }
+        .sidebar-menu .logout-link:hover { background: rgba(239, 68, 68, 0.08) !important; color: #dc2626 !important; border-color: rgba(239, 68, 68, 0.4) !important; transform: translateY(-2px) !important; }
     </style>
 
 </head>
