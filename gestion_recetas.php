@@ -327,10 +327,17 @@ include __DIR__ . '/includes/header.php';
                 <h1><i class='bx bx-dish'></i> Gestor de Recetas</h1>
                 <p>Configuración de platos, costos de producción y márgenes</p>
             </div>
-            <div class="fc-header-right no-print">
+            <div class="fc-header-right no-print" style="display: flex; gap: 15px; align-items: center;">
                 <button class="fc-btn fc-btn-primary" onclick="initNewProduct()">
                     <i class='bx bx-plus'></i> Nuevo Plato
                 </button>
+                <div class="fc-user-pill">
+                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?></div>
+                    <div class="fc-user-info">
+                        <span class="name"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></span>
+                        <span class="role"><?= htmlspecialchars($_SESSION['role_name'] ?? 'Administrador') ?></span>
+                    </div>
+                </div>
             </div>
         </div>
 

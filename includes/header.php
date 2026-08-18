@@ -3,6 +3,23 @@ if (!isset($page_title)) {
     $page_title = 'RestoCloud System';
     if (isset($pdo)) {
         try {
+            // Fix session data if missing
+            if (isset($_SESSION['user_id'])) {
+                if (empty($_SESSION['name'])) {
+                    $stmt = $pdo->prepare("SELECT name, role_id FROM users WHERE id = ?");
+                    $stmt->execute([$_SESSION['user_id']]);
+                    if ($u = $stmt->fetch()) {
+                        $_SESSION['name'] = $u['name'];
+                        $_SESSION['role_id'] = $u['role_id'];
+                    }
+                }
+                if (empty($_SESSION['role_name']) && !empty($_SESSION['role_id'])) {
+                    $stmt = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
+                    $stmt->execute([$_SESSION['role_id']]);
+                    $_SESSION['role_name'] = $stmt->fetchColumn() ?: 'Administrador';
+                }
+            }
+
             // Check if settings table exists
             $stmt = $pdo->query("SHOW TABLES LIKE 'settings'");
             if ($stmt->rowCount() > 0) {

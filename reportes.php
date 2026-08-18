@@ -17,6 +17,19 @@ $start_date = $_GET['start_date'] ?? date('Y-m-01');
 $end_date = $_GET['end_date'] ?? date('Y-m-d');
 
 // Logic based on report type
+$stmt = $pdo->prepare('SELECT name FROM roles WHERE id = ?');
+$stmt->execute([$_SESSION['role_id'] ?? 1]);
+$user_role_name = $stmt->fetchColumn() ?: 'Administrador';
+
+// Get current user name (fallback to DB if session missing)
+$user_name = $_SESSION['name'] ?? null;
+if (!$user_name && isset($_SESSION['user_id'])) {
+    $stmt = $pdo->prepare('SELECT name FROM users WHERE id = ?');
+    $stmt->execute([$_SESSION['user_id']]);
+    $user_name = $stmt->fetchColumn();
+}
+$user_name = $user_name ?: 'Usuario';
+
 if ($report_type === 'sales') {
     // Sales report logic (Existing)
     $stmt = $pdo->prepare('
@@ -121,6 +134,27 @@ if ($report_type === 'sales') {
     $stmt->execute($params);
     $waiters_stats = $stmt->fetchAll();
 
+    // Fetch order history for waiters
+    $sql_orders = '
+        SELECT o.id, o.date_created, o.total, t.name as table_name, u.name as waiter_name
+        FROM orders o
+        JOIN users u ON o.user_id = u.id
+        LEFT JOIN tables t ON o.table_id = t.id
+        WHERE o.status = "completed" AND u.role_id = 2 AND DATE(o.date_created) BETWEEN ? AND ?
+    ';
+    $params_orders = [$start_date, $end_date];
+
+    if ($waiter_id !== 'all' && is_numeric($waiter_id)) {
+        $sql_orders .= ' AND u.id = ?';
+        $params_orders[] = $waiter_id;
+    }
+
+    $sql_orders .= ' ORDER BY o.date_created DESC';
+
+    $stmt = $pdo->prepare($sql_orders);
+    $stmt->execute($params_orders);
+    $waiter_orders_history = $stmt->fetchAll();
+
 } elseif ($report_type === 'pedidosya') {
     // PedidosYa report logic
     try {
@@ -190,6 +224,18 @@ if ($report_type === 'sales') {
     ');
     $stmt->execute([$start_date, $end_date]);
     $deleted_invoices = $stmt->fetchAll();
+
+} elseif ($report_type === 'cierres') {
+    // Register closures logic
+    $stmt = $pdo->prepare('
+        SELECT cr.*, u.name as cashier_name
+        FROM cash_register cr
+        JOIN users u ON cr.user_id = u.id
+        WHERE cr.type = "close" AND DATE(cr.date_created) BETWEEN ? AND ?
+        ORDER BY cr.date_created DESC
+    ');
+    $stmt->execute([$start_date, $end_date]);
+    $closures = $stmt->fetchAll();
 }
 
 ?>
@@ -206,10 +252,10 @@ if ($report_type === 'sales') {
             </div>
             <div class="fc-header-right no-print">
                 <div class="fc-user-pill">
-                    <div class="fc-user-avatar"><?= strtoupper(substr($_SESSION['name'] ?? 'U', 0, 1)) ?></div>
+                    <div class="fc-user-avatar"><?= strtoupper(substr($user_name, 0, 1)) ?></div>
                     <div class="fc-user-info">
-                        <span class="name"><?= htmlspecialchars($_SESSION['name'] ?? 'Usuario') ?></span>
-                        <span class="role"><?= htmlspecialchars($_SESSION['role_name'] ?? 'Administrador') ?></span>
+                        <span class="name"><?= htmlspecialchars($user_name) ?></span>
+                        <span class="role"><?= htmlspecialchars($user_role_name) ?></span>
                     </div>
                 </div>
             </div>
@@ -234,6 +280,10 @@ if ($report_type === 'sales') {
             <a href="?type=sales&start_date=<?= $start_date ?>&end_date=<?= $end_date ?>"
                 class="fc-tab <?= $report_type === 'sales' ? 'active' : '' ?>">
                 <i class='bx bx-trending-up'></i> <span>Ventas</span>
+            </a>
+            <a href="?type=cierres&start_date=<?= $start_date ?>&end_date=<?= $end_date ?>"
+                class="fc-tab <?= $report_type === 'cierres' ? 'active' : '' ?>">
+                <i class='bx bx-archive-out'></i> <span>Arqueos</span>
             </a>
             <a href="?type=inventory" class="fc-tab <?= $report_type === 'inventory' ? 'active' : '' ?>">
                 <i class='bx bx-package'></i> <span>Inventario</span>
@@ -589,6 +639,58 @@ if ($report_type === 'sales') {
                                             <div style="width: 100px; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; margin: 0 auto; overflow: hidden;">
                                                 <div style="width: <?= min(100, ($avg/500)*100) ?>%; height: 100%; background: var(--fc-primary);"></div>
                                             </div>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- HISTORIAL DE COMANDAS -->
+            <div class="fc-card" style="margin-top: 25px;">
+                <div class="fc-modal-header">
+                    <h3><i class='bx bx-receipt'></i> Historial de Comandas</h3>
+                </div>
+                <div class="fc-table-responsive">
+                    <table class="fc-table">
+                        <thead>
+                            <tr>
+                                <th># Comanda</th>
+                                <th>Fecha y Hora</th>
+                                <th>Ubicación</th>
+                                <th>Mesero</th>
+                                <th style="text-align: right;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($waiter_orders_history)): ?>
+                                <tr>
+                                    <td colspan="5" style="text-align:center; padding: 30px; color: var(--fc-text-sec);">No hay comandas registradas</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($waiter_orders_history as $order): ?>
+                                    <tr>
+                                        <td>
+                                            <span class="fc-badge" style="background: rgba(255,255,255,0.05); color: var(--fc-text-main); font-family: monospace;">
+                                                #<?= str_pad($order['id'], 6, '0', STR_PAD_LEFT) ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div style="font-size: 13px; color: var(--fc-text-main);"><?= date('d/m/Y', strtotime($order['date_created'])) ?></div>
+                                            <div style="font-size: 11px; color: var(--fc-text-sec);"><?= date('H:i', strtotime($order['date_created'])) ?></div>
+                                        </td>
+                                        <td>
+                                            <span style="display: flex; align-items: center; gap: 5px; color: var(--fc-text-sec);">
+                                                <i class='bx bx-table'></i> <?= htmlspecialchars($order['table_name'] ?? 'Barra/Delivery') ?>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <strong style="color: var(--fc-text-main); font-size: 13px;"><?= htmlspecialchars($order['waiter_name']) ?></strong>
+                                        </td>
+                                        <td style="text-align: right; font-weight: 600; color: #10b981;">
+                                            C$<?= number_format($order['total'], 2) ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

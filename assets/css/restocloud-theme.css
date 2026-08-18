@@ -1376,11 +1376,8 @@ body {
     display: flex;
     gap: 12px;
     margin-bottom: 30px;
-    background: var(--fc-card-bg);
-    padding: 10px;
-    border-radius: 16px;
+    padding: 10px 0;
     width: fit-content;
-    border: 1px solid var(--fc-border);
 }
 
 .fc-tab {
@@ -1396,6 +1393,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    text-decoration: none !important;
 }
 
 .fc-tab:hover {
@@ -1822,10 +1820,7 @@ body {
 .fc-tabs {
     display: flex;
     gap: 8px;
-    background: #f1f5f9;
-    padding: 6px;
-    border-radius: 16px;
-    border: 1px solid var(--fc-border);
+    padding: 6px 0;
     margin-bottom: 25px;
 }
 
@@ -1841,6 +1836,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
+    text-decoration: none !important;
 }
 
 .fc-tab i { font-size: 1.1em; }

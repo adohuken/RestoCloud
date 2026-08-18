@@ -90,6 +90,64 @@ try {
 $success_msg = '';
 $error_msg = '';
 
+// --- USER MANAGEMENT LOGIC ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_action'])) {
+    switch ($_POST['user_action']) {
+        case 'create':
+            $name = $_POST['name'];
+            $email = $_POST['email'];
+            $username = $_POST['username'];
+            $password = password_hash($_POST['password'], PASSWORD_DEFAULT);
+            $role_id = $_POST['role_id'];
+
+            try {
+                $stmt = $pdo->prepare('INSERT INTO users (name, email, username, password, role_id, status) VALUES (?, ?, ?, ?, ?, "active")');
+                $stmt->execute([$name, $email, $username, $password, $role_id]);
+                $success_msg = 'Usuario creado exitosamente';
+            } catch (PDOException $e) {
+                if ($e->getCode() == 23000) {
+                    $error_msg = 'Error: El email o nombre de usuario ya existe en el sistema.';
+                } else {
+                    $error_msg = 'Error al crear usuario: ' . $e->getMessage();
+                }
+            }
+            break;
+
+        case 'update':
+            $user_id = $_POST['user_id'];
+            $name = $_POST['name'];
+            $email = $_POST['email'];
+            $role_id = $_POST['role_id'];
+            $status = $_POST['status'];
+
+            $stmt = $pdo->prepare('UPDATE users SET name = ?, email = ?, role_id = ?, status = ? WHERE id = ?');
+            $stmt->execute([$name, $email, $role_id, $status, $user_id]);
+            $success_msg = 'Usuario actualizado exitosamente';
+            break;
+
+        case 'reset_password':
+            $user_id = $_POST['user_id'];
+            $new_password = password_hash($_POST['new_password'], PASSWORD_DEFAULT);
+
+            $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+            $stmt->execute([$new_password, $user_id]);
+            $success_msg = 'Contraseña actualizada exitosamente';
+            break;
+
+        case 'delete':
+            $user_id = $_POST['user_id'];
+            if ($user_id == 1) {
+                $error_msg = 'No se puede eliminar al Superadmin.';
+                break;
+            }
+            $stmt = $pdo->prepare('DELETE FROM users WHERE id = ?');
+            $stmt->execute([$user_id]);
+            $success_msg = 'Usuario eliminado exitosamente';
+            break;
+    }
+}
+// -----------------------------
+
 // Handle Backup
 if (isset($_POST['backup'])) {
     // Security check: Only SuperAdmin can backup
@@ -594,6 +652,15 @@ if (isset($_POST['delete_table'])) {
 $salon_tables = $pdo->query('SELECT * FROM tables WHERE name != "Barra" AND name NOT LIKE "Barra - %" ORDER BY LENGTH(name), name')->fetchAll();
 $barra_seats = $pdo->query('SELECT * FROM tables WHERE name LIKE "Barra - %" ORDER BY LENGTH(name), name')->fetchAll();
 
+// Get users and roles
+$users = $pdo->query('
+    SELECT u.*, r.name as role_name 
+    FROM users u 
+    JOIN roles r ON u.role_id = r.id 
+    ORDER BY u.id DESC
+')->fetchAll();
+$roles = $pdo->query('SELECT * FROM roles ORDER BY name')->fetchAll();
+
 // Get user's role name
 $stmt = $pdo->prepare('SELECT name FROM roles WHERE id = ?');
 $stmt->execute([$_SESSION['role_id']]);
@@ -683,6 +750,12 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'config_modules') || isRoleAdmin($pdo, $_SESSION['role_id'])): ?>
                 <button class="fc-tab" onclick="switchTab('roles')" data-tab="roles">
                     <i class='bx bx-shield-quarter'></i> <span>Roles y Permisos</span>
+                </button>
+            <?php endif; ?>
+
+            <?php if (hasModuleAccess($pdo, $_SESSION['role_id'], 'users') || isRoleAdmin($pdo, $_SESSION['role_id'])): ?>
+                <button class="fc-tab" onclick="switchTab('users')" data-tab="users">
+                    <i class='bx bx-user'></i> <span>Usuarios</span>
                 </button>
             <?php endif; ?>
         </div>
@@ -1356,6 +1429,10 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     </div>
                 <?php endif; ?>
             </div>
+            
+            <!-- Users Management Tab -->
+            <?php require_once __DIR__ . '/includes/config_usuarios_tab.php'; ?>
+
         <?php endif; ?>
     </main>
 </div>

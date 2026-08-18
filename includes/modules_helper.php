@@ -98,7 +98,7 @@ function ensureModulesSystem($pdo)
             ['key' => 'cuentas',       'name' => 'Cuentas',        'icon' => 'bx bx-receipt',        'path' => 'cuentas.php',            'order' => 9,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'pedidosya',     'name' => 'PedidosYa',      'icon' => 'bx bx-cycling',        'path' => 'pedidosya.php',          'order' => 10,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'reports',       'name' => 'Reportes',       'icon' => 'bx bx-bar-chart-alt-2','path' => 'reportes.php',          'order' => 11, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'users',         'name' => 'Usuarios',       'icon' => 'bx bx-user',           'path' => 'usuarios.php',           'order' => 12, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'users',         'name' => 'Usuarios',       'icon' => 'bx bx-user',           'path' => 'usuarios.php',           'order' => 12, 'is_sidebar' => 0, 'category' => 'Configuración'],
             ['key' => 'settings',      'name' => 'Configuración',  'icon' => 'bx bx-cog',            'path' => 'configuracion.php',      'order' => 13, 'is_sidebar' => 1, 'category' => 'Barra Lateral'],
 
             // --- SPECIAL ACTIONS & SUB-PERMISSIONS ---

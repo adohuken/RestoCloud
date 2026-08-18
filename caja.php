@@ -34,14 +34,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $amount = $_POST['amount'];
                 $expected_amount = $_POST['expected_amount'] ?? $amount;
                 $difference = $amount - $expected_amount;
+                $denominations = $_POST['denominations'] ?? '{}';
 
                 // Close the register
                 $stmt = $pdo->prepare('UPDATE cash_register SET status = "closed" WHERE id = ?');
                 $stmt->execute([$register_id]);
 
                 // Create close record
-                $stmt = $pdo->prepare('INSERT INTO cash_register (user_id, amount, expected_amount, difference, type, status) VALUES (?, ?, ?, ?, "close", "closed")');
-                $stmt->execute([$_SESSION['user_id'], $amount, $expected_amount, $difference]);
+                $stmt = $pdo->prepare('INSERT INTO cash_register (user_id, amount, expected_amount, difference, type, status, denominations) VALUES (?, ?, ?, ?, "close", "closed", ?)');
+                $stmt->execute([$_SESSION['user_id'], $amount, $expected_amount, $difference, $denominations]);
 
                 header('Location: caja.php?success=closed');
                 exit();
@@ -213,6 +214,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                         <form method="POST" id="closeRegisterForm">
                             <input type="hidden" name="action" value="close">
                             <input type="hidden" name="register_id" value="<?= $active_register['id'] ?>">
+                            <input type="hidden" name="denominations" id="denominationsJSON" value="{}">
                             <input type="hidden" id="sysExpectedCash" name="expected_amount" value="<?= $active_register['amount'] + $payment_breakdown['cash'] ?>">
                             <input type="hidden" id="sysExpectedCard" value="<?= $payment_breakdown['card'] ?>">
                             <input type="hidden" id="sysExpectedTransfer" value="<?= $payment_breakdown['transfer'] ?>">
@@ -424,11 +426,18 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
             elecInputs.forEach(input => input.addEventListener('input', validateArqueo));
             
             function validateArqueo() {
+                let denominationsData = { billetes: {}, monedas: {}, electronico: {} };
+                
                 // 1. Calculate Physical Cash
                 let totalCash = 0;
                 denomInputs.forEach(input => {
                     const count = parseInt(input.value) || 0;
                     const val = parseFloat(input.getAttribute('data-val'));
+                    if (val >= 10) {
+                        denominationsData.billetes[val] = count;
+                    } else {
+                        denominationsData.monedas[val] = count;
+                    }
                     totalCash += count * val;
                 });
                 
@@ -439,6 +448,12 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 // 2. Get Electronic Declarations
                 const declaredCard = parseFloat(declCardInput.value) || 0;
                 const declaredTransfer = parseFloat(declTransferInput.value) || 0;
+                
+                denominationsData.electronico.tarjeta = declaredCard;
+                denominationsData.electronico.transferencia = declaredTransfer;
+                
+                const denomField = document.getElementById('denominationsJSON');
+                if (denomField) denomField.value = JSON.stringify(denominationsData);
                 
                 // 3. Calculate Differences
                 const diffCash = totalCash - expectedCash;
