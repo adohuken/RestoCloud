@@ -49,7 +49,7 @@ $stmt = $pdo->query('
            o.payment_details,
            u.name as waiter_name
     FROM tables t
-    JOIN orders o ON t.id = o.table_id 
+    LEFT JOIN orders o ON t.id = o.table_id 
         AND o.status IN ("draft", "pending", "preparing", "ready", "picked_up", "delivered")
     LEFT JOIN users u ON o.user_id = u.id
     ORDER BY t.id ASC

@@ -200,39 +200,42 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         <div class="fc-card" style="padding: 0; margin-bottom: 25px;">
             <div class="visual-categories-wrapper">
                 <div class="visual-category-card active" data-category="" onclick="filterByCategory(this, '')">
-                    <div class="cat-icon grad-default"><i class='bx bx-grid-alt'></i></div>
+                    <div class="cat-icon grad-default"><i class='fas fa-border-all'></i></div>
                     <span class="cat-name">Todos</span>
                 </div>
 
                 <?php foreach ($categories as $cat): ?>
                     <?php
-                    $cat_icon = 'bx-restaurant';
+                    $cat_icon = 'fas fa-utensils';
                     $cat_grad = 'grad-default';
                     $cat_name_lower = mb_strtolower($cat['name'], 'UTF-8');
 
                     if (strpos($cat_name_lower, 'alitas') !== false || strpos($cat_name_lower, 'pollo') !== false) {
-                        $cat_icon = 'bx-dish';
+                        $cat_icon = 'fas fa-drumstick-bite';
                         $cat_grad = 'grad-warm';
                     } elseif (strpos($cat_name_lower, 'hamburguesa') !== false || strpos($cat_name_lower, 'burger') !== false) {
-                        $cat_icon = 'bx-restaurant';
+                        $cat_icon = 'fas fa-burger';
                         $cat_grad = 'grad-warm';
                     } elseif (strpos($cat_name_lower, 'bebida') !== false || strpos($cat_name_lower, 'refresco') !== false || strpos($cat_name_lower, 'soda') !== false) {
-                        $cat_icon = 'bx-drink';
+                        $cat_icon = 'fas fa-martini-glass-citrus';
                         $cat_grad = 'grad-cool';
                     } elseif (strpos($cat_name_lower, 'postre') !== false || strpos($cat_name_lower, 'dulce') !== false) {
-                        $cat_icon = 'bx-cake';
+                        $cat_icon = 'fas fa-cake-candles';
                         $cat_grad = 'grad-sweet';
                     } elseif (strpos($cat_name_lower, 'combo') !== false || strpos($cat_name_lower, 'complemento') !== false || strpos($cat_name_lower, 'papa') !== false || strpos($cat_name_lower, 'entrada') !== false) {
-                        $cat_icon = 'bx-bowl-hot';
+                        $cat_icon = 'fas fa-bowl-food';
                         $cat_grad = 'grad-amber';
                     } elseif (strpos($cat_name_lower, 'pizza') !== false) {
-                        $cat_icon = 'bx-pizza';
+                        $cat_icon = 'fas fa-pizza-slice';
                         $cat_grad = 'grad-warm';
+                    } elseif (strpos($cat_name_lower, 'ensalada') !== false || strpos($cat_name_lower, 'salad') !== false) {
+                        $cat_icon = 'fas fa-leaf';
+                        $cat_grad = 'grad-default';
                     }
                     ?>
                     <div class="visual-category-card" data-category="<?= htmlspecialchars($cat['name']) ?>"
                         onclick="filterByCategory(this, '<?= htmlspecialchars($cat['name']) ?>')">
-                        <div class="cat-icon <?= $cat_grad ?>"><i class='bx <?= $cat_icon ?>'></i></div>
+                        <div class="cat-icon <?= $cat_grad ?>"><i class='<?= $cat_icon ?>'></i></div>
                         <span class="cat-name"><?= htmlspecialchars($cat['name']) ?></span>
                     </div>
                 <?php endforeach; ?>
@@ -528,6 +531,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     .visual-category-card.active { background: var(--fc-primary); border-color: var(--fc-primary); box-shadow: 0 8px 20px rgba(225, 29, 72, 0.3); }
 
     .cat-icon { width: 45px; height: 45px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; color: white; }
+    .cat-icon i { color: #ffffff !important; }
     .visual-category-card.active .cat-icon { background: rgba(255,255,255,0.2) !important; }
     .visual-category-card.active .cat-name { color: white; }
     .cat-name { font-size: 13px; font-weight: 600; color: var(--fc-text-sec); }

@@ -1,7 +1,12 @@
 <?php
-require_once 'config/db.php';
-require_once 'includes/auth.php';
-require_once 'includes/permissions.php';
+require_once __DIR__ . '/config/db.php';
+require_once __DIR__ . '/includes/modules_helper.php';
+session_start();
+
+if (!isset($_SESSION['user_id'])) {
+    header('Location: index.php');
+    exit();
+}
 
 // Check access
 if (!hasModuleAccess($pdo, $_SESSION['role_id'], 'inventory_view')) {
@@ -195,14 +200,14 @@ include __DIR__ . '/includes/header.php';
 </div>
 
 <script>
-    function showAddModal() { document.getElementById('addModal').classList.add('active'); }
-    function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
+    function showAddModal() { document.getElementById('addModal').classList.add('show'); }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('show'); }
     function showEditModal(id, name) {
         document.getElementById('edit_id').value = id;
         document.getElementById('edit_name').value = name;
-        document.getElementById('editModal').classList.add('active');
+        document.getElementById('editModal').classList.add('show');
     }
-    function closeEditModal() { document.getElementById('editModal').classList.remove('active'); }
+    function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
 
     function confirmDelete(e, form) {
         e.preventDefault();
