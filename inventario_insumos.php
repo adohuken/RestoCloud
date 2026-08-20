@@ -533,7 +533,7 @@ include __DIR__ . '/includes/header.php';
                         <label class="fc-label" title="Total pagado por todo el paquete o compra">Costo Total de Compra</label>
                         <div style="position:relative;">
                             <span style="position:absolute; left:12px; top:12px; font-weight:700; color:var(--fc-text-sec);">C$</span>
-                            <input type="number" id="editPurchaseCost" class="fc-input" value="${ing.cost}" style="padding-left:35px;" oninput="updateBaseCostPreview()">
+                            <input type="number" id="editPurchaseCost" class="fc-input" value="${ing.cost}" style="padding-left:35px;" oninput="updateBaseCostPreview()" onfocus="this.select()">
                         </div>
                     </div>
                     <div class="fc-form-group">
@@ -557,7 +557,7 @@ include __DIR__ . '/includes/header.php';
                     <div class="fc-form-group">
                         <label class="fc-label">Cantidad Comprada</label>
                         <div style="display:flex; gap:5px;">
-                            <input type="number" id="editPurchaseWeight" class="fc-input" value="1" step="0.01" oninput="updateBaseCostPreview()">
+                            <input type="number" id="editPurchaseWeight" class="fc-input" value="1" step="0.01" oninput="updateBaseCostPreview()" onfocus="this.select()">
                             <select id="dummyPurchaseUnit" class="fc-input" style="width: 110px;" onchange="checkCustomUnit(this, 'customPurchaseUnit'); document.getElementById('lblYieldHint').innerText = getActiveUnit('dummyPurchaseUnit', 'customPurchaseUnit'); updateBaseCostPreview();">
                                 <!-- Sólidos -->
                                 <option value="g">g</option><option value="kg">kg</option><option value="lb">lb</option><option value="oz">oz</option><option value="mg">mg</option>
@@ -573,7 +573,7 @@ include __DIR__ . '/includes/header.php';
                     </div>
                     <div class="fc-form-group" id="yieldContainer" style="display:none;">
                         <label class="fc-label" style="color:var(--fc-primary);">Rendimiento Total (Unidades)</label>
-                        <input type="number" id="editYieldQty" class="fc-input" value="1" step="0.01" oninput="updateBaseCostPreview()">
+                        <input type="number" id="editYieldQty" class="fc-input" value="1" step="0.01" oninput="updateBaseCostPreview()" onfocus="this.select()">
                         <div style="font-size:10px; color:var(--fc-text-sec); margin-top:4px;">Ej: ¿Cuántas alas salieron de esas <span id="lblYieldHint">lb</span>?</div>
                     </div>
                 </div>
@@ -587,7 +587,7 @@ include __DIR__ . '/includes/header.php';
 
                 <div class="fc-form-group" style="margin-bottom: 25px;">
                     <label class="fc-label">Stock Mínimo (uds base)</label>
-                    <input type="number" id="editMinStock" class="fc-input" value="${ing.min_stock}">
+                    <input type="number" id="editMinStock" class="fc-input" value="${ing.min_stock}" onfocus="this.select()">
                 </div>
 
                 ${!isNew ? `
@@ -605,7 +605,7 @@ include __DIR__ . '/includes/header.php';
                 ` : `
                 <div class="fc-form-group" style="margin-bottom:25px; border-top: 1px dashed var(--fc-border); padding-top: 20px;">
                     <label class="fc-label" style="color:#8b5cf6;">Stock Inicial en Inventario</label>
-                    <input type="number" id="editStock" class="fc-input" value="0">
+                    <input type="number" id="editStock" class="fc-input" value="0" onfocus="this.select()">
                     <div style="font-size:10px; color:var(--fc-text-sec); margin-top:4px;">Debe coincidir con tu rendimiento o cantidad comprada.</div>
                 </div>
                 `}
