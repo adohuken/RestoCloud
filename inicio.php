@@ -208,21 +208,7 @@ include __DIR__ . '/includes/header.php';
             .activity-meta { font-size: 0.78em; color: var(--fc-text-sec); margin-top: 2px; }
             .activity-amount { font-weight: 800; font-size: 1em; }
 
-            /* Quick Actions */
-            .quick-actions {
-                display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;
-                animation: fadeSlideUp 0.6s ease-out forwards; opacity: 0; animation-delay: 0.65s;
-            }
-            .qa-btn {
-                display: flex; flex-direction: column; align-items: center; gap: 12px;
-                padding: 25px 15px; border-radius: 18px;
-                background: rgba(255,255,255,0.02); border: 1px solid var(--fc-border);
-                cursor: pointer; transition: all 0.3s ease; text-decoration: none; color: var(--fc-text-sec);
-            }
-            .qa-btn:hover { background: rgba(225,29,72,0.08); border-color: rgba(225,29,72,0.3); color: var(--fc-primary); transform: translateY(-4px); box-shadow: 0 8px 25px rgba(225,29,72,0.15); }
-            .qa-btn i { font-size: 28px; transition: transform 0.3s; }
-            .qa-btn:hover i { transform: scale(1.15); }
-            .qa-btn span { font-size: 0.82em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+
 
             .empty-chart { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--fc-text-sec); text-align: center; }
             .empty-chart i { font-size: 52px; opacity: 0.1; margin-bottom: 15px; }
@@ -348,15 +334,7 @@ include __DIR__ . '/includes/header.php';
         </div>
         <?php endif; ?>
 
-        <!-- QUICK ACTIONS -->
-        <div class="quick-actions">
-            <a href="mesas.php" class="qa-btn"><i class='bx bx-grid-alt'></i><span>Nuevo Pedido</span></a>
-            <a href="productos.php" class="qa-btn"><i class='bx bx-restaurant'></i><span>Menú</span></a>
-            <a href="caja.php" class="qa-btn"><i class='bx bx-wallet'></i><span>Caja</span></a>
-            <a href="reportes.php" class="qa-btn"><i class='bx bx-line-chart'></i><span>Reportes</span></a>
-            <a href="inventario_insumos.php" class="qa-btn"><i class='bx bx-package'></i><span>Insumos</span></a>
-            <a href="configuracion.php" class="qa-btn"><i class='bx bx-cog'></i><span>Config</span></a>
-        </div>
+
     </main>
 </div>
 
