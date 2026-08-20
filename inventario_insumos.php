@@ -362,7 +362,7 @@ include __DIR__ . '/includes/header.php';
                                 <div class="insumo-meta">
                                     <span>Stock Actual</span>
                                     <span style="color: <?= $isLow ? 'var(--fc-primary)' : '#10b981' ?>; font-weight: 700;">
-                                        <?= $ing['stock'] ?> <?= $ing['unit'] ?>
+                                        <?= (float)$ing['stock'] ?> <?= htmlspecialchars($ing['unit']) ?>
                                     </span>
                                 </div>
                                 <div style="height: 4px; background: rgba(255,255,255,0.05); border-radius: 10px; overflow: hidden;">
@@ -388,26 +388,37 @@ include __DIR__ . '/includes/header.php';
 
 <!-- Category Manager Modal -->
 <div id="catModal" class="fc-modal-overlay">
-    <div class="fc-modal" style="max-width: 450px;">
-        <div class="fc-modal-header">
-            <h3><i class='bx bx-category'></i> Categorías de Insumos</h3>
-            <span class="close" onclick="closeCatManager()">&times;</span>
+    <div class="fc-modal" style="max-width: 450px; background: #ffffff; border-radius: 24px; box-shadow: 0 25px 50px rgba(0,0,0,0.1); border: none; overflow: hidden;">
+        <div class="fc-modal-header" style="background: transparent; border-bottom: 1px solid rgba(0,0,0,0.05); padding: 25px;">
+            <h3 style="font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 10px; font-size: 20px;">
+                <div style="width: 40px; height: 40px; border-radius: 12px; background: var(--fc-primary); color: white; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 15px rgba(139, 92, 246, 0.3);">
+                    <i class='bx bx-category'></i>
+                </div>
+                Categorías
+            </h3>
+            <button class="fc-close" onclick="closeCatManager()" style="background: #f1f5f9 !important; border: none !important; box-shadow: none !important; border-radius: 50px !important; width: 35px !important; height: 35px !important; color: #64748b !important; display: flex !important; justify-content: center !important; align-items: center !important; font-size: 22px !important; cursor: pointer !important; transition: all 0.3s ease !important;" onmouseover="this.style.setProperty('background', '#e2e8f0', 'important'); this.style.setProperty('color', '#ef4444', 'important');" onmouseout="this.style.setProperty('background', '#f1f5f9', 'important'); this.style.setProperty('color', '#64748b', 'important');"><i class='bx bx-x'></i></button>
         </div>
-        <div class="fc-modal-body" style="padding: 25px;">
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-                <input type="text" id="newCatName" class="fc-input" placeholder="Nueva categoría..." style="height: 45px;">
-                <button class="fc-btn fc-btn-primary" onclick="saveCategory(0)" style="width: 45px; padding: 0;">
+        <div class="fc-modal-content" style="padding: 25px; background: #fafafa;">
+
+            <div style="display: flex; gap: 15px; margin-bottom: 30px; position: relative;">
+                <input type="text" id="newCatName" class="fc-input" placeholder="Crear nueva categoría..." style="background: #ffffff; border: none; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border-radius: 16px; padding: 16px 20px; font-weight: 600; font-size: 15px; width: 100%; color: #334155;">
+                <button class="fc-btn fc-btn-primary" onclick="saveCategory(0)" style="width: 55px; height: 55px; padding: 0; border-radius: 16px; box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3); display: flex; justify-content: center; align-items: center; flex-shrink: 0; font-size: 24px;">
                     <i class='bx bx-plus'></i>
                 </button>
             </div>
 
-            <div style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;">
+            <div style="font-size: 13px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">Categorías Existentes</div>
+            
+            <div style="max-height: 350px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px; padding-right: 5px;" class="custom-scrollbar">
                 <?php foreach ($categories as $cat): ?>
-                    <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(255,255,255,0.02); border-radius: 12px; border: 1px solid var(--fc-border);">
+                    <div style="display: flex; align-items: center; gap: 15px; padding: 15px 20px; background: #ffffff; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.02); transition: all 0.3s ease; border: 1px solid rgba(0,0,0,0.03);" onmouseover="this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'; this.style.transform='translateY(-2px)';" onmouseout="this.style.boxShadow='0 2px 10px rgba(0,0,0,0.02)'; this.style.transform='translateY(0)';">
+                        <div style="color: var(--fc-primary); font-size: 20px; opacity: 0.7;">
+                            <i class='bx bx-folder'></i>
+                        </div>
                         <input type="text" value="<?= htmlspecialchars($cat['name']) ?>" id="cat_input_<?= $cat['id'] ?>" 
-                               class="fc-input" style="background:transparent; border:none; height:auto; padding:0; font-weight:600;"
+                               style="background: transparent !important; border: none !important; box-shadow: none !important; height: auto !important; padding: 0 !important; font-weight: 700 !important; font-size: 15px !important; color: #475569 !important; width: 100% !important; outline: none !important;"
                                onchange="saveCategory(<?= $cat['id'] ?>)">
-                        <button onclick="deleteCategory(<?= $cat['id'] ?>)" style="background:none; border:none; color:var(--fc-primary); cursor:pointer; font-size:18px;">
+                        <button onclick="deleteCategory(<?= $cat['id'] ?>)" style="background: #fee2e2; border: none; color: #ef4444; cursor: pointer; width: 35px; height: 35px; border-radius: 10px; display: flex; justify-content: center; align-items: center; font-size: 16px; transition: all 0.2s;" onmouseover="this.style.background='#fecaca'" onmouseout="this.style.background='#fee2e2'">
                             <i class='bx bx-trash'></i>
                         </button>
                     </div>
@@ -517,32 +528,73 @@ include __DIR__ . '/includes/header.php';
 
                 ${iconPickerHtml}
 
-                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div class="fc-form-group">
-                        <label class="fc-label">Costo x Unidad</label>
+                        <label class="fc-label" title="Total pagado por todo el paquete o compra">Costo Total de Compra</label>
                         <div style="position:relative;">
                             <span style="position:absolute; left:12px; top:12px; font-weight:700; color:var(--fc-text-sec);">C$</span>
-                            <input type="number" id="editCost" class="fc-input" value="${ing.cost}" style="padding-left:35px;">
+                            <input type="number" id="editPurchaseCost" class="fc-input" value="${ing.cost}" style="padding-left:35px;" oninput="updateBaseCostPreview()">
                         </div>
                     </div>
                     <div class="fc-form-group">
-                        <label class="fc-label">Unidad Medida</label>
-                        <select id="editUnit" class="fc-input">
-                            <option value="kg">kg</option><option value="lb">lb</option><option value="g">g</option>
-                            <option value="lt">lt</option><option value="ml">ml</option><option value="unidad">unidad</option>
-                        </select>
+                        <label class="fc-label" title="En qué unidad descuentas al vender (ej. ml, trago, botella, g, unidad)">Unidad Base (Para Recetas)</label>
+                        <div style="display:flex; gap:5px;">
+                            <select id="editUnit" class="fc-input" onchange="checkCustomUnit(this, 'customEditUnit'); updateBaseCostPreview();">
+                                <!-- Sólidos -->
+                                <option value="g">g</option><option value="kg">kg</option><option value="lb">lb</option><option value="oz">oz</option><option value="mg">mg</option>
+                                <!-- Líquidos -->
+                                <option value="ml">ml</option><option value="lt">lt</option><option value="fl oz">fl oz</option><option value="gal">gal</option><option value="tz">tz</option>
+                                <!-- Unidades -->
+                                <option value="und">und</option><option value="pza">pza</option><option value="botella">botella</option>
+                                <option value="otra">Otra...</option>
+                            </select>
+                            <input type="text" id="customEditUnit" class="fc-input" placeholder="Escribir..." style="display:none;" oninput="updateBaseCostPreview()">
+                        </div>
                     </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
                     <div class="fc-form-group">
-                        <label class="fc-label">Stock Mínimo</label>
-                        <input type="number" id="editMinStock" class="fc-input" value="${ing.min_stock}">
+                        <label class="fc-label">Cantidad Comprada</label>
+                        <div style="display:flex; gap:5px;">
+                            <input type="number" id="editPurchaseWeight" class="fc-input" value="1" step="0.01" oninput="updateBaseCostPreview()">
+                            <select id="dummyPurchaseUnit" class="fc-input" style="width: 110px;" onchange="checkCustomUnit(this, 'customPurchaseUnit'); document.getElementById('lblYieldHint').innerText = getActiveUnit('dummyPurchaseUnit', 'customPurchaseUnit'); updateBaseCostPreview();">
+                                <!-- Sólidos -->
+                                <option value="g">g</option><option value="kg">kg</option><option value="lb">lb</option><option value="oz">oz</option><option value="mg">mg</option>
+                                <!-- Líquidos -->
+                                <option value="ml">ml</option><option value="lt">lt</option><option value="fl oz">fl oz</option><option value="gal">gal</option><option value="tz">tz</option>
+                                <!-- Unidades -->
+                                <option value="und">und</option><option value="pza">pza</option><option value="docena">docena</option>
+                                <option value="caja">caja</option><option value="paquete">paquete</option><option value="botella">botella</option>
+                                <option value="otra">Otra...</option>
+                            </select>
+                            <input type="text" id="customPurchaseUnit" class="fc-input" placeholder="Escribir..." style="display:none; width:100px;" oninput="document.getElementById('lblYieldHint').innerText = this.value; updateBaseCostPreview();">
+                        </div>
                     </div>
+                    <div class="fc-form-group" id="yieldContainer" style="display:none;">
+                        <label class="fc-label" style="color:var(--fc-primary);">Rendimiento Total (Unidades)</label>
+                        <input type="number" id="editYieldQty" class="fc-input" value="1" step="0.01" oninput="updateBaseCostPreview()">
+                        <div style="font-size:10px; color:var(--fc-text-sec); margin-top:4px;">Ej: ¿Cuántas alas salieron de esas <span id="lblYieldHint">lb</span>?</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 25px; padding: 15px; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: 12px; text-align: center;">
+                    <div style="font-size: 11px; color: var(--fc-text-sec); margin-bottom: 5px; text-transform: uppercase;">Costo Unitario Calculado</div>
+                    <div style="font-size: 18px; font-weight: 800; color: #10b981;">
+                        <span id="baseCostPreview">C$ ${parseFloat(ing.cost).toFixed(2)}</span> / <span id="baseUnitPreview">${ing.unit || 'kg'}</span>
+                    </div>
+                </div>
+
+                <div class="fc-form-group" style="margin-bottom: 25px;">
+                    <label class="fc-label">Stock Mínimo (uds base)</label>
+                    <input type="number" id="editMinStock" class="fc-input" value="${ing.min_stock}">
                 </div>
 
                 ${!isNew ? `
                 <div style="background: rgba(255,255,255,0.02); border: 1px solid var(--fc-border); border-radius: 15px; padding: 15px; margin-bottom: 25px; display:flex; justify-content:space-around; text-align:center;">
                     <div>
                         <div style="font-size:10px; color:var(--fc-text-sec); margin-bottom:5px;">STOCK ACTUAL</div>
-                        <div style="font-size:20px; font-weight:800; color:${ing.stock <= ing.min_stock ? 'var(--fc-primary)' : '#10b981'};">${ing.stock} ${ing.unit}</div>
+                        <div style="font-size:20px; font-weight:800; color:${ing.stock <= ing.min_stock ? 'var(--fc-primary)' : '#10b981'};">${parseFloat(ing.stock)} ${ing.unit}</div>
                     </div>
                     <div style="width:1px; background:var(--fc-border);"></div>
                     <div style="display:flex; gap:10px; align-items:center;">
@@ -551,9 +603,10 @@ include __DIR__ . '/includes/header.php';
                     </div>
                 </div>
                 ` : `
-                <div class="fc-form-group" style="margin-bottom:25px;">
-                    <label class="fc-label">Stock Inicial</label>
+                <div class="fc-form-group" style="margin-bottom:25px; border-top: 1px dashed var(--fc-border); padding-top: 20px;">
+                    <label class="fc-label" style="color:#8b5cf6;">Stock Inicial en Inventario</label>
                     <input type="number" id="editStock" class="fc-input" value="0">
+                    <div style="font-size:10px; color:var(--fc-text-sec); margin-top:4px;">Debe coincidir con tu rendimiento o cantidad comprada.</div>
                 </div>
                 `}
 
@@ -572,7 +625,42 @@ include __DIR__ . '/includes/header.php';
                 </div>
             </div>
         `;
-        document.getElementById('editUnit').value = ing.unit;
+        
+        // Initialize selects
+        const knownUnits = ['g', 'kg', 'lb', 'oz', 'mg', 'ml', 'lt', 'fl oz', 'gal', 'tz', 'und', 'pza', 'docena', 'caja', 'paquete', 'botella'];
+        const savedUnit = ing.unit || 'g';
+        const editUnitSelect = document.getElementById('editUnit');
+        const customEditUnit = document.getElementById('customEditUnit');
+        
+        if (knownUnits.includes(savedUnit)) {
+            editUnitSelect.value = savedUnit;
+        } else {
+            editUnitSelect.value = 'otra';
+            customEditUnit.style.display = 'block';
+            customEditUnit.value = savedUnit;
+        }
+
+        setTimeout(updateBaseCostPreview, 50);
+    }
+
+    function checkCustomUnit(selectEl, customInputId) {
+        const customInput = document.getElementById(customInputId);
+        if (selectEl.value === 'otra') {
+            selectEl.style.display = 'none';
+            customInput.style.display = 'block';
+            customInput.focus();
+        } else {
+            customInput.style.display = 'none';
+            customInput.value = '';
+        }
+    }
+
+    function getActiveUnit(selectId, customInputId) {
+        const selectVal = document.getElementById(selectId).value;
+        if (selectVal === 'otra') {
+            return document.getElementById(customInputId).value.trim().toLowerCase() || 'und';
+        }
+        return selectVal;
     }
 
     function toggleIconPicker() {
@@ -597,15 +685,102 @@ include __DIR__ . '/includes/header.php';
         }
     }
 
+    function getConversionFactor(fromUnit, toUnit) {
+        if (fromUnit === toUnit) return 1;
+        const key = fromUnit + '_' + toUnit;
+        const matrix = {
+            // SÓLIDOS (Base: g)
+            'kg_g': 1000,
+            'lb_g': 453.59,
+            'oz_g': 28.35,
+            'mg_g': 0.001,
+            // SÓLIDOS - Retorno (por si lo necesitan al revés)
+            'g_kg': 0.001, 'g_lb': 0.00220462,
+
+            // LÍQUIDOS (Base: ml)
+            'lt_ml': 1000,
+            'fl oz_ml': 29.57,
+            'oz_ml': 29.57, // También soportamos oz normal como líquido
+            'gal_ml': 3785.41,
+            'tz_ml': 240,
+            // LÍQUIDOS - Retorno
+            'ml_lt': 0.001,
+
+            // UNIDADES
+            'docena_und': 12,
+            'docena_pza': 12,
+            'docena_unidad': 12
+        };
+        return matrix[key] || 1;
+    }
+
+    function updateBaseCostPreview() {
+        const cost = parseFloat(document.getElementById('editPurchaseCost').value) || 0;
+        const unit = getActiveUnit('editUnit', 'customEditUnit') || 'g';
+        const purchaseUnit = getActiveUnit('dummyPurchaseUnit', 'customPurchaseUnit') || 'g';
+        
+        let qty = 1;
+        let requiresYield = false;
+
+        if (unit === purchaseUnit) {
+            qty = parseFloat(document.getElementById('editPurchaseWeight').value) || 1;
+        } else {
+            const factor = getConversionFactor(purchaseUnit, unit);
+            if (factor === 1) { // No known conversion
+                requiresYield = true;
+            } else {
+                const rawPurchaseQty = parseFloat(document.getElementById('editPurchaseWeight').value) || 1;
+                qty = rawPurchaseQty * factor;
+            }
+        }
+
+        if (requiresYield) {
+            document.getElementById('yieldContainer').style.display = 'block';
+            qty = parseFloat(document.getElementById('editYieldQty').value) || 1;
+        } else {
+            document.getElementById('yieldContainer').style.display = 'none';
+        }
+
+        if (document.getElementById('editStock') && document.activeElement !== document.getElementById('editStock')) {
+            // Redondear a 2 decimales para el stock si no es entero
+            document.getElementById('editStock').value = Number.isInteger(qty) ? qty : qty.toFixed(2);
+        }
+
+        const baseCost = qty > 0 ? (cost / qty) : 0;
+        const displayCost = baseCost < 1 ? baseCost.toFixed(4) : baseCost.toFixed(2);
+        document.getElementById('baseCostPreview').innerText = 'C$ ' + displayCost;
+        document.getElementById('baseUnitPreview').innerText = unit;
+    }
+
     function saveIngredient() {
         const fd = new FormData();
         fd.append('ajax_action', 'save_ingredient');
         fd.append('id', currentIngredient.id);
         fd.append('name', document.getElementById('editName').value);
-        fd.append('cost', document.getElementById('editCost').value);
+        
+        const pCost = parseFloat(document.getElementById('editPurchaseCost').value) || 0;
+        const unit = getActiveUnit('editUnit', 'customEditUnit') || 'g';
+        const purchaseUnit = getActiveUnit('dummyPurchaseUnit', 'customPurchaseUnit') || 'g';
+        
+        let pQty = 1;
+        if (unit === purchaseUnit) {
+            pQty = parseFloat(document.getElementById('editPurchaseWeight').value) || 1;
+        } else {
+            const factor = getConversionFactor(purchaseUnit, unit);
+            if (factor === 1) { // No known conversion
+                pQty = parseFloat(document.getElementById('editYieldQty').value) || 1;
+            } else {
+                const rawPurchaseQty = parseFloat(document.getElementById('editPurchaseWeight').value) || 1;
+                pQty = rawPurchaseQty * factor;
+            }
+        }
+
+        const baseCost = pQty > 0 ? (pCost / pQty) : 0;
+        fd.append('cost', baseCost);
+
         fd.append('stock', document.getElementById('editStock')?.value || currentIngredient.stock);
         fd.append('min_stock', document.getElementById('editMinStock').value);
-        fd.append('unit', document.getElementById('editUnit').value);
+        fd.append('unit', unit);
         fd.append('category_id', document.getElementById('editCategory').value);
         fd.append('icon', document.getElementById('editIcon').value);
         const imgInput = document.getElementById('editImage');

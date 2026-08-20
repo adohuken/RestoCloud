@@ -73,8 +73,6 @@ function getSidebarIcon($module)
             return "<i class='bx bx-package'></i>";
         case 'inventario_insumos.php':
             return "<i class='bx bx-layer'></i>";
-        case 'gestion_recetas.php':
-            return "<i class='bx bx-food-menu'></i>";
         case 'mesas.php':
             return "<i class='bx bx-chair'></i>";
         case 'cocina.php':

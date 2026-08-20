@@ -109,12 +109,6 @@ if (isset($_GET['ajax'])) {
         $product = $stmt->fetch();
 
         if ($product) {
-            // Check stock
-            if ($quantity > $product['available_stock']) {
-                echo json_encode(['success' => false, 'message' => 'Stock insuficiente. Disponible: ' . $product['available_stock']]);
-                exit();
-            }
-
             try {
                 $pdo->beginTransaction();
 
@@ -297,6 +291,10 @@ if (isset($_GET['ajax'])) {
             $stmt = $pdo->prepare('UPDATE order_details SET item_status = "pending" WHERE order_id = ? AND item_status = "draft"');
             $stmt->execute([$order['id']]);
 
+            // Deduct stock for all undeducted items (which includes the ones we just sent to kitchen)
+            require_once __DIR__ . '/includes/inventory_helper.php';
+            InventoryManager::processOrderStock($order['id'], $_SESSION['user_id']);
+
             echo json_encode(['success' => true, 'message' => 'Pedido enviado a cocina']);
         } else {
             echo json_encode(['success' => false, 'message' => 'No hay pedido para enviar']);
@@ -357,7 +355,6 @@ $products = $pdo->query('
                                 WHERE od.product_id = p.id AND o.status IN ("pending", "ready")), 0)) as available_stock
     FROM products p
     WHERE p.status = "active"
-    HAVING available_stock > 0
     ORDER BY p.category_id, p.name
 ')->fetchAll();
 
@@ -445,12 +442,12 @@ if (!$clean_mode) {
                 $back_url = $is_barra_view ? 'mesas.php?tab=barra' : 'mesas.php';
                 ?>
                 <?php if ($clean_mode): ?>
-                    <button onclick="window.parent.switchOrdersTab('<?= $is_barra_view ? 'barra' : 'mesas' ?>')" class="fc-btn fc-btn-outline" title="Volver a Mesas">
-                        <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
+                    <button onclick="window.parent.switchOrdersTab('<?= $is_barra_view ? 'barra' : 'mesas' ?>')" class="fc-btn fc-btn-primary" style="border-radius: 50px; padding: 12px 25px; font-weight: 800; font-size: 15px; box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4); border: none;" title="Volver a Mesas">
+                        <i class='bx bx-arrow-back' style="font-size: 20px;"></i> <span class="hide-mobile">Volver a Mesas</span>
                     </button>
                 <?php else: ?>
-                    <a href="<?= $back_url ?>" class="fc-btn fc-btn-outline" title="Volver a Mesas">
-                        <i class='bx bx-arrow-back'></i> <span class="hide-mobile">Volver</span>
+                    <a href="<?= $back_url ?>" class="fc-btn fc-btn-primary" style="border-radius: 50px; padding: 12px 25px; font-weight: 800; font-size: 15px; box-shadow: 0 6px 20px rgba(225, 29, 72, 0.4); border: none; display: flex; align-items: center; gap: 8px; color: white;" title="Volver a Mesas">
+                        <i class='bx bx-arrow-back' style="font-size: 20px;"></i> <span class="hide-mobile">Volver a Mesas</span>
                     </a>
                 <?php endif; ?>
             </div>
@@ -621,6 +618,18 @@ if (!$clean_mode) {
         --btn-radius: 12px;
     }
  
+    .pos-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    .pos-header-actions .fc-btn {
+        width: fit-content;
+    }
+ 
     .pos-modern-layout {
         display: grid;
         grid-template-columns: 1fr 400px;
@@ -630,42 +639,47 @@ if (!$clean_mode) {
     }
  
     .products-section-modern {
-        background: var(--fc-bg-dark);
+        background: transparent;
         border-radius: var(--card-radius);
         position: relative;
         display: flex;
         flex-direction: column;
         overflow: hidden;
-        border: 1px solid var(--fc-border);
+        border: none;
     }
  
     .pos-toolbar-sticky {
-        background: var(--fc-bg);
-        padding: 20px;
+        background: transparent;
+        padding: 20px 0;
         position: sticky;
         top: 0;
         z-index: 10;
         display: flex;
         flex-direction: column;
         gap: 20px;
-        border-bottom: 1px solid var(--fc-border);
     }
  
+    .search-container {
+        position: relative;
+        width: 100%;
+    }
+
     .search-input {
         width: 100%;
-        padding: 14px 20px 14px 50px;
-        border: 1px solid var(--fc-border);
-        border-radius: 12px;
-        background: rgba(255,255,255,0.03);
-        color: var(--fc-text-main);
-        font-size: 15px;
-        transition: all 0.2s ease;
+        padding: 16px 20px 16px 50px;
+        border: none;
+        border-radius: 16px;
+        background: #ffffff;
+        color: #1e293b;
+        font-size: 16px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
     }
  
     .search-input:focus {
-        border-color: var(--fc-primary);
-        background: rgba(255,255,255,0.05);
+        background: #ffffff;
         outline: none;
+        box-shadow: 0 8px 30px rgba(225, 29, 72, 0.15);
     }
  
     .search-icon-overlay {
@@ -718,23 +732,22 @@ if (!$clean_mode) {
     }
  
     .product-item {
-        background: var(--fc-card-bg);
-        backdrop-filter: var(--fc-glass-blur);
-        border-radius: 20px;
+        background: #ffffff;
+        border-radius: 24px;
         overflow: hidden;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         display: flex;
         flex-direction: column;
-        border: 1px solid var(--fc-border);
+        border: none;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.06);
         position: relative;
-        min-height: 320px; /* Force a minimum height */
+        min-height: 350px;
     }
  
     .product-item:hover {
-        transform: translateY(-8px) scale(1.02);
-        border-color: rgba(225, 29, 72, 0.4);
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 0 1px rgba(225, 29, 72, 0.1);
+        transform: translateY(-12px);
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
     }
 
     .product-item:hover .product-actions-glass {
@@ -744,12 +757,11 @@ if (!$clean_mode) {
  
     .product-image {
         width: 100%;
-        height: 220px;
-        min-height: 220px;
-        background: rgba(30, 41, 59, 0.5);
+        height: 250px;
+        min-height: 250px;
+        background: #f8fafc;
         position: relative;
         overflow: hidden;
-        border-bottom: 1px solid var(--fc-border);
     }
  
     .product-image img {
@@ -784,15 +796,15 @@ if (!$clean_mode) {
         position: absolute;
         top: 15px;
         left: 15px;
-        background: rgba(15, 23, 42, 0.8);
-        backdrop-filter: blur(8px);
+        background: var(--fc-primary);
         color: white;
-        padding: 6px 12px;
-        border-radius: 10px;
-        font-weight: 700;
-        font-size: 14px;
-        border: 1px solid var(--fc-border);
+        padding: 8px 16px;
+        border-radius: 50px;
+        font-weight: 800;
+        font-size: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
         z-index: 2;
+        letter-spacing: 0.5px;
     }
 
     .product-actions-glass {
@@ -837,20 +849,20 @@ if (!$clean_mode) {
     }
  
     .product-info {
-        padding: 18px;
+        padding: 20px;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
         justify-content: space-between;
-        background: linear-gradient(180deg, rgba(255,255,255,0.02) 0%, transparent 100%);
+        background: #ffffff;
     }
  
     .product-name {
-        font-weight: 700;
-        color: var(--fc-text-main);
-        font-size: 17px;
-        margin-bottom: 10px;
-        line-height: 1.4;
+        font-weight: 800;
+        color: #1e293b;
+        font-size: 19px;
+        margin-bottom: 8px;
+        line-height: 1.3;
         display: -webkit-box;
         -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;

@@ -89,8 +89,7 @@ function ensureModulesSystem($pdo)
             // --- TOP LEVEL SIDEBAR MODULES (13 Modules matching Sidebar) ---
             ['key' => 'dashboard',     'name' => 'Dashboard',      'icon' => 'bx bxs-dashboard',     'path' => 'inicio.php',             'order' => 1,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'menu',          'name' => 'Menú',           'icon' => 'bx bx-package',        'path' => 'productos.php',          'order' => 2,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'insumos',       'name' => 'Insumos',        'icon' => 'bx bx-layer',          'path' => 'inventario_insumos.php', 'order' => 3,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
-            ['key' => 'recetas',       'name' => 'Recetas/Costos', 'icon' => 'bx bx-food-menu',      'path' => 'gestion_recetas.php',    'order' => 4,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
+            ['key' => 'insumos',       'name' => 'Inv. Insumos',        'icon' => 'bx bx-layer',          'path' => 'inventario_insumos.php', 'order' => 3,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'tables',        'name' => 'Mesas',          'icon' => 'bx bx-chair',          'path' => 'mesas.php',              'order' => 5,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'barra',         'name' => 'Barra',          'icon' => 'bx bx-shopping-bag',   'path' => 'mesas.php?tab=barra',    'order' => 6,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],
             ['key' => 'kitchen',       'name' => 'Cocina',         'icon' => 'bx bx-restaurant',     'path' => 'cocina.php',             'order' => 7,  'is_sidebar' => 1, 'category' => 'Barra Lateral'],

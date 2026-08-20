@@ -183,7 +183,7 @@ $user_role_name = 'Cocinero';
                                             <div class="item-qty"><?= $item['qty'] ?></div>
                                             <div class="item-details">
                                                 <div class="item-title">
-                                                    <span class="item-icon"><?= $item['icon'] ?: '🍽️' ?></span>
+                                                    <span class="item-icon"><?= (!empty($item['icon']) && str_replace('?', '', $item['icon']) !== '') ? $item['icon'] : '🍽️' ?></span>
                                                     <span class="item-name"><?= htmlspecialchars($item['name']) ?></span>
                                                     <?php if($item['status'] === 'pending' && $isPreparing): ?>
                                                         <span class="new-item-badge">NUEVO</span>
@@ -241,6 +241,7 @@ $user_role_name = 'Cocinero';
                                         <li>
                                             <div class="item-qty history-qty"><?= $item['qty'] ?></div>
                                             <div class="item-details">
+                                                <span class="item-icon history-icon"><?= (!empty($item['icon']) && str_replace('?', '', $item['icon']) !== '') ? $item['icon'] : '🍽️' ?></span>
                                                 <span class="item-name history-name"><?= htmlspecialchars($item['name']) ?></span>
                                             </div>
                                         </li>

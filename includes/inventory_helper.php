@@ -18,8 +18,8 @@ class InventoryManager {
     public static function processOrderStock($order_id, $user_id) {
         self::init();
         
-        // 1. Obtener detalles del pedido
-        $stmt = self::$pdo->prepare("SELECT od.*, p.name as p_name FROM order_details od JOIN products p ON od.product_id = p.id WHERE od.order_id = ?");
+        // 1. Obtener detalles del pedido que NO han sido descontados
+        $stmt = self::$pdo->prepare("SELECT od.*, p.name as p_name FROM order_details od JOIN products p ON od.product_id = p.id WHERE od.order_id = ? AND od.stock_deducted = 0");
         $stmt->execute([$order_id]);
         $items = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -48,6 +48,9 @@ class InventoryManager {
                 // Opcional: Registrar movimiento de producto final (sin ingredient_id)
                 self::registerProductMovement($product_id, -$qty_ordered, 'Sale', $user_id, $order_id, "Venta Directa Pedido #$order_id");
             }
+            // Marcar el item como descontado
+            $stmt = self::$pdo->prepare("UPDATE order_details SET stock_deducted = 1 WHERE id = ?");
+            $stmt->execute([$item['id']]);
         }
     }
 

@@ -1712,6 +1712,10 @@ body {
     opacity: 1;
 }
 
+.swal2-container {
+    z-index: 99999 !important;
+}
+
 .fc-modal {
     background: var(--fc-card-bg);
     border: 1px solid var(--fc-border);

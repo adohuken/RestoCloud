@@ -341,24 +341,29 @@ if (isset($_POST['reset_system'])) {
                     'payments',
                     'orders',
                     'cash_register',
-                    'products',
-                    'categories',
-                    'tables',
                     'deleted_invoices_log',
-                    'ingredient_categories',
                     'ingredient_movements',
-                    'ingredients',
                     'invoice_payments',
                     'pedidosya_order_details',
                     'pedidosya_orders',
-                    'product_recipes',
                     'stock_movements'
                 ];
+                
+                if (isset($_POST['hard_reset']) && $_POST['hard_reset'] == '1') {
+                    $tables_to_clear = array_merge($tables_to_clear, [
+                        'products',
+                        'product_recipes',
+                        'tables'
+                    ]);
+                }
 
                 foreach ($tables_to_clear as $table) {
                     $pdo->exec("DELETE FROM $table");
                     $pdo->exec("ALTER TABLE $table AUTO_INCREMENT = 1");
                 }
+                
+                // Reset physical tables to available
+                $pdo->exec("UPDATE tables SET status = 'available'");
 
                 // Check if invoices table exists before clearing
                 $stmt = $pdo->query("SHOW TABLES LIKE 'invoices'");
@@ -1674,6 +1679,10 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     <label class="fc-label">Contraseña</label>
                     <input type="password" name="super_admin_password" class="fc-input" required autocomplete="off">
                 </div>
+                <label style="display:flex; align-items:flex-start; gap:8px; font-size:12px; color:#e11d48; margin-top: 15px; font-weight:600; cursor:pointer;">
+                    <input type="checkbox" name="hard_reset" value="1" style="margin-top:2px;">
+                    <span>Borrar también mis platos, recetas y mesas físicas.<br><small>(Tus insumos, unidades y categorías quedarán a salvo siempre).</small></span>
+                </label>
                 <div style="display: flex; gap: 10px; margin-top: 25px;">
                     <button type="button" class="fc-btn fc-btn-outline fc-w100"
                         onclick="closeSystemResetModal()">Cancelar</button>
