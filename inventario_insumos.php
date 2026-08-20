@@ -747,7 +747,7 @@ include __DIR__ . '/includes/header.php';
         }
 
         const baseCost = qty > 0 ? (cost / qty) : 0;
-        const displayCost = baseCost < 1 ? baseCost.toFixed(4) : baseCost.toFixed(2);
+        const displayCost = baseCost.toFixed(2);
         document.getElementById('baseCostPreview').innerText = 'C$ ' + displayCost;
         document.getElementById('baseUnitPreview').innerText = unit;
     }
