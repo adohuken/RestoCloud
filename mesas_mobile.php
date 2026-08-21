@@ -7,6 +7,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <link rel="stylesheet" href="assets/css/mobile_mesero.css">
+    <!-- SweetAlert2 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
 
@@ -14,7 +17,6 @@
     <header class="app-header">
         <div class="app-title">Mesas</div>
         <div class="app-header-actions">
-            <!-- Optional: User profile or logout -->
             <button class="icon-btn" onclick="window.location.href='salir.php'">
                 <i class='bx bx-log-out'></i>
             </button>
@@ -24,20 +26,23 @@
     <!-- Main Content -->
     <main class="app-content">
         <?php if (!$active_register): ?>
-            <div style="background: var(--app-warning); color: #fff; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; text-align: center;">
-                ⚠️ Caja cerrada. No puedes tomar pedidos.
+            <div style="background: var(--app-warning-light); color: var(--app-warning); padding: 15px; border-radius: 16px; margin-bottom: 25px; font-weight: 700; text-align: center; border: 1px solid rgba(245, 158, 11, 0.2);">
+                <i class='bx bx-lock' style="font-size: 1.2rem; vertical-align: middle;"></i> Caja Cerrada
             </div>
         <?php endif; ?>
 
-        <h2 style="font-size: 1.1rem; color: var(--app-text-sec); margin-bottom: 15px;">Salón Principal</h2>
-        
         <div class="table-grid mb-3">
-            <?php foreach ($tables as $table):
+            <?php 
+            $all_tables = $tables;
+            if (hasModuleAccess($pdo, $_SESSION['role_id'], 'ver_asientos_barra')) {
+                $all_tables = array_merge($all_tables, $barra_seats ?? []);
+            }
+            foreach ($all_tables as $table):
                 $status = $table['order_status'] ?? null;
                 $cardClass = 'free';
                 
                 if ($table['order_id']) {
-                    $cardClass = 'occupied'; // We can simplify status for mobile or add more colors later
+                    $cardClass = 'occupied';
                 }
             ?>
             <?php 
@@ -49,32 +54,36 @@
                 }
             ?>
                 <!-- When clicking, go to venta.php unless locked -->
-                <a <?= $is_locked_for_me ? 'href="javascript:void(0)" onclick="alert(\'Esta mesa está siendo atendida por otro mesero.\')"' : 'href="venta.php?table=' . $table['id'] . '"' ?> class="table-card <?= $cardClass ?>" <?= $is_locked_for_me ? 'style="opacity: 0.6;"' : '' ?>>
+                <a <?= $is_locked_for_me ? 'href="javascript:void(0)" onclick="Swal.fire({html: \'<div style=&quot;margin-bottom:10px&quot;><i class=\\\'bx bx-lock\\\' style=\\\'font-size: 54px; color: #f59e0b; opacity: 0.9;\\\'></i></div><div style=&quot;font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.4;&quot;>Esta mesa está siendo atendida por otro mesero.</div>\', confirmButtonColor: \'#6366f1\', confirmButtonText: \'Entendido\', customClass: { popup: \'premium-swal compact-swal\' }})"' : 'href="venta.php?table=' . $table['id'] . '"' ?> class="table-card <?= $cardClass ?>" <?= $is_locked_for_me ? 'style="opacity: 0.6; filter: grayscale(1);"' : '' ?>>
+                    <div class="table-icon-wrapper">
+                        <i class='bx <?= $is_locked_for_me ? 'bx-lock' : 'bx-chair' ?>'></i>
+                    </div>
                     <div class="table-number">
-                        <?= $is_locked_for_me ? "<i class='bx bx-lock'></i> " : "" ?>
                         <?= htmlspecialchars($table['name']) ?>
                     </div>
                     <div class="table-status">
                         <?php if ($table['order_id']): ?>
-                            <?php 
-                                $status_map = [
-                                    'draft' => 'Tomando...',
-                                    'pending' => 'En cocina',
-                                    'preparing' => 'Preparando',
-                                    'ready' => '¡Listo!',
-                                    'picked_up' => 'Recogido',
-                                    'delivered' => 'Servido'
-                                ];
-                                echo $status_map[$status] ?? 'Ocupada';
-                            ?>
-                            <div style="font-size: 0.75rem; margin-top: 5px; color: var(--app-text-sec); font-weight: 500;">
+                            <div class="badge badge-occupied mb-1">
+                                <?php 
+                                    $status_map = [
+                                        'draft' => 'Tomando...',
+                                        'pending' => 'Cocina',
+                                        'preparing' => 'Preparando',
+                                        'ready' => '¡Listo!',
+                                        'picked_up' => 'Recogido',
+                                        'delivered' => 'Servido'
+                                    ];
+                                    echo $status_map[$status] ?? 'Ocupada';
+                                ?>
+                            </div>
+                            <div style="font-size: 0.75rem; margin-top: 5px; color: var(--app-text-sec); font-weight: 600;">
                                 <i class='bx bxs-user-badge'></i> <?= htmlspecialchars($table['waiter_name'] ?? 'Mesero') ?>
                             </div>
-                            <div style="font-size: 0.8rem; margin-top: 5px; color: var(--app-text-main); font-weight: 700;">
+                            <div style="font-size: 0.85rem; margin-top: 5px; color: var(--app-text-main); font-weight: 800;">
                                 C$<?= number_format($table['order_total'], 0) ?>
                             </div>
                         <?php else: ?>
-                            Libre
+                            <div class="badge badge-free">Libre</div>
                         <?php endif; ?>
                     </div>
                 </a>
