@@ -73,7 +73,7 @@ try {
     <div class="login-split-card">
         <!-- Left: Illustration Panel -->
         <div class="login-illustration">
-            <img src="assets/img/login-bg.jpg?v=2" alt="Restaurant" class="login-bg-img">
+            <img src="assets/img/login-bg.jpg?v=3" alt="Restaurant" class="login-bg-img">
             <div class="login-illustration-overlay"></div>
         </div>
         
