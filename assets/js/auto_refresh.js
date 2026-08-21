@@ -9,7 +9,7 @@
  */
 
 (function() {
-    const REFRESH_INTERVAL = 5000; // 5 seconds
+    const REFRESH_INTERVAL = 10000; // 10 seconds
     let lastInteraction = 0; // Initialize to 0 so it can refresh immediately if no interaction
 
     // Track user interactions
