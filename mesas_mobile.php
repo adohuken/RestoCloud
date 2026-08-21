@@ -29,12 +29,6 @@
             </div>
         <?php endif; ?>
 
-        <?php if (isset($_GET['error']) && $_GET['error'] === 'table_locked'): ?>
-            <div style="background: var(--app-danger); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; text-align: center;">
-                ⚠️ Acceso denegado: Esta mesa está siendo atendida por otro mesero.
-            </div>
-        <?php endif; ?>
-
         <h2 style="font-size: 1.1rem; color: var(--app-text-sec); margin-bottom: 15px;">Salón Principal</h2>
         
         <div class="table-grid mb-3">

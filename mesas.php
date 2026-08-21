@@ -230,12 +230,6 @@ if (isset($_SESSION['device_type']) && $_SESSION['device_type'] === 'mobile' && 
             </div>
         <?php endif; ?>
         
-        <?php if (isset($_GET['error']) && $_GET['error'] === 'table_locked'): ?>
-            <div class="alert alert-danger" style="background: var(--app-danger); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
-                ⚠️ Acceso denegado: Esta mesa está siendo atendida por otro mesero.
-            </div>
-        <?php endif; ?>
-
         <?php if (!$active_register): ?>
             <div class="alert alert-warning">
                 ⚠️ Debe abrir la caja antes de tomar pedidos.
