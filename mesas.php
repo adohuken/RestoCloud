@@ -8,9 +8,9 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+
 // Check module access (will redirect if not authorized)
 checkModuleAccess($pdo, $_SESSION['role_id'], 'tables');
-
 
 // Check if there's ANY active cash register (not just user's own)
 $stmt = $pdo->query('SELECT * FROM cash_register WHERE type = "open" AND status = "active" ORDER BY date_created DESC LIMIT 1');
@@ -84,7 +84,9 @@ $stmt = $pdo->query('
     SELECT t.*, 
            o.id as order_id, 
            o.total as order_total,
-           o.status as order_status
+           o.status as order_status,
+           o.user_id as order_user_id,
+           u.name as waiter_name
     FROM tables t
     LEFT JOIN (
         SELECT o1.* FROM orders o1
@@ -95,6 +97,7 @@ $stmt = $pdo->query('
             AND o2.status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered")
         )
     ) o ON t.id = o.table_id
+    LEFT JOIN users u ON o.user_id = u.id
     WHERE t.name != "Barra" AND t.name NOT LIKE "Barra - %"
     ORDER BY LENGTH(t.name), t.name
 ');
@@ -105,7 +108,9 @@ $stmt = $pdo->query('
     SELECT t.*, 
            o.id as order_id, 
            o.total as order_total,
-           o.status as order_status
+           o.status as order_status,
+           o.user_id as order_user_id,
+           u.name as waiter_name
     FROM tables t
     LEFT JOIN (
         SELECT o1.* FROM orders o1
@@ -116,6 +121,7 @@ $stmt = $pdo->query('
             AND o2.status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered")
         )
     ) o ON t.id = o.table_id
+    LEFT JOIN users u ON o.user_id = u.id
     WHERE t.name LIKE "Barra - %"
     ORDER BY LENGTH(t.name), t.name
 ');
@@ -181,6 +187,11 @@ if ($has_pedidosya_access) {
 $stmt = $pdo->prepare('SELECT name FROM roles WHERE id = ?');
 $stmt->execute([$_SESSION['role_id']]);
 $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
+// Intercept mobile mesero sessions
+if (isset($_SESSION['device_type']) && $_SESSION['device_type'] === 'mobile' && (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'mesero')) {
+    require_once __DIR__ . '/mesas_mobile.php';
+    exit();
+}
 ?>
 <?php include __DIR__ . '/includes/header.php'; ?>
 
@@ -216,6 +227,12 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         <?php if (isset($_GET['success']) && $_GET['success'] === 'payment_completed'): ?>
             <div class="alert alert-success">
                 ✅ Pago procesado exitosamente
+            </div>
+        <?php endif; ?>
+        
+        <?php if (isset($_GET['error']) && $_GET['error'] === 'table_locked'): ?>
+            <div class="alert alert-danger" style="background: var(--app-danger); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+                ⚠️ Acceso denegado: Esta mesa está siendo atendida por otro mesero.
             </div>
         <?php endif; ?>
 
@@ -257,10 +274,17 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                             $icon = 'bx-restaurant';
                         }
                     }
+                    $is_locked_for_me = false;
+                    if ($table['order_id'] && $_SESSION['role_id'] == 2) {
+                        if ($table['order_user_id'] != $_SESSION['user_id']) {
+                            $is_locked_for_me = true;
+                            $cardClass = 'occupied'; // Force occupied color
+                        }
+                    }
                     ?>
-                    <div class="table-card table-<?= $cardClass ?>" data-order-id="<?= $table['order_id'] ?? '' ?>">
+                    <div class="table-card table-<?= $cardClass ?>" data-order-id="<?= $table['order_id'] ?? '' ?>" style="<?= $is_locked_for_me ? 'opacity: 0.7;' : '' ?>">
                         <div class="table-icon">
-                            <i class='bx <?= $icon ?>'></i>
+                            <i class='bx <?= $is_locked_for_me ? 'bx-lock' : $icon ?>'></i>
                         </div>
                         <div class="table-name"><?= htmlspecialchars($table['name']) ?></div>
                         <div class="table-status">
@@ -276,6 +300,9 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                     ];
                                     echo $status_map[$status] ?? 'Ocupada';
                                 ?>
+                                <div style="font-size: 0.75rem; margin-top: 4px; color: var(--fc-text-sec); display: flex; align-items: center; justify-content: center; gap: 4px;">
+                                    <i class='bx bxs-user-badge'></i> <?= htmlspecialchars($table['waiter_name'] ?? 'Mesero') ?>
+                                </div>
                             <?php else: ?>
                                 Disponible
                             <?php endif; ?>
@@ -288,7 +315,11 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                         <?php endif; ?>
 
                         <div class="table-actions">
-                            <?php if ($table['order_id']): ?>
+                            <?php if ($is_locked_for_me): ?>
+                                <button class="fc-btn fc-btn-outline fc-w100" style="height: 48px; opacity: 0.6; cursor: not-allowed; border: 1px solid var(--fc-border);" disabled>
+                                    <i class='bx bx-lock-alt'></i> EN USO
+                                </button>
+                            <?php elseif ($table['order_id']): ?>
                                 <?php if ($status === 'ready'): ?>
                                     <form method="POST">
                                         <input type="hidden" name="action" value="pickup_order">

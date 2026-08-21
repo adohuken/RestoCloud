@@ -1067,8 +1067,9 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
-    height: 340px;
+    justify-content: space-between; /* Space out the items so buttons are always at bottom */
+    min-height: 340px;
+    height: auto;
     box-shadow: var(--fc-shadow-lg);
 }
 

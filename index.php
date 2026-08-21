@@ -24,6 +24,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['name'] = $user['name'];
             $_SESSION['role_id'] = $user['role_id'];
             $_SESSION['is_super_admin'] = $user['is_super_admin'];
+            
+            // Check if user is a Mesero to prompt device selection
+            $stmtRole = $pdo->prepare("SELECT name FROM roles WHERE id = ?");
+            $stmtRole->execute([$user['role_id']]);
+            $role_name = strtolower(trim($stmtRole->fetchColumn() ?: ''));
+            $_SESSION['role_name'] = $role_name;
+
+            if ($role_name === 'mesero') {
+                header('Location: seleccionar_dispositivo.php');
+                exit();
+            }
 
             // Intelligent redirect based on assigned modules
             if (isRoleAdmin($pdo, $user['role_id'])) {

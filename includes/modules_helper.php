@@ -12,10 +12,6 @@
  */
 function isRoleAdmin($pdo, $role_id)
 {
-    // Check session super admin flag if set
-    if (isset($_SESSION['is_super_admin']) && $_SESSION['is_super_admin'] == 1) {
-        return true;
-    }
 
     // Role ID 1 is always the master Admin
     if ($role_id == 1) {
@@ -220,6 +216,7 @@ function getModuleKeyAliases($key)
         'configuracion' => ['settings', 'configuracion'],
         'reports' => ['reports', 'reportes'],
         'reportes' => ['reports', 'reportes'],
+        'pos' => ['pos', 'tables', 'mesas', 'pedido_libre'],
     ];
 
     return $map[$key] ?? [$key];

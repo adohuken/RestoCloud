@@ -87,6 +87,20 @@ if ($is_libre) {
     $table = ['id' => $barra_table_id, 'name' => 'Barra', 'status' => 'available'];
 }
 
+// Check table ownership/locking (Backend protection)
+if (!$is_libre && $_SESSION['role_id'] == 2) {
+    // Check if there is an active order on this table
+    $stmt = $pdo->prepare('SELECT user_id FROM orders WHERE table_id = ? AND status IN ("draft", "pending", "ready", "preparing", "picked_up", "delivered") ORDER BY id DESC LIMIT 1');
+    $stmt->execute([$table_id]);
+    $active_owner = $stmt->fetchColumn();
+
+    if ($active_owner && $active_owner != $_SESSION['user_id']) {
+        // Table is locked by another waiter!
+        header('Location: mesas.php?error=table_locked');
+        exit();
+    }
+}
+
 // Handle AJAX requests
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
@@ -377,6 +391,11 @@ $stmt = $pdo->prepare('
 ');
 $stmt->execute([$table_id]);
 $order_items = $stmt->fetchAll();
+// Intercept mobile mesero sessions
+if (isset($_SESSION['device_type']) && $_SESSION['device_type'] === 'mobile' && (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'mesero')) {
+    require_once __DIR__ . '/venta_mobile.php';
+    exit();
+}
 ?>
 <?php // Check for clean mode (embedded)
 $clean_mode = isset($_GET['clean']);
@@ -414,18 +433,7 @@ if (!$clean_mode) {
         <?php include __DIR__ . '/includes/sidebar.php'; ?>
     <?php endif; ?>
  
-    <main class="main-content" style="<?= $_SESSION['role_id'] == 2 ? 'margin-left: 0;' : '' ?>">
-        <?php if ($_SESSION['role_id'] == 2 && !$clean_mode): ?>
-            <div class="fc-card" style="margin-bottom: 25px; padding: 15px 25px; border-left: 5px solid var(--fc-primary);">
-                <div class="fc-flex-between">
-                    <h2 style="margin:0; font-size: 1.2em;"><i class='bx bxs-user-badge'></i> Terminal Mesero</h2>
-                    <div style="display: flex; gap: 10px;">
-                        <a href="mesas.php" class="fc-btn fc-btn-outline" style="padding: 8px 15px;"><i class='bx bx-grid-alt'></i> Mesas</a>
-                        <a href="salir.php" class="fc-btn fc-btn-primary" style="padding: 8px 15px;"><i class='bx bx-log-out'></i></a>
-                    </div>
-                </div>
-            </div>
-        <?php endif; ?>
+    <main class="main-content">
  
         <div class="pos-header" style="margin-bottom: 20px;">
             <div>
