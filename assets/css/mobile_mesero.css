@@ -193,14 +193,16 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 1.8rem;
-    margin-bottom: 12px;
+    margin: 0 auto 12px auto; /* Centrado horizontal en contenedores de bloque */
     background: var(--app-bg);
     color: var(--app-text-sec);
     transition: all 0.3s;
 }
 
 .table-icon-wrapper i {
-    transform: translateY(-2px); /* Pequeño ajuste para la fuente BoxIcons */
+    position: relative;
+    top: 0;
+    display: inline-block;
 }
 
 .table-card.free .table-icon-wrapper {
