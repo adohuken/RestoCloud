@@ -150,6 +150,17 @@ function isModuleActive($module, $current_page)
             </li>
         <?php endforeach; ?>
 
+        <?php if ($_SESSION['role_name'] === 'mesero'): ?>
+        <li>
+            <a href="javascript:void(0)" onclick="document.getElementById('switchToMobileForm').submit();">
+                <i class='bx bx-mobile'></i> <span>Ver Móvil</span>
+            </a>
+            <form id="switchToMobileForm" method="POST" action="seleccionar_dispositivo.php" style="display:none;">
+                <input type="hidden" name="device_type" value="mobile">
+            </form>
+        </li>
+        <?php endif; ?>
+
         <li>
             <a href="salir.php" class="logout-link">
                 <i class='bx bx-log-out'></i> <span>Cerrar Sesión</span>

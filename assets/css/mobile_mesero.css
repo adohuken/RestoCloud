@@ -246,11 +246,19 @@ div:where(.swal2-container) h2:where(.swal2-title) {
     color: var(--app-text-main);
 }
 div:where(.swal2-container) button:where(.swal2-styled).swal2-confirm {
-    border-radius: 16px;
-    font-weight: 700;
-    padding: 14px 28px;
-    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
-    border: none;
+    border-radius: 16px !important;
+    font-weight: 700 !important;
+    padding: 14px 28px !important;
+    box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3) !important;
+    border: none !important;
+}
+div:where(.swal2-container) button:where(.swal2-styled).swal2-cancel {
+    border-radius: 16px !important;
+    font-weight: 700 !important;
+    padding: 14px 28px !important;
+    background-color: #f1f5f9 !important;
+    color: #64748b !important;
+    border: none !important;
 }
 
 /* Compact SweetAlert Variant */
@@ -269,10 +277,11 @@ div:where(.swal2-container) div:where(.swal2-popup).compact-swal .swal2-icon {
     transform: scale(0.7);
     margin: 5px auto;
 }
-div:where(.swal2-container) div:where(.swal2-popup).compact-swal button:where(.swal2-styled).swal2-confirm {
-    padding: 10px 20px;
-    font-size: 0.95rem;
-    margin-top: 15px;
+div:where(.swal2-container) div:where(.swal2-popup).compact-swal button:where(.swal2-styled).swal2-confirm,
+div:where(.swal2-container) div:where(.swal2-popup).compact-swal button:where(.swal2-styled).swal2-cancel {
+    padding: 10px 20px !important;
+    font-size: 0.95rem !important;
+    margin-top: 15px !important;
 }
 
 /* Utility Classes */

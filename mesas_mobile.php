@@ -53,40 +53,65 @@
                     }
                 }
             ?>
-                <!-- When clicking, go to venta.php unless locked -->
-                <a <?= $is_locked_for_me ? 'href="javascript:void(0)" onclick="Swal.fire({html: \'<div style=&quot;margin-bottom:10px&quot;><i class=\\\'bx bx-lock\\\' style=\\\'font-size: 54px; color: #f59e0b; opacity: 0.9;\\\'></i></div><div style=&quot;font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.4;&quot;>Esta mesa está siendo atendida por otro mesero.</div>\', confirmButtonColor: \'#6366f1\', confirmButtonText: \'Entendido\', customClass: { popup: \'premium-swal compact-swal\' }})"' : 'href="venta.php?table=' . $table['id'] . '"' ?> class="table-card <?= $cardClass ?>" <?= $is_locked_for_me ? 'style="opacity: 0.6; filter: grayscale(1);"' : '' ?>>
-                    <div class="table-icon-wrapper">
-                        <i class='bx <?= $is_locked_for_me ? 'bx-lock' : 'bx-chair' ?>'></i>
-                    </div>
-                    <div class="table-number">
-                        <?= htmlspecialchars($table['name']) ?>
-                    </div>
-                    <div class="table-status">
-                        <?php if ($table['order_id']): ?>
-                            <div class="badge badge-occupied mb-1">
-                                <?php 
-                                    $status_map = [
-                                        'draft' => 'Tomando...',
-                                        'pending' => 'Cocina',
-                                        'preparing' => 'Preparando',
-                                        'ready' => '¡Listo!',
-                                        'picked_up' => 'Recogido',
-                                        'delivered' => 'Servido'
-                                    ];
-                                    echo $status_map[$status] ?? 'Ocupada';
-                                ?>
-                            </div>
-                            <div style="font-size: 0.75rem; margin-top: 5px; color: var(--app-text-sec); font-weight: 600;">
-                                <i class='bx bxs-user-badge'></i> <?= htmlspecialchars($table['waiter_name'] ?? 'Mesero') ?>
-                            </div>
-                            <div style="font-size: 0.85rem; margin-top: 5px; color: var(--app-text-main); font-weight: 800;">
-                                C$<?= number_format($table['order_total'], 0) ?>
-                            </div>
-                        <?php else: ?>
-                            <div class="badge badge-free">Libre</div>
-                        <?php endif; ?>
-                    </div>
-                </a>
+                <div class="table-card <?= $cardClass ?>" <?= $is_locked_for_me ? 'style="opacity: 0.6; filter: grayscale(1);"' : '' ?>>
+                    <!-- Top clickable area to go to venta.php (unless locked) -->
+                    <a <?= $is_locked_for_me ? 'href="javascript:void(0)" onclick="Swal.fire({html: \'<div style=&quot;margin-bottom:10px&quot;><i class=\\\'bx bx-lock\\\' style=\\\'font-size: 54px; color: #f59e0b; opacity: 0.9;\\\'></i></div><div style=&quot;font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.4;&quot;>Esta mesa está siendo atendida por otro mesero.</div>\', confirmButtonColor: \'#6366f1\', confirmButtonText: \'Entendido\', customClass: { popup: \'premium-swal compact-swal\' }})"' : 'href="venta.php?table=' . $table['id'] . '"' ?> style="text-decoration: none; color: inherit; display: block;">
+                        <div class="table-icon-wrapper">
+                            <i class='bx <?= $is_locked_for_me ? 'bx-lock' : 'bx-chair' ?>'></i>
+                        </div>
+                        <div class="table-number">
+                            <?= htmlspecialchars($table['name']) ?>
+                        </div>
+                        <div class="table-status">
+                            <?php if ($table['order_id']): ?>
+                                <div class="badge badge-occupied mb-1">
+                                    <?php 
+                                        $status_map = [
+                                            'draft' => 'Tomando...',
+                                            'pending' => 'Cocina',
+                                            'preparing' => 'Preparando',
+                                            'ready' => '¡Listo!',
+                                            'picked_up' => 'Recogido',
+                                            'delivered' => 'Servido'
+                                        ];
+                                        echo $status_map[$status] ?? 'Ocupada';
+                                    ?>
+                                </div>
+                                <div style="font-size: 0.75rem; margin-top: 5px; color: var(--app-text-sec); font-weight: 600;">
+                                    <i class='bx bxs-user-badge'></i> <?= htmlspecialchars($table['waiter_name'] ?? 'Mesero') ?>
+                                </div>
+                                <div style="font-size: 0.85rem; margin-top: 5px; color: var(--app-text-main); font-weight: 800;">
+                                    C$<?= number_format($table['order_total'], 0) ?>
+                                </div>
+                            <?php else: ?>
+                                <div class="badge badge-free">Libre</div>
+                            <?php endif; ?>
+                        </div>
+                    </a>
+
+                    <!-- Action Buttons at the bottom of the card -->
+                    <?php if (!$is_locked_for_me && $table['order_id']): ?>
+                        <div style="margin-top: 15px;">
+                            <?php if ($status === 'ready'): ?>
+                                <form method="POST" style="margin:0;">
+                                    <input type="hidden" name="action" value="pickup_order">
+                                    <input type="hidden" name="order_id" value="<?= $table['order_id'] ?>">
+                                    <button type="submit" style="width: 100%; padding: 10px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+                                        <i class='bx bx-check-double' style="font-size: 1.2rem;"></i> SERVIR
+                                    </button>
+                                </form>
+                            <?php elseif ($status === 'picked_up'): ?>
+                                <form method="POST" style="margin:0;">
+                                    <input type="hidden" name="action" value="deliver_order">
+                                    <input type="hidden" name="order_id" value="<?= $table['order_id'] ?>">
+                                    <button type="submit" style="width: 100%; padding: 10px; background: var(--app-gradient); color: white; border: none; border-radius: 12px; font-weight: 700; font-size: 0.9rem; display: flex; align-items: center; justify-content: center; gap: 5px; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);">
+                                        <i class='bx bx-check' style="font-size: 1.2rem;"></i> FINALIZAR
+                                    </button>
+                                </form>
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
             <?php endforeach; ?>
         </div>
     </main>
@@ -111,5 +136,6 @@
     <form id="switchForm" method="POST" action="seleccionar_dispositivo.php" style="display:none;">
         <input type="hidden" name="device_type" value="pc">
     </form>
+    <script src="assets/js/auto_refresh.js?v=<?= time() ?>"></script>
 </body>
 </html>

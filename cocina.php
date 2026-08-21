@@ -700,10 +700,8 @@ $user_role_name = 'Cocinero';
         });
     }, 1000);
 
-    // Auto-refresh KDS every 15 seconds to fetch new incoming orders
-    setInterval(() => {
-        location.reload();
-    }, 15000);
+    // Auto-refresh KDS handled by smart script
 </script>
+<script src="assets/js/auto_refresh.js?v=<?= time() ?>"></script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

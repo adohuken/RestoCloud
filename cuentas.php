@@ -707,4 +707,6 @@ function showOrderSummary(orderId) {
     }
 </script>
 
+<script src="assets/js/auto_refresh.js?v=<?= time() ?>"></script>
+
 <?php include __DIR__ . '/includes/footer.php'; ?>

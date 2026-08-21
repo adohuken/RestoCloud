@@ -562,7 +562,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         const url = new URL(window.location);
         url.searchParams.delete('success');
         url.searchParams.delete('error');
-        window.history.replaceState(null, null, url.pathname);
     }
 </script>
+<script src="assets/js/auto_refresh.js?v=<?= time() ?>"></script>
 <?php include __DIR__ . '/includes/footer.php'; ?>

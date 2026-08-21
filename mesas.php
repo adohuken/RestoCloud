@@ -831,8 +831,10 @@ if (isset($_SESSION['device_type']) && $_SESSION['device_type'] === 'mobile' && 
         });
     }
 
-    // Auto-refresh page every 30 seconds to check for ready orders
-    setTimeout(() => location.reload(), 30000);
+    // Auto-refresh handled by smart script
+    </script>
+    <script src="assets/js/auto_refresh.js?v=<?= time() ?>"></script>
+    <script>
 
     function showOrderSummary(orderId) {
         Swal.fire({

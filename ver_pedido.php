@@ -67,6 +67,8 @@ if ($has_splits) {
     exit();
 }
 
+
+
 // Handle Request Cancellation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['request_cancellation'])) {
     $pdo->prepare('UPDATE orders SET payment_requested = 1 WHERE id = ?')->execute([$order['id']]);
@@ -318,6 +320,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Error al procesar: ' . $e->getMessage();
         }
     }
+}
+
+// Intercept mobile mesero sessions (placed here so all POST requests finish processing first)
+if (isset($_SESSION['device_type']) && $_SESSION['device_type'] === 'mobile' && (isset($_SESSION['role_name']) && $_SESSION['role_name'] === 'mesero')) {
+    require_once __DIR__ . '/ver_pedido_mobile.php';
+    exit();
 }
 ?>
 <?php
@@ -1593,5 +1601,7 @@ $ui_total_with_iva = $ui_subtotal + $ui_iva_amount;
         margin-top: 20px;
     }
 </style>
+
+<script src="assets/js/auto_refresh.js?v=<?= time() ?>"></script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

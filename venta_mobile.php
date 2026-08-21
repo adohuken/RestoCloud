@@ -276,8 +276,11 @@
             </a>
             <?= htmlspecialchars($table['name']) ?>
         </div>
-        <div class="app-header-actions" style="font-weight: 800; color: var(--app-primary);">
-            <span id="headerTotal">C$<?= number_format($order_total, 0) ?></span>
+        <div class="app-header-actions" style="font-weight: 800;">
+            <a href="ver_pedido.php?table=<?= $table_id ?>&view=bill" style="color: var(--app-primary); text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                <span id="headerTotal">C$<?= number_format($order_total, 0) ?></span>
+                <i class='bx bx-receipt' style="font-size: 1.2rem;"></i>
+            </a>
         </div>
     </header>
 
@@ -331,7 +334,10 @@
         <div class="order-sheet-footer">
             <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 1.2rem; font-weight: 800;">
                 <span>Total:</span>
-                <span id="sheetTotal">C$<?= number_format($order_total, 0) ?></span>
+                <a href="ver_pedido.php?table=<?= $table_id ?>&view=bill" style="color: var(--app-text-main); text-decoration: none; display: flex; align-items: center; gap: 5px;">
+                    <span id="sheetTotal">C$<?= number_format($order_total, 0) ?></span>
+                    <i class='bx bx-receipt' style="color: var(--app-primary); font-size: 1.4rem;"></i>
+                </a>
             </div>
             <button class="btn-kitchen" onclick="sendToKitchen()" id="btnKitchen">
                 <i class='bx bx-send'></i> Enviar a Cocina
