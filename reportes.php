@@ -98,9 +98,13 @@ if ($report_type === 'sales') {
 
     $total_inventory_value = 0;
     $total_items = 0;
+    $low_stock_count = 0;
     foreach ($inventory as $item) {
         $total_inventory_value += $item['total_value'];
         $total_items += $item['stock'];
+        if ($item['stock'] < 10) {
+            $low_stock_count++;
+        }
     }
 
 } elseif ($report_type === 'waiters') {
@@ -154,6 +158,23 @@ if ($report_type === 'sales') {
     $stmt = $pdo->prepare($sql_orders);
     $stmt->execute($params_orders);
     $waiter_orders_history = $stmt->fetchAll();
+
+    // Calculate summary statistics
+    $total_waiter_sales = 0;
+    $total_waiter_orders = 0;
+    $top_waiter_name = 'N/A';
+    $top_waiter_sales = 0;
+    
+    foreach ($waiters_stats as $waiter) {
+        $total_waiter_sales += $waiter['total_sales'];
+        $total_waiter_orders += $waiter['total_orders'];
+        if ($waiter['total_sales'] > $top_waiter_sales) {
+            $top_waiter_sales = $waiter['total_sales'];
+            $top_waiter_name = $waiter['name'];
+        }
+    }
+    
+    $waiter_avg_ticket = $total_waiter_orders > 0 ? $total_waiter_sales / $total_waiter_orders : 0;
 
 } elseif ($report_type === 'pedidosya') {
     // PedidosYa report logic
@@ -236,6 +257,15 @@ if ($report_type === 'sales') {
     ');
     $stmt->execute([$start_date, $end_date]);
     $closures = $stmt->fetchAll();
+
+    $total_expected = 0;
+    $total_declared = 0;
+    $total_difference = 0;
+    foreach ($closures as $closure) {
+        $total_expected += $closure['expected_amount'] ?? 0;
+        $total_declared += $closure['amount'] ?? 0;
+        $total_difference += $closure['difference'] ?? 0;
+    }
 }
 
 ?>
@@ -377,13 +407,16 @@ if ($report_type === 'sales') {
                 </div>
             </div>
 
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin-bottom: 30px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-bottom: 30px;">
                 <div class="fc-card" style="margin: 0;">
-                    <div class="fc-modal-header">
+                    <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                         <h3><i class='bx bx-calendar'></i> Ventas por Fecha</h3>
+                        <button onclick="exportTableToCSV('#sales-by-date-table', 'ventas_por_fecha.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            <i class='bx bx-export'></i> Excel
+                        </button>
                     </div>
                     <div class="fc-table-responsive">
-                        <table class="fc-table">
+                        <table class="fc-table" id="sales-by-date-table">
                             <thead>
                                 <tr>
                                     <th>Fecha</th>
@@ -399,6 +432,42 @@ if ($report_type === 'sales') {
                                         <td style="text-align: right; font-weight: 700; color: var(--fc-text-main);">C$<?= number_format($sale['total'], 2) ?></td>
                                     </tr>
                                 <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- NEW: Productos Más Vendidos Card -->
+                <div class="fc-card" style="margin: 0;">
+                    <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <h3><i class='bx bx-star'></i> Más Vendidos</h3>
+                        <button onclick="exportTableToCSV('#top-products-table', 'productos_mas_vendidos.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            <i class='bx bx-export'></i> Excel
+                        </button>
+                    </div>
+                    <div class="fc-table-responsive">
+                        <table class="fc-table" id="top-products-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th style="text-align: center;">Cant.</th>
+                                    <th style="text-align: right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($top_products)): ?>
+                                    <tr>
+                                        <td colspan="3" style="text-align:center; padding: 20px; color: var(--fc-text-sec);">Sin datos</td>
+                                    </tr>
+                                <?php else: ?>
+                                    <?php foreach ($top_products as $prod): ?>
+                                        <tr>
+                                            <td><strong style="color: var(--fc-text-main); font-size: 13px;"><?= htmlspecialchars($prod['name']) ?></strong></td>
+                                            <td style="text-align: center;"><span class="fc-badge fc-badge-outline"><?= $prod['quantity'] ?></span></td>
+                                            <td style="text-align: right; font-weight: 700; color: #10b981; font-size: 13px;">C$<?= number_format($prod['total'], 2) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </tbody>
                         </table>
                     </div>
@@ -431,11 +500,14 @@ if ($report_type === 'sales') {
 
             <!-- Detailed Invoices -->
             <div class="fc-card" style="margin-top: 25px;">
-                <div class="fc-modal-header">
+                <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <h3><i class='bx bx-list-ul'></i> Diario de Facturación Detallado</h3>
+                    <button onclick="exportTableToCSV('#detailed-invoices-table', 'facturas_detalladas.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                        <i class='bx bx-export'></i> Exportar Excel
+                    </button>
                 </div>
                 <div class="fc-table-responsive">
-                    <table class="fc-table">
+                    <table class="fc-table" id="detailed-invoices-table">
                         <thead>
                             <tr>
                                 <th># Folio</th>
@@ -444,7 +516,7 @@ if ($report_type === 'sales') {
                                 <th>Detalle de Productos</th>
                                 <th>Método</th>
                                 <th>Monto Total</th>
-                                <th class="no-print" style="text-align: center;">Acciones</th>
+                                <th class="no-print no-export" style="text-align: center;">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -503,9 +575,126 @@ if ($report_type === 'sales') {
             </div>
         <?php endif; ?>
 
+        <!-- REGISTER CLOSURES REPORT -->
+        <?php if ($report_type === 'cierres'): ?>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div class="fc-card" style="margin:0; padding: 20px; background: rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx bx-calculator'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Total Esperado</span>
+                            <div style="color: var(--fc-text-main); font-size: 20px; font-weight: 700;">C$<?= number_format($total_expected, 2) ?></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fc-card" style="margin:0; padding: 20px; background: rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: #10b981; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx bx-money'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Total Declarado (Real)</span>
+                            <div style="color: var(--fc-text-main); font-size: 20px; font-weight: 700;">C$<?= number_format($total_declared, 2) ?></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fc-card" style="margin:0; padding: 20px; background: <?= $total_difference < 0 ? 'rgba(239, 68, 68, 0.05)' : 'rgba(16, 185, 129, 0.05)' ?>; border-left: 4px solid <?= $total_difference < 0 ? '#ef4444' : '#10b981' ?>;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: <?= $total_difference < 0 ? '#ef4444' : '#10b981' ?>; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx <?= $total_difference < 0 ? 'bx-trending-down' : 'bx-trending-up' ?>'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Diferencia Total</span>
+                            <div style="color: <?= $total_difference < 0 ? '#ef4444' : '#10b981' ?>; font-size: 20px; font-weight: 700;">C$<?= number_format($total_difference, 2) ?></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fc-card" style="margin:0; padding: 20px; background: rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: #8b5cf6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx bx-archive'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Arqueos Realizados</span>
+                            <div style="color: var(--fc-text-main); font-size: 20px; font-weight: 700;"><?= count($closures) ?> <span style="font-size: 12px; font-weight: 400; color: var(--fc-text-sec);">cierres</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="fc-card">
+                <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h3><i class='bx bx-archive-out'></i> Historial de Arqueos y Cierres</h3>
+                    <button onclick="exportTableToCSV('#cierres-table', 'arqueos_caja.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                        <i class='bx bx-export'></i> Exportar Excel
+                    </button>
+                </div>
+                <div class="fc-table-responsive">
+                    <table class="fc-table" id="cierres-table">
+                        <thead>
+                            <tr>
+                                <th>Fecha Cierre</th>
+                                <th>Cajero</th>
+                                <th style="text-align: right;">Esperado en Caja</th>
+                                <th style="text-align: right;">Declarado (Real)</th>
+                                <th style="text-align: right;">Diferencia</th>
+                                <th style="text-align: center;">Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (empty($closures)): ?>
+                                <tr>
+                                    <td colspan="6" style="text-align:center; padding: 40px; color: var(--fc-text-sec);">No se encontraron arqueos en el rango seleccionado</td>
+                                </tr>
+                            <?php else: ?>
+                                <?php foreach ($closures as $closure): 
+                                    $diff = $closure['difference'] ?? 0;
+                                    $statusClass = 'fc-badge-outline';
+                                    $statusText = 'Cuadrado';
+                                    if ($diff < 0) {
+                                        $statusClass = 'fc-badge-primary'; // Red/Error badge style
+                                        $statusText = 'Faltante';
+                                    } elseif ($diff > 0) {
+                                        $statusClass = 'fc-badge-outline'; // Amber or Green outline
+                                        $statusText = 'Sobrante';
+                                    }
+                                ?>
+                                    <tr>
+                                        <td>
+                                            <div style="font-size: 13px; color: var(--fc-text-main);"><?= date('d/m/Y', strtotime($closure['date_created'])) ?></div>
+                                            <div style="font-size: 11px; color: var(--fc-text-sec);"><?= date('H:i', strtotime($closure['date_created'])) ?></div>
+                                        </td>
+                                        <td>
+                                            <strong style="color: var(--fc-text-main);"><?= htmlspecialchars($closure['cashier_name']) ?></strong>
+                                        </td>
+                                        <td style="text-align: right; font-weight: 600;">C$<?= number_format($closure['expected_amount'], 2) ?></td>
+                                        <td style="text-align: right; font-weight: 600; color: var(--fc-text-main);">C$<?= number_format($closure['amount'], 2) ?></td>
+                                        <td style="text-align: right; font-weight: 700; color: <?= $diff < 0 ? '#ef4444' : ($diff > 0 ? '#f59e0b' : '#10b981') ?>;">
+                                            C$<?= number_format($diff, 2) ?>
+                                        </td>
+                                        <td style="text-align: center;">
+                                            <?php if ($diff < 0): ?>
+                                                <span class="fc-badge" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);"><?= $statusText ?></span>
+                                            <?php elseif ($diff > 0): ?>
+                                                <span class="fc-badge" style="background-color: rgba(245, 158, 11, 0.1); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2);"><?= $statusText ?></span>
+                                            <?php else: ?>
+                                                <span class="fc-badge" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2);"><?= $statusText ?></span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        <?php endif; ?>
+
         <!-- INVENTORY REPORT -->
         <?php if ($report_type === 'inventory'): ?>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
                 <div class="fc-card" style="margin:0; padding: 20px; background: rgba(255,255,255,0.03);">
                     <div style="display: flex; align-items: center; gap: 15px;">
                         <div style="width: 50px; height: 50px; background: #f59e0b; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
@@ -539,17 +728,40 @@ if ($report_type === 'sales') {
                         </div>
                     </div>
                 </div>
+                <!-- NEW: Low Stock Summary Card -->
+                <div class="fc-card" style="margin:0; padding: 20px; background: rgba(239, 68, 68, 0.05); border-left: 4px solid #ef4444;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: #ef4444; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx bx-error-alt'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Stock Bajo / Agotado</span>
+                            <div style="color: #ef4444; font-size: 20px; font-weight: 700;"><?= $low_stock_count ?> <span style="font-size: 12px; font-weight: 400; color: var(--fc-text-sec);">alertas</span></div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="fc-card">
-                <div class="fc-modal-header" style="justify-content: space-between;">
+                <div class="fc-modal-header" style="justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
                     <h3><i class='bx bx-store'></i> Estado de Existencias</h3>
-                    <button onclick="window.print()" class="fc-btn fc-btn-outline" style="padding: 8px 15px; font-size: 12px;">
-                       <i class='bx bx-printer'></i> Exportar PDF
-                    </button>
+                    <div style="display: flex; gap: 10px; align-items: center;" class="no-print">
+                        <button id="btn-filter-all" onclick="filterInventory('all')" class="fc-btn fc-btn-primary inventory-filter-btn" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            Ver Todo
+                        </button>
+                        <button id="btn-filter-low" onclick="filterInventory('low')" class="fc-btn fc-btn-outline inventory-filter-btn" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            Alertas (<?= $low_stock_count ?>)
+                        </button>
+                        <button onclick="exportTableToCSV('#inventory-table', 'reporte_inventario.csv')" class="fc-btn fc-btn-outline" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            <i class='bx bx-export'></i> Exportar Excel
+                        </button>
+                        <button onclick="window.print()" class="fc-btn fc-btn-outline" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            <i class='bx bx-printer'></i> PDF
+                        </button>
+                    </div>
                 </div>
                 <div class="fc-table-responsive">
-                    <table class="fc-table">
+                    <table class="fc-table" id="inventory-table">
                         <thead>
                             <tr>
                                 <th>Producto</th>
@@ -557,12 +769,14 @@ if ($report_type === 'sales') {
                                 <th style="text-align: right;">Costo Unit.</th>
                                 <th style="text-align: center;">Disponibilidad</th>
                                 <th style="text-align: right;">Valuación</th>
-                                <th style="text-align: center;">Indicador</th>
+                                <th style="text-align: center;" class="no-export">Indicador</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php foreach ($inventory as $item): ?>
-                                <tr>
+                        <tbody id="inventory-table-body">
+                            <?php foreach ($inventory as $item): 
+                                $rowStatus = ($item['stock'] <= 0) ? 'empty' : (($item['stock'] < 10) ? 'low' : 'ok');
+                            ?>
+                                <tr data-status="<?= $rowStatus ?>">
                                     <td><strong style="color: var(--fc-text-main);"><?= htmlspecialchars($item['name']) ?></strong></td>
                                     <td><span class="fc-badge fc-badge-outline" style="font-size: 10px;"><?= htmlspecialchars($item['category_name'] ?? 'General') ?></span></td>
                                     <td style="text-align: right;">C$<?= number_format($item['price'], 2) ?></td>
@@ -576,7 +790,7 @@ if ($report_type === 'sales') {
                                         <?php endif; ?>
                                     </td>
                                     <td style="text-align: right; font-weight: 600;">C$<?= number_format($item['total_value'], 2) ?></td>
-                                    <td style="text-align: center;">
+                                    <td style="text-align: center;" class="no-export">
                                         <?php if ($item['stock'] <= 0): ?>
                                             <i class='bx bxs-error-circle' style="color: #ef4444; font-size: 18px;"></i>
                                         <?php elseif ($item['stock'] < 10): ?>
@@ -595,19 +809,72 @@ if ($report_type === 'sales') {
 
         <!-- WAITERS REPORT -->
         <?php if ($report_type === 'waiters'): ?>
+            <!-- NEW: Summary Cards for Waiters -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div class="fc-card" style="margin:0; padding: 20px; background: rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: var(--fc-primary); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx bx-money'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Ventas Totales Equipo</span>
+                            <div style="color: var(--fc-text-main); font-size: 20px; font-weight: 700;">C$<?= number_format($total_waiter_sales, 2) ?></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fc-card" style="margin:0; padding: 20px; background: rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: #3b82f6; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx bx-shopping-bag'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Pedidos Atendidos</span>
+                            <div style="color: var(--fc-text-main); font-size: 20px; font-weight: 700;"><?= $total_waiter_orders ?> <span style="font-size: 12px; font-weight: 400; color: var(--fc-text-sec);">comandas</span></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="fc-card" style="margin:0; padding: 20px; background: rgba(255,255,255,0.03);">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: #10b981; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white;">
+                            <i class='bx bx-trending-up'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Ticket Promedio Equipo</span>
+                            <div style="color: var(--fc-text-main); font-size: 20px; font-weight: 700;">C$<?= number_format($waiter_avg_ticket, 2) ?></div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Highlight Star Waiter card -->
+                <div class="fc-card" style="margin:0; padding: 20px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%); border-left: 4px solid #f59e0b;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="width: 50px; height: 50px; background: #f59e0b; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2);">
+                            <i class='bx bxs-medal'></i>
+                        </div>
+                        <div>
+                            <span style="color: var(--fc-text-sec); font-size: 13px;">Colaborador Estrella</span>
+                            <div style="color: #f59e0b; font-size: 16px; font-weight: 800;"><?= htmlspecialchars($top_waiter_name) ?></div>
+                            <div style="font-size: 11px; color: var(--fc-text-sec); font-weight: 600;">Ventas: C$<?= number_format($top_waiter_sales, 0) ?></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="fc-card">
-                <div class="fc-modal-header">
+                <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <h3><i class='bx bx-medal'></i> Desempeño del Equipo de Servicio</h3>
+                    <button onclick="exportTableToCSV('#waiters-performance-table', 'desempeño_meseros.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                        <i class='bx bx-export'></i> Exportar Excel
+                    </button>
                 </div>
                 <div class="fc-table-responsive">
-                    <table class="fc-table">
+                    <table class="fc-table" id="waiters-performance-table">
                         <thead>
                             <tr>
                                 <th>Colaborador</th>
                                 <th style="text-align: center;">Pedidos Concluidos</th>
                                 <th style="text-align: right;">Volumen de Venta</th>
                                 <th style="text-align: right;">Ticket Promedio</th>
-                                <th style="text-align: center;">Productividad</th>
+                                <th style="text-align: center;" class="no-export">Productividad</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -635,7 +902,7 @@ if ($report_type === 'sales') {
                                         </td>
                                         <td style="text-align: right; color: var(--fc-text-main); font-weight: 700;">C$<?= number_format($waiter['total_sales'], 2) ?></td>
                                         <td style="text-align: right; color: #10b981; font-weight: 600;">C$<?= number_format($avg, 2) ?></td>
-                                        <td style="text-align: center;">
+                                        <td style="text-align: center;" class="no-export">
                                             <div style="width: 100px; height: 8px; background: rgba(255,255,255,0.05); border-radius: 4px; margin: 0 auto; overflow: hidden;">
                                                 <div style="width: <?= min(100, ($avg/500)*100) ?>%; height: 100%; background: var(--fc-primary);"></div>
                                             </div>
@@ -650,11 +917,14 @@ if ($report_type === 'sales') {
 
             <!-- HISTORIAL DE COMANDAS -->
             <div class="fc-card" style="margin-top: 25px;">
-                <div class="fc-modal-header">
+                <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                     <h3><i class='bx bx-receipt'></i> Historial de Comandas</h3>
+                    <button onclick="exportTableToCSV('#waiters-history-table', 'historial_comandas_meseros.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                        <i class='bx bx-export'></i> Exportar Excel
+                    </button>
                 </div>
                 <div class="fc-table-responsive">
-                    <table class="fc-table">
+                    <table class="fc-table" id="waiters-history-table">
                         <thead>
                             <tr>
                                 <th># Comanda</th>
@@ -734,108 +1004,30 @@ if ($report_type === 'sales') {
 
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 25px; margin-bottom: 30px;">
                     <div class="fc-card" style="margin: 0;">
-                        <div class="fc-modal-header">
-                            <h3><i class='bx bx-calendar'></i> Histórico Delivery</h3>
-                        </div>
-                        <div class="fc-table-responsive">
-                            <table class="fc-table">
-                                <thead>
-                                    <tr>
-                                        <th>Fecha</th>
-                                        <th style="text-align: center;">Pedidos</th>
-                                        <th style="text-align: right;">Subtotal</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($pedidosya_by_date)): ?>
-                                        <tr><td colspan="3" style="text-align:center; padding:30px; color: var(--fc-text-sec);">No hay registros</td></tr>
-                                    <?php else: ?>
-                                        <?php foreach ($pedidosya_by_date as $day): ?>
-                                            <tr>
-                                                <td><?= date('d/m/Y', strtotime($day['date'])) ?></td>
-                                                <td style="text-align: center;"><span class="fc-badge fc-badge-outline"><?= $day['orders'] ?></span></td>
-                                                <td style="text-align: right; font-weight: 700; color: #ff4757;">C$<?= number_format($day['total'], 2) ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="fc-card" style="margin: 0;">
-                        <div class="fc-modal-header">
-                            <h3><i class='bx bx-trending-up'></i> Top Delivery</h3>
-                        </div>
-                        <div class="fc-table-responsive">
-                            <table class="fc-table">
-                                <thead>
-                                    <tr>
-                                        <th>Producto</th>
-                                        <th style="text-align: center;">Cant.</th>
-                                        <th style="text-align: right;">Total</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <?php if (empty($pedidosya_top_products)): ?>
-                                        <tr><td colspan="3" style="text-align:center; padding:30px; color: var(--fc-text-sec);">No hay registros</td></tr>
-                                    <?php else: ?>
-                                        <?php foreach ($pedidosya_top_products as $prod): ?>
-                                            <tr>
-                                                <td><?= htmlspecialchars($prod['product_name']) ?></td>
-                                                <td style="text-align: center;"><?= $prod['quantity'] ?></td>
-                                                <td style="text-align: right; font-weight: 600;">C$<?= number_format($prod['total'], 2) ?></td>
-                                            </tr>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="fc-card">
-                    <div class="fc-modal-header">
-                        <h3><i class='bx bx-list-check'></i> Auditoría de Órdenes Delivery</h3>
+                    <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <h3><i class='bx bx-calendar'></i> Histórico Delivery</h3>
+                        <button onclick="exportTableToCSV('#pedidosya-history-table', 'pedidosya_historico.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            <i class='bx bx-export'></i> Excel
+                        </button>
                     </div>
                     <div class="fc-table-responsive">
-                        <table class="fc-table">
+                        <table class="fc-table" id="pedidosya-history-table">
                             <thead>
                                 <tr>
-                                    <th>ID Externo</th>
-                                    <th>Fecha/Hora</th>
-                                    <th>Información Cliente</th>
-                                    <th>Items</th>
-                                    <th>Recaudación</th>
-                                    <th class="no-print">Ref.</th>
+                                    <th>Fecha</th>
+                                    <th style="text-align: center;">Pedidos</th>
+                                    <th style="text-align: right;">Subtotal</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <?php if (empty($pedidosya_orders)): ?>
-                                    <tr><td colspan="6" style="text-align:center; padding:40px; color: var(--fc-text-sec);">Sin pedidos PedidosYa</td></tr>
+                                <?php if (empty($pedidosya_by_date)): ?>
+                                    <tr><td colspan="3" style="text-align:center; padding:30px; color: var(--fc-text-sec);">No hay registros</td></tr>
                                 <?php else: ?>
-                                    <?php foreach ($pedidosya_orders as $order): ?>
+                                    <?php foreach ($pedidosya_by_date as $day): ?>
                                         <tr>
-                                            <td><span class="fc-badge" style="background: #ff4757; color: white; border: none; font-family: monospace;"><?= htmlspecialchars($order['external_order_id']) ?></span></td>
-                                            <td>
-                                                <div style="font-size: 13px; color: var(--fc-text-main);"><?= date('d/m/Y', strtotime($order['date_created'])) ?></div>
-                                                <div style="font-size: 11px; color: var(--fc-text-sec);"><?= date('H:i', strtotime($order['date_created'])) ?></div>
-                                            </td>
-                                            <td>
-                                                <?php if ($order['customer_name']): ?>
-                                                    <div style="font-weight: 600; font-size: 13px;"><?= htmlspecialchars($order['customer_name']) ?></div>
-                                                    <?php if ($order['customer_phone']): ?>
-                                                        <div style="font-size: 11px; color: var(--fc-text-sec);"><i class='bx bx-phone'></i> <?= htmlspecialchars($order['customer_phone']) ?></div>
-                                                    <?php endif; ?>
-                                                <?php else: ?>
-                                                    <span style="color: var(--fc-text-sec);">-</span>
-                                                <?php endif; ?>
-                                            </td>
-                                            <td style="max-width: 250px; font-size: 12px; color: var(--fc-text-sec);"><?= htmlspecialchars($order['items'] ?? '-') ?></td>
-                                            <td><strong style="color: #ff4757;">C$<?= number_format($order['total'], 2) ?></strong></td>
-                                            <td class="no-print">
-                                                <a href="factura_pedidosya.php?id=<?= $order['id'] ?>" class="fc-btn fc-btn-outline" style="padding: 5px 10px; font-size: 11px;">Ver</a>
-                                            </td>
+                                            <td><?= date('d/m/Y', strtotime($day['date'])) ?></td>
+                                            <td style="text-align: center;"><span class="fc-badge fc-badge-outline"><?= $day['orders'] ?></span></td>
+                                            <td style="text-align: right; font-weight: 700; color: #ff4757;">C$<?= number_format($day['total'], 2) ?></td>
                                         </tr>
                                     <?php endforeach; ?>
                                 <?php endif; ?>
@@ -843,51 +1035,85 @@ if ($report_type === 'sales') {
                         </table>
                     </div>
                 </div>
-            <?php endif; ?>
-        <?php endif; ?>
 
-        <!-- DELETED INVOICES REPORT -->
-        <?php if ($report_type === 'deleted'): ?>
+                <div class="fc-card" style="margin: 0;">
+                    <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                        <h3><i class='bx bx-trending-up'></i> Top Delivery</h3>
+                        <button onclick="exportTableToCSV('#pedidosya-top-table', 'pedidosya_top_productos.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                            <i class='bx bx-export'></i> Excel
+                        </button>
+                    </div>
+                    <div class="fc-table-responsive">
+                        <table class="fc-table" id="pedidosya-top-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th style="text-align: center;">Cant.</th>
+                                    <th style="text-align: right;">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($pedidosya_top_products)): ?>
+                                    <tr><td colspan="3" style="text-align:center; padding:30px; color: var(--fc-text-sec);">No hay registros</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($pedidosya_top_products as $prod): ?>
+                                        <tr>
+                                            <td><?= htmlspecialchars($prod['product_name']) ?></td>
+                                            <td style="text-align: center;"><?= $prod['quantity'] ?></td>
+                                            <td style="text-align: right; font-weight: 600;">C$<?= number_format($prod['total'], 2) ?></td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
             <div class="fc-card">
-                <div class="fc-modal-header">
-                    <h3><i class='bx bx-history'></i> Auditoría de Eliminaciones Técnicas</h3>
+                <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h3><i class='bx bx-list-check'></i> Auditoría de Órdenes Delivery</h3>
+                    <button onclick="exportTableToCSV('#pedidosya-audit-table', 'auditoria_pedidosya.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                        <i class='bx bx-export'></i> Exportar Excel
+                    </button>
                 </div>
                 <div class="fc-table-responsive">
-                    <table class="fc-table">
+                    <table class="fc-table" id="pedidosya-audit-table">
                         <thead>
                             <tr>
-                                <th>Factura/Pedido</th>
-                                <th style="text-align: right;">Monto Anulado</th>
-                                <th>Fecha Anulación</th>
-                                <th>Responsable</th>
-                                <th>Motivación del Ajuste</th>
+                                <th>ID Externo</th>
+                                <th>Fecha/Hora</th>
+                                <th>Información Cliente</th>
+                                <th>Items</th>
+                                <th>Recaudación</th>
+                                <th class="no-print no-export">Ref.</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if (empty($deleted_invoices)): ?>
-                                <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--fc-text-sec);">Registro de auditoría limpio</td></tr>
+                            <?php if (empty($pedidosya_orders)): ?>
+                                <tr><td colspan="6" style="text-align:center; padding:40px; color: var(--fc-text-sec);">Sin pedidos PedidosYa</td></tr>
                             <?php else: ?>
-                                <?php foreach ($deleted_invoices as $del): ?>
+                                <?php foreach ($pedidosya_orders as $order): ?>
                                     <tr>
+                                        <td><span class="fc-badge" style="background: #ff4757; color: white; border: none; font-family: monospace;"><?= htmlspecialchars($order['external_order_id']) ?></span></td>
                                         <td>
-                                            <div style="font-weight: 700; color: var(--fc-text-main);">#<?= $del['original_invoice_id'] ?></div>
-                                            <div style="font-size: 11px; color: var(--fc-text-sec);">Orden #<?= $del['order_id'] ?></div>
-                                        </td>
-                                        <td style="text-align: right;"><strong style="color: #ef4444;">C$<?= number_format($del['amount'], 2) ?></strong></td>
-                                        <td>
-                                            <div style="font-size: 13px;"><?= date('d/m/Y', strtotime($del['deleted_at'])) ?></div>
-                                            <div style="font-size: 11px; color: var(--fc-text-sec);"><?= date('H:i', strtotime($del['deleted_at'])) ?></div>
+                                            <div style="font-size: 13px; color: var(--fc-text-main);"><?= date('d/m/Y', strtotime($order['date_created'])) ?></div>
+                                            <div style="font-size: 11px; color: var(--fc-text-sec);"><?= date('H:i', strtotime($order['date_created'])) ?></div>
                                         </td>
                                         <td>
-                                            <div style="display:flex; align-items:center; gap:8px;">
-                                                <div class="fc-user-avatar" style="width:28px; height:28px; font-size:12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 8px;">
-                                                    <?= strtoupper(substr($del['deleted_by_name'] ?? 'S', 0, 1)) ?>
-                                                </div>
-                                                <span style="font-size: 13px;"><?= htmlspecialchars($del['deleted_by_name'] ?? 'SISTEMA') ?></span>
-                                            </div>
+                                            <?php if ($order['customer_name']): ?>
+                                                <div style="font-weight: 600; font-size: 13px;"><?= htmlspecialchars($order['customer_name']) ?></div>
+                                                <?php if ($order['customer_phone']): ?>
+                                                    <div style="font-size: 11px; color: var(--fc-text-sec);"><i class='bx bx-phone'></i> <?= htmlspecialchars($order['customer_phone']) ?></div>
+                                                <?php endif; ?>
+                                            <?php else: ?>
+                                                <span style="color: var(--fc-text-sec);">-</span>
+                                            <?php endif; ?>
                                         </td>
-                                        <td style="max-width: 250px; font-size: 12px;">
-                                            <i class='bx bx-comment-error' style="color: #ef4444;"></i> <?= htmlspecialchars($del['reason'] ?: 'Sin motivo especificado') ?>
+                                        <td style="max-width: 250px; font-size: 12px; color: var(--fc-text-sec);"><?= htmlspecialchars($order['items'] ?? '-') ?></td>
+                                        <td><strong style="color: #ff4757;">C$<?= number_format($order['total'], 2) ?></strong></td>
+                                        <td class="no-print no-export">
+                                            <a href="factura_pedidosya.php?id=<?= $order['id'] ?>" class="fc-btn fc-btn-outline" style="padding: 5px 10px; font-size: 11px;">Ver</a>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -897,27 +1123,158 @@ if ($report_type === 'sales') {
                 </div>
             </div>
         <?php endif; ?>
+    <?php endif; ?>
 
-    </main>
+    <!-- DELETED INVOICES REPORT -->
+    <?php if ($report_type === 'deleted'): ?>
+        <div class="fc-card">
+            <div class="fc-modal-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <h3><i class='bx bx-history'></i> Auditoría de Eliminaciones Técnicas</h3>
+                <button onclick="exportTableToCSV('#deleted-invoices-table', 'auditoria_eliminaciones.csv')" class="fc-btn fc-btn-outline no-print" style="padding: 6px 12px; font-size: 11px; height: auto;">
+                    <i class='bx bx-export'></i> Exportar Excel
+                </button>
+            </div>
+            <div class="fc-table-responsive">
+                <table class="fc-table" id="deleted-invoices-table">
+                    <thead>
+                        <tr>
+                            <th>Factura/Pedido</th>
+                            <th style="text-align: right;">Monto Anulado</th>
+                            <th>Fecha Anulación</th>
+                            <th>Responsable</th>
+                            <th>Motivación del Ajuste</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (empty($deleted_invoices)): ?>
+                            <tr><td colspan="5" style="text-align:center; padding:40px; color:var(--fc-text-sec);">Registro de auditoría limpio</td></tr>
+                        <?php else: ?>
+                            <?php foreach ($deleted_invoices as $del): ?>
+                                <tr>
+                                    <td>
+                                        <div style="font-weight: 700; color: var(--fc-text-main);">#<?= $del['original_invoice_id'] ?></div>
+                                        <div style="font-size: 11px; color: var(--fc-text-sec);">Orden #<?= $del['order_id'] ?></div>
+                                    </td>
+                                    <td style="text-align: right;"><strong style="color: #ef4444;">C$<?= number_format($del['amount'], 2) ?></strong></td>
+                                    <td>
+                                        <div style="font-size: 13px;"><?= date('d/m/Y', strtotime($del['deleted_at'])) ?></div>
+                                        <div style="font-size: 11px; color: var(--fc-text-sec);"><?= date('H:i', strtotime($del['deleted_at'])) ?></div>
+                                    </td>
+                                    <td>
+                                        <div style="display:flex; align-items:center; gap:8px;">
+                                            <div class="fc-user-avatar" style="width:28px; height:28px; font-size:12px; background: rgba(239, 68, 68, 0.1); color: #ef4444; border-radius: 8px;">
+                                                <?= strtoupper(substr($del['deleted_by_name'] ?? 'S', 0, 1)) ?>
+                                            </div>
+                                            <span style="font-size: 13px;"><?= htmlspecialchars($del['deleted_by_name'] ?? 'SISTEMA') ?></span>
+                                        </div>
+                                    </td>
+                                    <td style="max-width: 250px; font-size: 12px;">
+                                        <i class='bx bx-comment-error' style="color: #ef4444;"></i> <?= htmlspecialchars($del['reason'] ?: 'Sin motivo especificado') ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <?php endif; ?>
+
+</main>
 </div>
 
 <style>
-    @media print {
-        @page { margin: 20mm; size: auto; }
-        body { background: white !important; color: black !important; font-family: serif; }
-        .sidebar, .no-print, .fc-tabs, .fc-header-right, .fc-btn { display: none !important; }
-        .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; background: white !important; }
-        .dashboard-wrapper { display: block !important; }
-        .fc-card { box-shadow: none !important; border: 1px solid #ddd !important; background: white !important; }
-        .fc-modal-header { border-bottom: 2px solid #000 !important; padding: 10px 0 !important; }
-        .fc-modal-header h3 { color: black !important; font-size: 18px !important; }
-        .fc-table th { background: #f0f0f0 !important; color: black !important; border: 1px solid #000 !important; }
-        .fc-table td { color: black !important; border: 1px solid #ddd !important; }
-        .fc-badge { border: 1px solid #000 !important; color: black !important; background: white !important; }
-        .print-header { display: block !important; }
-        .fc-card, .fc-table-responsive { page-break-inside: avoid; }
-    }
-    .print-header { display: none; }
+@media print {
+    @page { margin: 20mm; size: auto; }
+    body { background: white !important; color: black !important; font-family: serif; }
+    .sidebar, .no-print, .fc-tabs, .fc-header-right, .fc-btn { display: none !important; }
+    .main-content { margin-left: 0 !important; padding: 0 !important; width: 100% !important; background: white !important; }
+    .dashboard-wrapper { display: block !important; }
+    .fc-card { box-shadow: none !important; border: 1px solid #ddd !important; background: white !important; }
+    .fc-modal-header { border-bottom: 2px solid #000 !important; padding: 10px 0 !important; }
+    .fc-modal-header h3 { color: black !important; font-size: 18px !important; }
+    .fc-table th { background: #f0f0f0 !important; color: black !important; border: 1px solid #000 !important; }
+    .fc-table td { color: black !important; border: 1px solid #ddd !important; }
+    .fc-badge { border: 1px solid #000 !important; color: black !important; background: white !important; }
+    .print-header { display: block !important; }
+    .fc-card, .fc-table-responsive { page-break-inside: avoid; }
+}
+.print-header { display: none; }
 </style>
+
+<script>
+//restocloud CSV exporter
+function exportTableToCSV(tableSelector, filename) {
+    const table = document.querySelector(tableSelector);
+    if (!table) return;
+    
+    let csv = [];
+    const rows = table.querySelectorAll("tr");
+    
+    for (let i = 0; i < rows.length; i++) {
+        // Skip hidden rows (like filtered out inventory items)
+        if (rows[i].style.display === 'none') continue;
+        
+        const row = [];
+        const cols = rows[i].querySelectorAll("td, th");
+        
+        for (let j = 0; j < cols.length; j++) {
+            // Skip action/icon columns marked with no-export
+            if (cols[j].classList.contains('no-export')) continue;
+            
+            let data = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, " ").replace(/\s+/g, " ").trim();
+            // Escape double quotes
+            data = data.replace(/"/g, '""');
+            row.push('"' + data + '"');
+        }
+        if (row.length > 0) {
+            csv.push(row.join(","));
+        }
+    }
+    
+    // Add UTF-8 BOM to make Excel read Spanish accents/currency symbols correctly
+    const csvString = "\uFEFF" + csv.join("\n");
+    const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+// inventory filtering logic
+function filterInventory(type) {
+    const rows = document.querySelectorAll('#inventory-table-body tr');
+    const buttons = document.querySelectorAll('.inventory-filter-btn');
+    
+    // Update button styling states
+    buttons.forEach(btn => {
+        btn.classList.remove('fc-btn-primary');
+        btn.classList.add('fc-btn-outline');
+    });
+    
+    const activeBtn = document.getElementById('btn-filter-' + type);
+    if (activeBtn) {
+        activeBtn.classList.remove('fc-btn-outline');
+        activeBtn.classList.add('fc-btn-primary');
+    }
+    
+    rows.forEach(row => {
+        const status = row.getAttribute('data-status');
+        if (type === 'all') {
+            row.style.display = '';
+        } else if (type === 'low') {
+            if (status === 'low' || status === 'empty') {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+}
+</script>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>
