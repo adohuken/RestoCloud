@@ -175,7 +175,7 @@
             position: fixed;
             bottom: calc(var(--nav-height) + 25px);
             right: 25px;
-            background: var(--app-gradient);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
             width: 64px;
             height: 64px;
@@ -184,7 +184,7 @@
             align-items: center;
             justify-content: center;
             font-size: 28px;
-            box-shadow: 0 10px 25px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);
             z-index: 998;
             border: none;
             transition: transform 0.2s;
