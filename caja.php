@@ -234,6 +234,13 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                     input[type=number].denom-input, input[type=number].electronic-input {
                                         -moz-appearance: textfield; 
                                     }
+                                    #arqueo-audit-table th {
+                                        position: sticky;
+                                        top: 0;
+                                        background: #ffffff;
+                                        z-index: 2;
+                                        border-bottom: 1px solid #e2e8f0;
+                                    }
                                 </style>
 
                                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
@@ -351,8 +358,8 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 <div class="fc-modal-header">
                     <h3><i class='bx bx-history'></i> Auditoría de Arqueos</h3>
                 </div>
-                <div class="fc-table-responsive">
-                    <table class="fc-table">
+                <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
+                    <table class="fc-table" id="arqueo-audit-table">
                         <thead>
                             <tr>
                                 <th>Fecha y Hora</th>
@@ -477,30 +484,23 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 
                 statusDiv.style.display = 'block';
                 
-                // If everything matches perfectly
-                if (Math.abs(diffCash) < 0.01 && Math.abs(diffCard) < 0.01 && Math.abs(diffTransfer) < 0.01) {
-                    statusDiv.innerHTML = '<i class="bx bx-check-circle"></i> Arqueo Cuadrado Perfecto (Efectivo y Electrónico)';
-                    statusDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
-                    statusDiv.style.color = '#10b981';
-                    
-                    btnCerrar.disabled = false;
-                    btnCerrar.style.background = '#0f172a';
-                    btnCerrar.style.setProperty('color', 'white', 'important');
-                    btnCerrar.style.cursor = 'pointer';
-                } else {
-                    // Build error messages
+                // Check if there are deficits (faltantes)
+                let hasDeficit = (diffCash < -0.01) || (diffCard < -0.01) || (diffTransfer < -0.01);
+                
+                if (hasDeficit) {
+                    // Build deficit error messages
                     let errors = [];
-                    if (Math.abs(diffCash) >= 0.01) {
-                        errors.push(`Efectivo: ${diffCash > 0 ? '+' : ''}${diffCash.toFixed(2)}`);
+                    if (diffCash < -0.01) {
+                        errors.push(`Faltante Efectivo: C$${Math.abs(diffCash).toFixed(2)}`);
                     }
-                    if (Math.abs(diffCard) >= 0.01) {
-                        errors.push(`Tarjeta: ${diffCard > 0 ? '+' : ''}${diffCard.toFixed(2)}`);
+                    if (diffCard < -0.01) {
+                        errors.push(`Faltante Tarjeta: C$${Math.abs(diffCard).toFixed(2)}`);
                     }
-                    if (Math.abs(diffTransfer) >= 0.01) {
-                        errors.push(`Transfer: ${diffTransfer > 0 ? '+' : ''}${diffTransfer.toFixed(2)}`);
+                    if (diffTransfer < -0.01) {
+                        errors.push(`Faltante Transfer: C$${Math.abs(diffTransfer).toFixed(2)}`);
                     }
                     
-                    statusDiv.innerHTML = `<i class="bx bx-error"></i> Descuadre en: ${errors.join(' | ')}`;
+                    statusDiv.innerHTML = `<i class="bx bx-error"></i> Bloqueado: ${errors.join(' | ')}`;
                     statusDiv.style.backgroundColor = 'rgba(239, 68, 68, 0.1)';
                     statusDiv.style.color = '#ef4444';
                     
@@ -508,6 +508,34 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                     btnCerrar.style.background = '#94a3b8';
                     btnCerrar.style.setProperty('color', 'white', 'important');
                     btnCerrar.style.cursor = 'not-allowed';
+                } else {
+                    // No deficits! Check if there is a surplus or perfect match
+                    let hasSurplus = (diffCash > 0.01) || (diffCard > 0.01) || (diffTransfer > 0.01);
+                    
+                    if (hasSurplus) {
+                        let surpluses = [];
+                        if (diffCash > 0.01) {
+                            surpluses.push(`Efectivo: +C$${diffCash.toFixed(2)}`);
+                        }
+                        if (diffCard > 0.01) {
+                            surpluses.push(`Tarjeta: +C$${diffCard.toFixed(2)}`);
+                        }
+                        if (diffTransfer > 0.01) {
+                            surpluses.push(`Transfer: +C$${diffTransfer.toFixed(2)}`);
+                        }
+                        statusDiv.innerHTML = `<i class="bx bx-check-circle"></i> Arqueo con Sobrante Autorizado (${surpluses.join(' | ')})`;
+                        statusDiv.style.backgroundColor = 'rgba(245, 158, 11, 0.1)';
+                        statusDiv.style.color = '#f59e0b';
+                    } else {
+                        statusDiv.innerHTML = '<i class="bx bx-check-circle"></i> Arqueo Cuadrado Perfecto (Efectivo y Electrónico)';
+                        statusDiv.style.backgroundColor = 'rgba(16, 185, 129, 0.1)';
+                        statusDiv.style.color = '#10b981';
+                    }
+                    
+                    btnCerrar.disabled = false;
+                    btnCerrar.style.background = '#0f172a';
+                    btnCerrar.style.setProperty('color', 'white', 'important');
+                    btnCerrar.style.cursor = 'pointer';
                 }
             }
             

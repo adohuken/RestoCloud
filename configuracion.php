@@ -1325,8 +1325,10 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                 <h4 style="color: var(--fc-text-main); font-size: 15px; margin-bottom: 15px;">Control de
                                     Auditoría</h4>
                                 <a href="gestion_facturas.php" class="fc-btn fc-btn-outline fc-w100"
-                                    style="text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 10px; color: #f59e0b; border-color: rgba(245, 158, 11, 0.3);">
-                                    <i class='bx bx-history'></i> Administrar Historial de Facturas
+                                    style="text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 10px; color: #f59e0b; border-color: #f59e0b; background: rgba(245, 158, 11, 0.05); font-weight: 600; padding: 12px; border-radius: 12px; transition: all 0.2s ease;"
+                                    onmouseover="this.style.background='rgba(245, 158, 11, 0.1)'; this.style.transform='translateY(-1px)';"
+                                    onmouseout="this.style.background='rgba(245, 158, 11, 0.05)'; this.style.transform='translateY(0)';">
+                                    <i class='bx bx-history' style="font-size: 18px;"></i> Administrar Historial de Facturas
                                 </a>
                             </div>
                         <?php endif; ?>

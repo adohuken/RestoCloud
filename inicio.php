@@ -29,12 +29,19 @@ if ($_SESSION['role_id'] == 4) {
 $stmt = $pdo->query('SELECT * FROM cash_register WHERE status = "active" ORDER BY id DESC LIMIT 1');
 $active_register = $stmt->fetch();
 
+$display_register = $active_register;
+if (!$display_register) {
+    // For demonstration and to avoid blank charts, fallback to the last opened cash register
+    $stmt = $pdo->query('SELECT * FROM cash_register WHERE type = "open" ORDER BY id DESC LIMIT 1');
+    $display_register = $stmt->fetch();
+}
+
 $total_sales = 0;
 $total_orders = 0;
 $top_products = [];
 $category_sales = [];
 
-if ($active_register) {
+if ($display_register) {
     // Sales & Orders
     $stmt = $pdo->prepare('
         SELECT SUM(p.amount) as total_sales, COUNT(DISTINCT o.id) as total_orders 
@@ -42,7 +49,7 @@ if ($active_register) {
         JOIN orders o ON p.order_id = o.id
         WHERE p.date_created >= ?
     ');
-    $stmt->execute([$active_register['date_created']]);
+    $stmt->execute([$display_register['date_created']]);
     $sales_data = $stmt->fetch();
     $total_sales = $sales_data['total_sales'] ?? 0;
     $total_orders = $sales_data['total_orders'] ?? 0;
@@ -59,7 +66,7 @@ if ($active_register) {
         ORDER BY total DESC
         LIMIT 5
     ');
-    $stmt->execute([$active_register['date_created']]);
+    $stmt->execute([$display_register['date_created']]);
     $top_products = $stmt->fetchAll();
 
     // Category Sales
@@ -74,7 +81,7 @@ if ($active_register) {
         GROUP BY c.id
         ORDER BY total DESC
     ');
-    $stmt->execute([$active_register['date_created']]);
+    $stmt->execute([$display_register['date_created']]);
     $category_sales = $stmt->fetchAll();
 }
 

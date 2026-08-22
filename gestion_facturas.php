@@ -112,11 +112,13 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     <main class="main-content">
         <div class="fc-header" style="margin-bottom: 30px;">
             <div class="fc-header-left">
-                <h1><i class='bx bx-receipt'></i> Gestión de Facturas</h1>
-                <p>Administrar historial de facturación y anulaciones</p>
-                <a href="configuracion.php?tab=invoicing" class="fc-btn fc-btn-outline" style="margin-top: 10px; height: 32px; padding: 0 15px; font-size: 11px;">
-                    <i class='bx bx-left-arrow-alt'></i> Volver
+                <a href="configuracion.php?tab=invoicing" class="fc-btn" style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 20px; font-size: 13px; font-weight: 700; border-radius: 10px; margin-bottom: 20px; height: auto; text-decoration: none; background: #6366f1; color: white !important; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3); transition: all 0.2s ease;"
+                   onmouseover="this.style.background='#4f46e5'; this.style.transform='translateY(-1px)';"
+                   onmouseout="this.style.background='#6366f1'; this.style.transform='translateY(0)';">
+                    <i class='bx bx-left-arrow-alt' style="font-size: 20px; color: white !important;"></i> Volver a Configuración
                 </a>
+                <h1 style="display: flex; align-items: center; gap: 10px; margin: 0 0 5px 0;"><i class='bx bx-receipt' style="color: var(--fc-primary);"></i> Gestión de Facturas</h1>
+                <p style="margin: 0;">Administrar historial de facturación y anulaciones</p>
             </div>
             <div class="fc-header-right">
                 <div class="user-profile-header">
@@ -168,17 +170,17 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 </form>
             </div>
 
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; min-width: 800px;">
+            <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
+                <table class="fc-table" id="invoices-list-table" style="width: 100%; border-collapse: collapse; min-width: 800px;">
                     <thead>
                         <tr style="background: rgba(255, 255, 255, 0.02); border-bottom: 1px solid var(--fc-border);">
-                            <th style="padding: 15px 20px; text-align: left; font-size: 11px; font-weight: 700; color: var(--fc-text-sec); text-transform: uppercase;">Factura</th>
-                            <th style="padding: 15px 20px; text-align: left; font-size: 11px; font-weight: 700; color: var(--fc-text-sec); text-transform: uppercase;">Pedido</th>
-                            <th style="padding: 15px 20px; text-align: left; font-size: 11px; font-weight: 700; color: var(--fc-text-sec); text-transform: uppercase;">Fecha / Hora</th>
-                            <th style="padding: 15px 20px; text-align: left; font-size: 11px; font-weight: 700; color: var(--fc-text-sec); text-transform: uppercase;">Referencia</th>
-                            <th style="padding: 15px 20px; text-align: left; font-size: 11px; font-weight: 700; color: var(--fc-text-sec); text-transform: uppercase;">Método Pago</th>
-                            <th style="padding: 15px 20px; text-align: right; font-size: 11px; font-weight: 700; color: var(--fc-text-sec); text-transform: uppercase;">Total</th>
-                            <th style="padding: 15px 20px; text-align: center; font-size: 11px; font-weight: 700; color: var(--fc-text-sec); text-transform: uppercase;">Acciones</th>
+                            <th>Factura</th>
+                            <th>Pedido</th>
+                            <th>Fecha / Hora</th>
+                            <th>Referencia</th>
+                            <th>Método Pago</th>
+                            <th style="text-align: right;">Total</th>
+                            <th style="text-align: center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -268,5 +270,16 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         });
     }
 </script>
+
+<style>
+#invoices-list-table th {
+    position: sticky;
+    top: 0;
+    background: var(--fc-card-bg);
+    z-index: 2;
+    border-bottom: 1px solid var(--fc-border);
+}
+
+</style>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

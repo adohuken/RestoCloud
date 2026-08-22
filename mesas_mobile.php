@@ -47,23 +47,40 @@
             ?>
             <?php 
                 $is_locked_for_me = false;
+                $is_caja_cerrada = !$active_register;
                 if ($table['order_id'] && $_SESSION['role_id'] == 2) {
                     if ($table['order_user_id'] != $_SESSION['user_id']) {
                         $is_locked_for_me = true;
                     }
                 }
+                
+                // Determine styling and actions
+                $card_style = '';
+                $click_action = '';
+                
+                if ($is_caja_cerrada) {
+                    $card_style = 'style="opacity: 0.6; filter: grayscale(1); cursor: not-allowed;"';
+                    $click_action = 'href="javascript:void(0)" onclick="Swal.fire({html: \'<div style=&quot;margin-bottom:10px&quot;><i class=\\\'bx bx-lock-alt\\\' style=\\\'font-size: 54px; color: #ef4444; opacity: 0.9;\\\'></i></div><div style=&quot;font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.4;&quot;>Operación bloqueada.<br>Debe abrir la caja para tomar pedidos.</div>\', confirmButtonColor: \'#ef4444\', confirmButtonText: \'Entendido\', customClass: { popup: \'premium-swal compact-swal\' }})"';
+                } elseif ($is_locked_for_me) {
+                    $card_style = 'style="opacity: 0.6; filter: grayscale(1);"';
+                    $click_action = 'href="javascript:void(0)" onclick="Swal.fire({html: \'<div style=&quot;margin-bottom:10px&quot;><i class=\\\'bx bx-lock\\\' style=\\\'font-size: 54px; color: #f59e0b; opacity: 0.9;\\\'></i></div><div style=&quot;font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.4;&quot;>Esta mesa está siendo atendida por otro mesero.</div>\', confirmButtonColor: \'#6366f1\', confirmButtonText: \'Entendido\', customClass: { popup: \'premium-swal compact-swal\' }})"';
+                } else {
+                    $click_action = 'href="venta.php?table=' . $table['id'] . '"';
+                }
             ?>
-                <div class="table-card <?= $cardClass ?>" <?= $is_locked_for_me ? 'style="opacity: 0.6; filter: grayscale(1);"' : '' ?>>
-                    <!-- Top clickable area to go to venta.php (unless locked) -->
-                    <a <?= $is_locked_for_me ? 'href="javascript:void(0)" onclick="Swal.fire({html: \'<div style=&quot;margin-bottom:10px&quot;><i class=\\\'bx bx-lock\\\' style=\\\'font-size: 54px; color: #f59e0b; opacity: 0.9;\\\'></i></div><div style=&quot;font-size: 1.05rem; font-weight: 700; color: #0f172a; line-height: 1.4;&quot;>Esta mesa está siendo atendida por otro mesero.</div>\', confirmButtonColor: \'#6366f1\', confirmButtonText: \'Entendido\', customClass: { popup: \'premium-swal compact-swal\' }})"' : 'href="venta.php?table=' . $table['id'] . '"' ?> style="text-decoration: none; color: inherit; display: block;">
+                <div class="table-card <?= $cardClass ?>" <?= $card_style ?>>
+                    <!-- Top clickable area to go to venta.php (unless locked/closed) -->
+                    <a <?= $click_action ?> style="text-decoration: none; color: inherit; display: block;">
                         <div class="table-icon-wrapper">
-                            <i class='bx <?= $is_locked_for_me ? 'bx-lock' : 'bx-chair' ?>'></i>
+                            <i class='bx <?= $is_caja_cerrada ? 'bx-lock-alt' : ($is_locked_for_me ? 'bx-lock' : 'bx-chair') ?>'></i>
                         </div>
                         <div class="table-number">
                             <?= htmlspecialchars($table['name']) ?>
                         </div>
                         <div class="table-status">
-                            <?php if ($table['order_id']): ?>
+                            <?php if ($is_caja_cerrada): ?>
+                                <div class="badge badge-locked mb-1" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2);">Bloqueada</div>
+                            <?php elseif ($table['order_id']): ?>
                                 <div class="badge badge-occupied mb-1">
                                     <?php 
                                         $status_map = [

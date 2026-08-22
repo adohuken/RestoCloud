@@ -235,76 +235,105 @@ if (!$clean_mode) {
             </div>
         <?php endif; ?>
  
-        <?php if ($error_msg): ?>
+<?php if ($error_msg): ?>
             <div class="fc-alert fc-alert-slate">
                 <i class='bx bx-x-circle'></i> <?= htmlspecialchars($error_msg) ?>
             </div>
         <?php endif; ?>       <div class="pedidosya-layout">
             <!-- Form Section -->
             <div class="fc-card" style="padding:0;">
-                <div class="fc-card-header">
-                    <h3 style="margin:0;"><i class='bx bx-plus-circle'></i> Nuevo Pedido Delivery</h3>
+                <div class="fc-card-header" style="padding: 15px 20px;">
+                    <h3 style="margin:0; font-size: 16px;"><i class='bx bx-plus-circle'></i> Nuevo Pedido Delivery</h3>
                 </div>
-                <form method="POST" id="pedidosyaForm" style="padding: 25px;">
+                <form method="POST" id="pedidosyaForm" style="padding: 15px 20px;">
                     <input type="hidden" name="create_order" value="1">
  
-                    <div style="margin-bottom: 30px;">
-                        <h4 style="margin-bottom: 20px; color: var(--fc-primary); font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 12px; color: var(--fc-primary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
                             <i class='bx bx-info-circle'></i> Datos del Cliente
                         </h4>
-                        <div class="fc-flex-between" style="gap: 20px; margin-bottom: 20px;">
-                            <div class="fc-input-group" style="flex: 1;">
-                                <label class="fc-label">Orden PedidosYa *</label>
-                                <input type="text" name="external_order_id" class="fc-input" placeholder="Ej: PY-12345" required
+                        <div class="fc-flex-between" style="gap: 15px; margin-bottom: 12px;">
+                            <div class="fc-input-group" style="flex: 1; margin: 0;">
+                                <label class="fc-label" style="font-size: 11px; margin-bottom: 6px;">Orden PedidosYa *</label>
+                                <input type="text" name="external_order_id" class="fc-input" placeholder="Ej: PY-12345" required style="height: 40px; font-size: 13px;"
                                     value="<?= htmlspecialchars($_POST['external_order_id'] ?? '') ?>">
                             </div>
-                            <div class="fc-input-group" style="flex: 1;">
-                                <label class="fc-label">Teléfono</label>
-                                <input type="text" name="customer_phone" class="fc-input" placeholder="8888-8888"
+                            <div class="fc-input-group" style="flex: 1; margin: 0;">
+                                <label class="fc-label" style="font-size: 11px; margin-bottom: 6px;">Teléfono</label>
+                                <input type="text" name="customer_phone" class="fc-input" placeholder="8888-8888" style="height: 40px; font-size: 13px;"
                                     value="<?= htmlspecialchars($_POST['customer_phone'] ?? '') ?>">
                             </div>
                         </div>
-                        <div class="fc-input-group" style="margin-bottom: 20px;">
-                            <label class="fc-label">Nombre del Cliente</label>
-                            <input type="text" name="customer_name" class="fc-input" placeholder="Nombre completo"
+                        <div class="fc-input-group" style="margin-bottom: 12px;">
+                            <label class="fc-label" style="font-size: 11px; margin-bottom: 6px;">Nombre del Cliente</label>
+                            <input type="text" name="customer_name" class="fc-input" placeholder="Nombre completo" style="height: 40px; font-size: 13px;"
                                 value="<?= htmlspecialchars($_POST['customer_name'] ?? '') ?>">
                         </div>
-                        <div class="fc-input-group">
-                            <label class="fc-label">Dirección Completa</label>
-                            <textarea name="customer_address" class="fc-input" rows="2" style="height: auto; padding: 12px;"
+                        <div class="fc-input-group" style="margin: 0;">
+                            <label class="fc-label" style="font-size: 11px; margin-bottom: 6px;">Dirección Completa</label>
+                            <textarea name="customer_address" class="fc-input" rows="2" style="height: auto; padding: 8px 12px; font-size: 13px;"
                                 placeholder="Punto de entrega"><?= htmlspecialchars($_POST['customer_address'] ?? '') ?></textarea>
                         </div>
                     </div>
  
-                    <div style="margin-bottom: 30px;">
-                        <h4 style="margin-bottom: 20px; color: var(--fc-primary); font-size: 14px; text-transform: uppercase;">
+                    <div style="margin-bottom: 20px;">
+                        <h4 style="margin-bottom: 12px; color: var(--fc-primary); font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
                             <i class='bx bx-list-ul'></i> Canasta de Productos
                         </h4>
-                        <div id="products-container">
-                            <div class="product-row" style="background: rgba(255,255,255,0.02); border: 1px solid var(--fc-border); padding: 15px; border-radius: 12px; display: flex; gap: 15px; align-items: center; margin-bottom: 15px;">
-                                <div style="flex: 1; display: flex; gap: 10px;">
+                        <div id="products-container" style="max-height: 220px; overflow-y: auto; padding-right: 5px; margin-bottom: 10px;">
+                            <div class="product-row" style="background: rgba(255,255,255,0.02); border: 1px solid var(--fc-border); padding: 10px 12px; border-radius: 10px; display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                                <div style="flex: 1; display: flex; gap: 6px;">
                                     <input type="hidden" name="products[]" class="product-id">
                                     <input type="text" class="fc-input product-name" readonly
                                         placeholder="Toca para buscar..." onclick="openProductModal(this)"
-                                        style="cursor: pointer; background: rgba(0,0,0,0.2);">
-                                    <button type="button" class="fc-btn fc-btn-outline" style="width: 48px; padding: 0;"
-                                        onclick="openProductModal(this)"><i class='bx bx-search-alt'></i></button>
+                                        style="cursor: pointer; background: rgba(0,0,0,0.2); height: 38px; font-size: 13px; padding-left: 10px;">
+                                    <button type="button" class="fc-btn fc-btn-outline" style="width: 38px; height: 38px; padding: 0; display: flex; align-items: center; justify-content: center;"
+                                        onclick="openProductModal(this)"><i class='bx bx-search-alt' style="font-size: 16px;"></i></button>
                                 </div>
-                                <div style="width: 90px;">
+                                <div style="width: 70px;">
                                     <input type="number" name="quantities[]" class="fc-input quantity-input" min="1"
-                                        value="1" placeholder="Cant." required style="text-align: center;">
+                                        value="1" placeholder="Cant." required style="text-align: center; height: 38px; font-size: 13px; padding: 0;">
                                 </div>
-                                <div style="width: 120px; font-weight: 700; color: var(--fc-primary); text-align: right;" class="item-subtotal">C$0.00</div>
+                                <div style="width: 100px; font-weight: 700; color: var(--fc-primary); text-align: right; font-size: 13px;" class="item-subtotal">C$0.00</div>
                                 <button type="button" class="fc-btn fc-btn-outline remove-product"
-                                    style="display:none; width: 48px; border-color: rgba(225,29,72,0.3); color: var(--fc-primary); padding:0;">
-                                    <i class='bx bx-trash'></i>
+                                    style="display:none; width: 38px; height: 38px; border-color: rgba(225,29,72,0.3); color: var(--fc-primary); padding:0; display: flex; align-items: center; justify-content: center;">
+                                    <i class='bx bx-trash' style="font-size: 16px;"></i>
                                 </button>
                             </div>
                         </div>
-                        <button type="button" id="addProductBtn" class="fc-btn fc-btn-outline" style="width: 100%; border-style: dashed; border-width: 2px;">
+                        <button type="button" id="addProductBtn" class="fc-btn fc-btn-outline" style="width: 100%; border-style: dashed; border-width: 2px; height: 36px; font-size: 12px; border-radius: 8px;">
                             <i class='bx bx-plus'></i> Agregar otro ítem
                         </button>
                     </div>
+ 
+                    <div class="fc-input-group" style="margin-top: 15px; margin-bottom: 15px;">
+                        <label class="fc-label" style="font-size: 11px; margin-bottom: 6px;"><i class='bx bx-note'></i> Instrucciones / Notas</label>
+                        <textarea name="notes" class="fc-input" rows="2" style="height: auto; padding: 8px 12px; font-size: 13px;"
+                            placeholder="Ej: Sin cebolla, llamar al llegar..."><?= htmlspecialchars($_POST['notes'] ?? '') ?></textarea>
+                    </div>
+ 
+                    <div style="background: rgba(225,29,72,0.03); padding: 15px 20px; border-radius: 12px; margin: 20px 0; border: 1px dashed var(--fc-primary); font-size: 13px;">
+                        <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--fc-text-sec);">
+                            <span>Subtotal Bruto:</span>
+                            <span id="subtotal">C$0.00</span>
+                        </div>
+                        <?php if ($iva_percentage > 0): ?>
+                            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 8px; color: var(--fc-text-sec);">
+                                <span>IVA Aplicado (<?= $iva_percentage ?>%):</span>
+                                <span id="iva">C$0.00</span>
+                            </div>
+                        <?php endif; ?>
+                        <div style="display: flex; justify-content: space-between; padding-top: 10px; border-top: 1px solid rgba(225,29,72,0.2); font-size: 1.25em; font-weight: 800; color: var(--fc-text-main);">
+                            <span>Total Final:</span>
+                            <span id="total">C$0.00</span>
+                        </div>
+                    </div>
+ 
+                    <button type="submit" class="fc-btn fc-btn-primary fc-w100" style="height: 48px; font-size: 14px; font-weight: 700; border-radius: 10px;">
+                        <i class='bx bx-save'></i> Registrar en Inventario
+                    </button>
+                </form>
+            </div>
                     <!-- Product Selection Modal -->
                     <div id="productModal" class="fc-modal-overlay">
                         <div class="fc-modal" style="max-width: 600px;">
@@ -334,42 +363,13 @@ if (!$clean_mode) {
                             </div>
                         </div>
                     </div>
- 
-                    <div class="fc-input-group" style="margin-top: 25px;">
-                        <label class="fc-label"><i class='bx bx-note'></i> Instrucciones / Notas</label>
-                        <textarea name="notes" class="fc-input" rows="2" style="height: auto; padding: 12px;"
-                            placeholder="Ej: Sin cebolla, llamar al llegar..."><?= htmlspecialchars($_POST['notes'] ?? '') ?></textarea>
-                    </div>
- 
-                    <div style="background: rgba(225,29,72,0.05); padding: 25px; border-radius: 15px; margin: 30px 0; border: 1px dashed var(--fc-primary);">
-                        <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--fc-text-sec);">
-                            <span>Subtotal Bruto:</span>
-                            <span id="subtotal">C$0.00</span>
-                        </div>
-                        <?php if ($iva_percentage > 0): ?>
-                            <div class="summary-row" style="display: flex; justify-content: space-between; margin-bottom: 10px; color: var(--fc-text-sec);">
-                                <span>IVA Aplicado (<?= $iva_percentage ?>%):</span>
-                                <span id="iva">C$0.00</span>
-                            </div>
-                        <?php endif; ?>
-                        <div style="display: flex; justify-content: space-between; padding-top: 15px; border-top: 1px solid rgba(225,29,72,0.2); font-size: 1.5em; font-weight: 800; color: var(--fc-text-main);">
-                            <span>Total Final:</span>
-                            <span id="total">C$0.00</span>
-                        </div>
-                    </div>
- 
-                    <button type="submit" class="fc-btn fc-btn-primary fc-w100" style="height: 60px; font-size: 1.2em;">
-                        <i class='bx bx-save'></i> Registrar en Inventario
-                    </button>
-                </form>
-            </div>
 
             <!-- Recent Orders -->
             <div class="fc-card" style="padding:0; overflow: hidden; display: flex; flex-direction: column;">
                 <div class="fc-card-header">
                     <h3 style="margin:0;"><i class='bx bx-history'></i> Entregas Recientes</h3>
                 </div>
-                <div style="overflow-y: auto; padding: 20px;">
+                <div style="max-height: 680px; overflow-y: auto; padding: 20px;">
                     <?php if (empty($recent_orders)): ?>
                         <div style="text-align: center; padding: 40px; color: var(--fc-text-sec);">
                             <i class='bx bx-package' style="font-size: 40px; opacity: 0.3;"></i>
@@ -377,21 +377,29 @@ if (!$clean_mode) {
                         </div>
                     <?php else: ?>
                         <?php foreach ($recent_orders as $order): ?>
-                            <div class="order-item" style="background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; margin-bottom: 15px; border-left: 4px solid var(--fc-primary);">
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px; align-items: center;">
-                                    <strong style="color: var(--fc-primary); font-size: 1.1em;">#<?= htmlspecialchars($order['external_order_id']) ?></strong>
-                                    <span style="font-size: 11px; color: var(--fc-text-sec); text-transform: uppercase;"><?= date('d M, h:i A', strtotime($order['date_created'])) ?></span>
+                            <div class="order-item" style="background: rgba(255,255,255,0.03); border-radius: 12px; padding: 12px 15px; margin-bottom: 10px; border-left: 3px solid var(--fc-primary); font-size: 13px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 6px; align-items: center;">
+                                    <strong style="color: var(--fc-primary); font-size: 0.95em;">#<?= htmlspecialchars($order['external_order_id']) ?></strong>
+                                    <span style="font-size: 10px; color: var(--fc-text-sec); text-transform: uppercase;"><?= date('d M, h:i A', strtotime($order['date_created'])) ?></span>
                                 </div>
-                                <div style="margin-bottom: 15px; font-size: 14px;">
-                                    <?php if ($order['customer_name']): ?>
-                                        <div style="margin-bottom: 5px;"><i class='bx bx-user' style="color: var(--fc-text-sec);"></i> <?= htmlspecialchars($order['customer_name']) ?></div>
-                                    <?php endif; ?>
-                                    <div style="margin-bottom: 5px;"><i class='bx bx-package' style="color: var(--fc-text-sec);"></i> <?= $order['item_count'] ?> ítems</div>
-                                    <div style="font-weight: 800; color: var(--fc-text-main); font-size: 1.2em;">C$<?= number_format($order['total'], 2) ?></div>
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <div>
+                                        <?php if ($order['customer_name']): ?>
+                                            <div style="margin-bottom: 2px; font-weight: 600; color: var(--fc-text-main); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                <i class='bx bx-user' style="color: var(--fc-text-sec); margin-right: 3px;"></i> <?= htmlspecialchars($order['customer_name']) ?>
+                                            </div>
+                                        <?php endif; ?>
+                                        <div style="font-size: 11px; color: var(--fc-text-sec);">
+                                            <i class='bx bx-package' style="margin-right: 3px;"></i> <?= $order['item_count'] ?> ítems
+                                        </div>
+                                    </div>
+                                    <div style="text-align: right;">
+                                        <div style="font-weight: 800; color: var(--fc-text-main); font-size: 1.1em;">C$<?= number_format($order['total'], 2) ?></div>
+                                    </div>
                                 </div>
-                                <div style="display: flex; gap: 10px;">
-                                    <a href="factura_pedidosya.php?id=<?= $order['id'] ?>" class="fc-btn fc-btn-outline fc-w100" style="padding: 10px;">
-                                        <i class='bx bx-printer'></i> Factura
+                                <div>
+                                    <a href="factura_pedidosya.php?id=<?= $order['id'] ?>" class="fc-btn fc-btn-outline" style="width: 100%; height: 30px; padding: 0 10px; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; gap: 5px; border-radius: 8px;">
+                                        <i class='bx bx-printer' style="font-size: 13px;"></i> Factura
                                     </a>
                                 </div>
                             </div>

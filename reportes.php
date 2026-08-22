@@ -415,7 +415,7 @@ if ($report_type === 'sales') {
                             <i class='bx bx-export'></i> Excel
                         </button>
                     </div>
-                    <div class="fc-table-responsive">
+                    <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                         <table class="fc-table" id="sales-by-date-table">
                             <thead>
                                 <tr>
@@ -506,7 +506,7 @@ if ($report_type === 'sales') {
                         <i class='bx bx-export'></i> Exportar Excel
                     </button>
                 </div>
-                <div class="fc-table-responsive">
+                <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                     <table class="fc-table" id="detailed-invoices-table">
                         <thead>
                             <tr>
@@ -631,7 +631,7 @@ if ($report_type === 'sales') {
                         <i class='bx bx-export'></i> Exportar Excel
                     </button>
                 </div>
-                <div class="fc-table-responsive">
+                <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                     <table class="fc-table" id="cierres-table">
                         <thead>
                             <tr>
@@ -760,7 +760,7 @@ if ($report_type === 'sales') {
                         </button>
                     </div>
                 </div>
-                <div class="fc-table-responsive">
+                <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                     <table class="fc-table" id="inventory-table">
                         <thead>
                             <tr>
@@ -923,7 +923,7 @@ if ($report_type === 'sales') {
                         <i class='bx bx-export'></i> Exportar Excel
                     </button>
                 </div>
-                <div class="fc-table-responsive">
+                <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                     <table class="fc-table" id="waiters-history-table">
                         <thead>
                             <tr>
@@ -969,7 +969,7 @@ if ($report_type === 'sales') {
                     </table>
                 </div>
             </div>
-        <?php endif; ?>           </div>        <!-- PEDIDOSYA REPORT -->
+        <?php endif; ?>        <!-- PEDIDOSYA REPORT -->
         <?php if ($report_type === 'pedidosya'): ?>
             <?php if (!isset($pedidosya_table_exists) || !$pedidosya_table_exists): ?>
                 <div class="fc-badge fc-badge-outline" style="width: 100%; justify-content: center; padding: 30px; border-style: dashed;">
@@ -1010,7 +1010,7 @@ if ($report_type === 'sales') {
                             <i class='bx bx-export'></i> Excel
                         </button>
                     </div>
-                    <div class="fc-table-responsive">
+                    <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                         <table class="fc-table" id="pedidosya-history-table">
                             <thead>
                                 <tr>
@@ -1077,7 +1077,7 @@ if ($report_type === 'sales') {
                         <i class='bx bx-export'></i> Exportar Excel
                     </button>
                 </div>
-                <div class="fc-table-responsive">
+                <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                     <table class="fc-table" id="pedidosya-audit-table">
                         <thead>
                             <tr>
@@ -1134,7 +1134,7 @@ if ($report_type === 'sales') {
                     <i class='bx bx-export'></i> Exportar Excel
                 </button>
             </div>
-            <div class="fc-table-responsive">
+            <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
                 <table class="fc-table" id="deleted-invoices-table">
                     <thead>
                         <tr>
@@ -1200,6 +1200,19 @@ if ($report_type === 'sales') {
     .fc-card, .fc-table-responsive { page-break-inside: avoid; }
 }
 .print-header { display: none; }
+#sales-by-date-table th,
+#detailed-invoices-table th,
+#cierres-table th,
+#inventory-table th,
+#waiters-history-table th,
+#pedidosya-history-table th,
+#pedidosya-audit-table th,
+#deleted-invoices-table th {
+    position: sticky;
+    top: 0;
+    background: var(--fc-card-bg);
+    z-index: 2;
+}
 </style>
 
 <script>
