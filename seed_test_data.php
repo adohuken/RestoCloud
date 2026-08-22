@@ -27,6 +27,89 @@ try {
     $pdo->exec("TRUNCATE TABLE deleted_invoices_log;");
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1;");
 
+    // 1.5 Setup reference data if it's missing (helps with empty databases)
+    echo "Ensuring reference data (categories, products, tables, ingredients) exists...\n";
+    
+    // Categories
+    $pdo->exec("INSERT IGNORE INTO categories (id, name) VALUES 
+        (1, 'Bebidas'),
+        (2, 'Hamburguesas'),
+        (3, 'Postres'),
+        (4, 'Pizzas'),
+        (5, 'Ensaladas'),
+        (6, 'Snack')
+    ");
+
+    // Products
+    $pdo->exec("INSERT IGNORE INTO products (code, name, price, stock, category_id, status, image_url) VALUES 
+        ('COCA-COLA', 'Coca Cola Fria', 3.00, 150, 1, 'active', 'uploads/products/prod_6a86125c4b50c.jpg'),
+        ('CESAR-SALAD', 'Ensalada César Fresca', 7.00, 80, 5, 'active', 'uploads/products/prod_6a86125c4c14e.jpg'),
+        ('BURGER-GOURMET', 'Hamburguesa Gourmet', 9.00, 120, 2, 'active', 'uploads/products/prod_6a86125c4ce32.jpg'),
+        ('CHOCO-CAKE', 'Pastel de Chocolate', 5.00, 60, 3, 'active', 'uploads/products/prod_6a86125c4df6f.jpg'),
+        ('PIZZA-PEPPERONI', 'Pizza Pepperoni Clásica', 12.00, 90, 4, 'active', 'uploads/products/prod_6a86125c4f00f.jpg'),
+        ('TONA-100', 'Toña 100ml', 20.00, 200, 1, 'active', NULL),
+        ('PROD-TACOS', 'Tacos de Asada', 85.00, 100, 6, 'active', 'uploads/products/tacos.jpg'),
+        ('PROD-ALITAS', 'Alitas BBQ', 90.00, 100, 6, 'active', 'uploads/products/alitas.jpg'),
+        ('PROD-PAPASSUP', 'Papas Fritas Suprema', 65.00, 100, 6, 'active', 'uploads/products/papas_suprema.jpg'),
+        ('PROD-SUSHITEMP', 'Sushi Roll Tempura', 110.00, 100, 6, 'active', 'uploads/products/sushi.jpg'),
+        ('PROD-MOJITO', 'Mojito Clásico', 45.00, 100, 1, 'active', 'uploads/products/mojito.jpg'),
+        ('PROD-HELADOMIX', 'Copa de Helado Mixta', 40.00, 100, 3, 'active', 'uploads/products/helado.jpg'),
+        ('PROD-CLUBSAND', 'Club Sandwich', 80.00, 100, 2, 'active', 'uploads/products/club_sandwich.jpg')
+    ");
+
+    // Tables
+    $pdo->exec("INSERT IGNORE INTO tables (id, name, status) VALUES 
+        (1, 'Mesa 1', 'free'),
+        (2, 'Mesa 2', 'free'),
+        (3, 'Mesa 3', 'free'),
+        (4, 'Mesa 4', 'free'),
+        (5, 'Mesa 5', 'free'),
+        (6, 'Mesa 6', 'free')
+    ");
+
+    // Ingredient Categories
+    $pdo->exec("INSERT IGNORE INTO ingredient_categories (id, name) VALUES 
+        (1, 'Carnes'),
+        (2, 'Verduras'),
+        (3, 'Lácteos'),
+        (4, 'Abarrotes'),
+        (5, 'Bebidas Base'),
+        (6, 'Licores y Destilados'),
+        (7, 'Cervezas'),
+        (8, 'Vinos y Espumantes'),
+        (9, 'Refrescos y Mezcladores'),
+        (10, 'Frutas y Guarniciones (Bar)'),
+        (11, 'Carnes y Aves'),
+        (12, 'Pescados y Mariscos'),
+        (13, 'Lácteos y Quesos'),
+        (14, 'Verduras y Hortalizas'),
+        (15, 'Abarrotes y Secos'),
+        (16, 'Salsas y Aderezos'),
+        (17, 'Especias y Condimentos'),
+        (18, 'Desechables y Empaques')
+    ");
+
+    // Ingredients
+    $pdo->exec("INSERT IGNORE INTO ingredients (name, cost, stock, min_stock, unit, category_id, icon) VALUES 
+        ('Carne de Res Molida', 5.50, 15, 5, 'kg', 11, '🥩'),
+        ('Jarabe de Cola', 15.00, 5, 2, 'x', 5, '🛢️'),
+        ('Lechuga Romana', 0.80, 10, 2, 'kg', 14, '🥬'),
+        ('Masa para Pizza', 1.50, 30, 10, 'x', 15, '🍞'),
+        ('Pan de Hamburguesa', 0.30, 98, 20, 'x', 15, '🍞'),
+        ('Pepperoni', 9.50, 8, 2, 'kg', 11, '🥓'),
+        ('Queso Cheddar', 8.00, 5, 2, 'kg', 13, '🧀'),
+        ('Queso Mozzarella', 7.50, 12, 3, 'kg', 13, '🧀'),
+        ('Tomate Fresco', 1.20, 20, 4, 'kg', 14, '🍅'),
+        ('Toña 100ml', 8.33, 118, 24, 'und', 7, '🍺'),
+        ('Tortillas de Maíz', 0.15, 500, 50, 'und', 15, '🌽'),
+        ('Alitas de Pollo (Crudas)', 3.20, 50, 10, 'kg', 11, '🍗'),
+        ('Papas Fritas Congeladas', 2.50, 80, 15, 'kg', 15, '🍟'),
+        ('Arroz para Sushi', 1.10, 30, 5, 'kg', 15, '🍚'),
+        ('Hierbabuena / Menta', 0.50, 5, 1, 'kg', 14, '🌿'),
+        ('Helado de Vainilla', 4.20, 12, 2, 'kg', 13, '🍨'),
+        ('Tocino en Rebanadas', 8.50, 10, 3, 'kg', 11, '🥓')
+    ");
+
     $pdo->beginTransaction();
     echo "Old transactional data cleared.\n";
 
