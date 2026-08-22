@@ -26,8 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit();
 
             case 'close':
-                // Check for occupied tables
-                $stmt = $pdo->query("SELECT COUNT(*) FROM tables WHERE status = 'occupied'");
+                // Check for occupied tables (by checking if there are any active unpaid orders)
+                $stmt = $pdo->query("SELECT COUNT(*) FROM orders WHERE status NOT IN ('completed', 'cancelled')");
                 if ($stmt->fetchColumn() > 0) {
                     header('Location: caja.php?error=occupied');
                     exit();
