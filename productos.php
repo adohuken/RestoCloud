@@ -889,9 +889,11 @@ include __DIR__ . '/includes/header.php';
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
-                const holder = document.querySelector('#modalContent img') || document.querySelector('#modalContent i').parentNode;
-                if(holder.tagName === 'IMG') holder.src = e.target.result;
-                else holder.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                // Always target the upload container div (the one with dashed border)
+                const container = input.previousElementSibling;
+                if (container) {
+                    container.innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                }
             }
             reader.readAsDataURL(input.files[0]);
         }
