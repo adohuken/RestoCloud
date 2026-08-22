@@ -415,7 +415,7 @@ if ($report_type === 'sales') {
                             <i class='bx bx-export'></i> Excel
                         </button>
                     </div>
-                    <div class="fc-table-responsive" style="max-height: 480px; overflow-y: auto;">
+                    <div class="fc-table-responsive" style="max-height: 520px; overflow-y: auto;">
                         <table class="fc-table" id="sales-by-date-table">
                             <thead>
                                 <tr>
@@ -445,7 +445,7 @@ if ($report_type === 'sales') {
                             <i class='bx bx-export'></i> Excel
                         </button>
                     </div>
-                    <div class="fc-table-responsive">
+                    <div class="fc-table-responsive" style="max-height: 520px; overflow-y: auto;">
                         <table class="fc-table" id="top-products-table">
                             <thead>
                                 <tr>
@@ -1201,6 +1201,7 @@ if ($report_type === 'sales') {
 }
 .print-header { display: none; }
 #sales-by-date-table th,
+#top-products-table th,
 #detailed-invoices-table th,
 #cierres-table th,
 #inventory-table th,
