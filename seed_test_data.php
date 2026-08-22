@@ -4,9 +4,9 @@
  * Run this script from CLI or browser to generate realistic reports data.
  */
 
-// Only allow execution from CLI or local environments for safety
-if (php_sapi_name() !== 'cli' && $_SERVER['REMOTE_ADDR'] !== '127.0.0.1' && $_SERVER['REMOTE_ADDR'] !== '::1') {
-    die("Access denied. This script can only be run locally.");
+// Only allow execution from CLI or local environments for safety, or with a secret key
+if (php_sapi_name() !== 'cli' && $_SERVER['REMOTE_ADDR'] !== '127.0.0.1' && $_SERVER['REMOTE_ADDR'] !== '::1' && ($_GET['key'] ?? '') !== 'restocloud123') {
+    die("Access denied. This script can only be run locally or by using the secret key '?key=restocloud123'.");
 }
 
 require_once __DIR__ . '/config/db.php';
