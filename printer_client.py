@@ -30,11 +30,9 @@ except ImportError:
 
 try:
     import win32print
-    import win32ui
-    from PIL import Image, ImageDraw, ImageFont
 except ImportError:
     print("=" * 50)
-    print("ERROR: Faltan librerías necesarias")
+    print("ERROR: Falta la librería 'pywin32'")
     print("Ejecuta: pip install pywin32")
     print("=" * 50)
     input("Presiona Enter para salir...")
