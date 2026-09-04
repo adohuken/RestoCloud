@@ -22,34 +22,6 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
-// Handle AJAX Test Print
-if (isset($_GET['ajax']) && $_GET['ajax'] === 'test_printer') {
-    $ip = $_POST['test_ip'] ?? '';
-    $port = $_POST['test_port'] ?? '9100';
-
-    if (empty($ip)) {
-        echo json_encode(['success' => false, 'message' => 'IP vacía']);
-        exit();
-    }
-
-    require_once __DIR__ . '/includes/printer_helper.php';
-
-    // Create dummy items for the test
-    $dummy_items = [
-        ['quantity' => 1, 'product_name' => 'Hamburguesa Clásica', 'notes' => 'Sin cebolla'],
-        ['quantity' => 2, 'product_name' => 'Cerveza Artesanal', 'notes' => '']
-    ];
-
-    $result = sendToKitchenPrinter($ip, $port, 'Mesa de Prueba', $_SESSION['name'] ?? 'Admin', $dummy_items);
-
-    if ($result) {
-        echo json_encode(['success' => true]);
-    } else {
-        echo json_encode(['success' => false, 'message' => 'No se pudo conectar a la impresora. Verifica la IP y que esté encendida.']);
-    }
-    exit();
-}
-
 // Check module access for settings (will redirect if not authorized)
 checkModuleAccess($pdo, $_SESSION['role_id'], 'settings');
 
@@ -1027,66 +999,14 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                     Principal</label>
                                 <div style="position: relative;">
                                     <select name="kitchen_workflow" class="fc-input"
-                                        onchange="document.getElementById('printer_settings').style.display = this.value === 'comandera' ? 'block' : 'none'"
                                         style="cursor: pointer; font-weight: 600; padding: 16px; border-radius: 12px; font-size: 15px; background: #f8fafc; border: 1px solid #cbd5e1; appearance: none;">
                                         <option value="pantalla" <?= $kitchen_workflow === 'pantalla' ? 'selected' : '' ?>>💻
                                             Modo Pantalla Interactiva (Flujo Completo con Tablet)</option>
                                         <option value="comandera" <?= $kitchen_workflow === 'comandera' ? 'selected' : '' ?>>
-                                            🖨️ Modo Comandera Física (Impresión Directa por Red)</option>
+                                            🖨️ Modo Comandera Física (Monitor de Impresión Automática)</option>
                                     </select>
                                     <i class='bx bx-chevron-down'
                                         style="position: absolute; right: 15px; top: 18px; font-size: 20px; color: var(--fc-text-sec); pointer-events: none;"></i>
-                                </div>
-                            </div>
-
-                            <div id="printer_settings"
-                                style="display: <?= $kitchen_workflow === 'comandera' ? 'block' : 'none' ?>; background: #f8fafc; padding: 25px; border-radius: 16px; border: 1px solid var(--fc-border);">
-                                <h5
-                                    style="margin-top:0; margin-bottom: 20px; font-size: 15px; font-weight: 700; color: var(--fc-text-main); display: flex; align-items: center; gap: 8px;">
-                                    <i class='bx bx-wifi' style="color: var(--fc-primary); font-size: 20px;"></i>
-                                    Ajustes de Impresora de Red Térmica (ESC/POS)
-                                </h5>
-
-                                <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
-                                    <div class="fc-form-group" style="margin-bottom: 0;">
-                                        <label class="fc-label" style="font-weight: 600;">Dirección IP (Red Local)</label>
-                                        <div style="position: relative;">
-                                            <i class='bx bx-network-chart'
-                                                style="position: absolute; left: 16px; top: 15px; color: var(--fc-primary); font-size: 20px;"></i>
-                                            <input type="text" name="kitchen_printer_ip" class="fc-input"
-                                                value="<?= htmlspecialchars($kitchen_printer_ip) ?>"
-                                                placeholder="Ej: 192.168.1.100"
-                                                style="padding: 14px 14px 14px 45px; border-radius: 10px; font-family: monospace; font-size: 15px;">
-                                        </div>
-                                    </div>
-                                    <div class="fc-form-group" style="margin-bottom: 0;">
-                                        <label class="fc-label" style="font-weight: 600;">Puerto Socket</label>
-                                        <div style="position: relative;">
-                                            <i class='bx bx-plug'
-                                                style="position: absolute; left: 16px; top: 15px; color: var(--fc-primary); font-size: 20px;"></i>
-                                            <input type="number" name="kitchen_printer_port" class="fc-input"
-                                                value="<?= htmlspecialchars($kitchen_printer_port) ?>" placeholder="9100"
-                                                style="padding: 14px 14px 14px 45px; border-radius: 10px; font-family: monospace; font-size: 15px;">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div style="margin-top: 20px; display: flex; gap: 15px;">
-                                    <div
-                                        style="flex: 1; background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 15px; border-radius: 12px; display: flex; align-items: center; gap: 12px;">
-                                        <div
-                                            style="width: 32px; height: 32px; border-radius: 50%; background: #fef3c7; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
-                                            <i class='bx bx-info-circle'></i></div>
-                                        <span
-                                            style="font-size: 13px; color: #92400e; font-weight: 500; line-height: 1.4;">El
-                                            servidor web (PHP) debe tener acceso de red a esta IP local.</span>
-                                    </div>
-
-                                    <button type="button" onclick="testKitchenPrinter()" class="fc-btn"
-                                        style="flex-shrink: 0; background: white; color: var(--fc-primary); border: 2px solid var(--fc-primary); padding: 0 25px; border-radius: 12px; font-weight: 700; transition: all 0.2s;">
-                                        <i class='bx bx-printer' style="font-size: 20px; margin-right: 6px;"></i> Ticket de
-                                        Prueba
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -1931,43 +1851,6 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
         }).then((result) => {
             if (result.isConfirmed) form.submit();
         });
-    }
-
-    function testKitchenPrinter() {
-        const ip = document.querySelector('input[name="kitchen_printer_ip"]').value;
-        const port = document.querySelector('input[name="kitchen_printer_port"]').value || '9100';
-
-        if (!ip) {
-            Swal.fire({ icon: 'warning', title: 'IP Inválida', text: 'Por favor ingresa la IP de la impresora.' });
-            return;
-        }
-
-        Swal.fire({
-            title: 'Imprimiendo...',
-            text: 'Enviando ticket de prueba a ' + ip,
-            allowOutsideClick: false,
-            didOpen: () => { Swal.showLoading(); }
-        });
-
-        const formData = new FormData();
-        formData.append('test_ip', ip);
-        formData.append('test_port', port);
-
-        fetch('configuracion.php?ajax=test_printer', {
-            method: 'POST',
-            body: formData
-        })
-            .then(r => r.json())
-            .then(data => {
-                if (data.success) {
-                    Swal.fire({ icon: 'success', title: '¡Éxito!', text: 'El ticket de prueba ha sido enviado. Revisa tu impresora térmica.' });
-                } else {
-                    Swal.fire({ icon: 'error', title: 'Fallo de Conexión', text: data.message });
-                }
-            })
-            .catch(e => {
-                Swal.fire({ icon: 'error', title: 'Error de Red', text: 'No se pudo contactar al servidor para hacer la prueba.' });
-            });
     }
 
     <?php if ($success_msg): ?>

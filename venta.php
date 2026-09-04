@@ -293,11 +293,10 @@ if (isset($_GET['ajax'])) {
                     $stmt_w->execute([$order['id']]);
                     $waiter_name = $stmt_w->fetchColumn() ?: 'Mesero';
 
-                    require_once __DIR__ . '/includes/printer_helper.php';
-                    $ip = $cfg['kitchen_printer_ip'] ?? '192.168.1.100';
-                    $port = $cfg['kitchen_printer_port'] ?? '9100';
-                    
-                    sendToKitchenPrinter($ip, $port, $table_name, $waiter_name, $items_to_print);
+                    // Insert into print_jobs for real-time monitor pickup
+                    $items_json = json_encode($items_to_print);
+                    $stmt_pj = $pdo->prepare("INSERT INTO print_jobs (order_id, table_name, waiter_name, items_json, status) VALUES (?, ?, ?, ?, 'pending')");
+                    $stmt_pj->execute([$order['id'], $table_name, $waiter_name, $items_json]);
                 }
             }
 
