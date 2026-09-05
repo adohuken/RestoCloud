@@ -161,13 +161,6 @@ function isModuleActive($module, $current_page)
         </li>
         <?php endif; ?>
 
-        <?php if ($kitchen_workflow === 'comandera'): ?>
-        <li>
-            <a href="monitor_impresion.php" target="_blank" class="<?= $current_page === 'monitor_impresion.php' ? 'active' : '' ?>">
-                <i class='bx bx-printer'></i> <span>Monitor Impresión</span>
-            </a>
-        </li>
-        <?php endif; ?>
 
         <li>
             <a href="salir.php" class="logout-link">

@@ -255,7 +255,7 @@ def main():
             # Poll for pending jobs
             resp = requests.get(
                 f"{url}/api_print_jobs.php",
-                params={'key': api_key},
+                params={'token': api_key},
                 timeout=10
             )
             resp.raise_for_status()
@@ -279,7 +279,7 @@ def main():
                     # Mark as printed
                     requests.post(
                         f"{url}/api_print_jobs.php",
-                        data={'key': api_key, 'action': 'mark_printed', 'job_id': job_id},
+                        data={'token': api_key, 'action': 'mark_printed', 'job_id': job_id},
                         timeout=10
                     )
                     print(f"  ✓ Ticket impreso correctamente")

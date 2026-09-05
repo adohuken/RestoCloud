@@ -7,3 +7,4 @@ debug_log.txt
 .DS_Store
 Thumbs.db
 config/db.php.bak
+printer_config.json

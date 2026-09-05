@@ -879,7 +879,7 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 </div>
 
                 <?php
-                $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_logo', 'theme_effects_enabled', 'show_company_name', 'kitchen_workflow', 'kitchen_printer_ip', 'kitchen_printer_port')");
+                $stmt = $pdo->prepare("SELECT setting_key, setting_value FROM settings WHERE setting_key IN ('company_name', 'company_logo', 'theme_effects_enabled', 'show_company_name', 'kitchen_workflow', 'kitchen_printer_ip', 'kitchen_printer_port', 'printer_token')");
                 $stmt->execute();
                 $settings = $stmt->fetchAll(PDO::FETCH_KEY_PAIR);
                 $current_name = $settings['company_name'] ?? 'RestoCloud System';
@@ -889,6 +889,11 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                 $kitchen_workflow = $settings['kitchen_workflow'] ?? 'pantalla';
                 $kitchen_printer_ip = $settings['kitchen_printer_ip'] ?? '192.168.1.100';
                 $kitchen_printer_port = $settings['kitchen_printer_port'] ?? '9100';
+                $printer_token = $settings['printer_token'] ?? '';
+                if (empty($printer_token)) {
+                    $printer_token = substr(md5(uniqid(rand(), true)), 0, 16);
+                    $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('printer_token', ?) ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$printer_token, $printer_token]);
+                }
                 ?>
 
                 <form method="POST" enctype="multipart/form-data">
@@ -1008,6 +1013,25 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
                                     <i class='bx bx-chevron-down'
                                         style="position: absolute; right: 15px; top: 18px; font-size: 20px; color: var(--fc-text-sec); pointer-events: none;"></i>
                                 </div>
+                            </div>
+
+                            <div class="fc-form-group" style="margin-bottom: 0;">
+                                <label class="fc-label" style="font-weight: 600; margin-bottom: 10px;">
+                                    🔑 Token de Impresora (para printer_client.py)
+                                </label>
+                                <div style="display: flex; gap: 10px; align-items: center;">
+                                    <input type="text" id="printer-token-display" class="fc-input" 
+                                        value="<?= htmlspecialchars($printer_token) ?>" readonly
+                                        style="padding: 14px; border-radius: 12px; font-size: 15px; font-family: monospace; background: #f1f5f9; letter-spacing: 1px;">
+                                    <button type="button" onclick="copyToken()" 
+                                        style="padding: 14px 20px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc; cursor: pointer; font-size: 18px; flex-shrink: 0; transition: all 0.2s;"
+                                        title="Copiar token" id="copy-token-btn">
+                                        📋
+                                    </button>
+                                </div>
+                                <p style="font-size: 12px; color: #94a3b8; margin-top: 8px;">
+                                    Usa este token al configurar <code>printer_client.py</code> en la PC de la impresora.
+                                </p>
                             </div>
                         </div>
 
@@ -1863,6 +1887,15 @@ $user_role_name = $stmt->fetchColumn() ?: 'Usuario';
     // Prevent Form Resubmission Prompt on Page Refresh
     if (window.history.replaceState) {
         window.history.replaceState(null, null, window.location.href);
+    }
+    // Copy printer token to clipboard
+    function copyToken() {
+        const input = document.getElementById('printer-token-display');
+        const btn = document.getElementById('copy-token-btn');
+        navigator.clipboard.writeText(input.value).then(() => {
+            btn.textContent = '✅';
+            setTimeout(() => { btn.textContent = '📋'; }, 2000);
+        });
     }
 </script>
 

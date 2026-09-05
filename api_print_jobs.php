@@ -1,33 +1,53 @@
 <?php
 /**
- * API de Trabajos de Impresión
- * GET  → Devuelve los tickets pendientes (JSON)
+ * API de Trabajos de Impresión (Simple)
+ * GET  → Devuelve tickets pendientes
  * POST → Marca un ticket como impreso
+ * 
+ * Autenticación: token simple en la URL
  */
 require_once __DIR__ . '/config/db.php';
-session_start();
 
-// Allow API key auth for the Python script
-$api_key = $_GET['key'] ?? $_POST['key'] ?? '';
-$valid_key = false;
+header('Content-Type: application/json');
+header('Access-Control-Allow-Origin: *');
 
+// Simple token auth
+$token = $_GET['token'] ?? $_POST['token'] ?? '';
+
+// Get stored token
+$stored_token = '';
 try {
-    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'printer_api_key'");
+    $stmt = $pdo->prepare("SELECT setting_value FROM settings WHERE setting_key = 'printer_token'");
     $stmt->execute();
-    $stored_key = $stmt->fetchColumn();
-    if ($stored_key && $api_key === $stored_key) {
-        $valid_key = true;
-    }
+    $stored_token = $stmt->fetchColumn();
 } catch (Exception $e) {}
 
-// Auth: either session or API key
-if (!isset($_SESSION['user_id']) && !$valid_key) {
-    http_response_code(403);
-    echo json_encode(['error' => 'No autorizado']);
+// If no token exists yet, create one automatically
+if (empty($stored_token)) {
+    $stored_token = substr(md5(uniqid(rand(), true)), 0, 16);
+    try {
+        $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('printer_token', ?) 
+                       ON DUPLICATE KEY UPDATE setting_value = ?")->execute([$stored_token, $stored_token]);
+    } catch (Exception $e) {}
+}
+
+// Special endpoint: get the token (requires session)
+if (isset($_GET['get_token'])) {
+    session_start();
+    if (isset($_SESSION['user_id'])) {
+        echo json_encode(['token' => $stored_token]);
+    } else {
+        echo json_encode(['error' => 'Inicia sesión primero']);
+    }
     exit();
 }
 
-header('Content-Type: application/json');
+// Validate token
+if ($token !== $stored_token) {
+    http_response_code(403);
+    echo json_encode(['error' => 'Token inválido']);
+    exit();
+}
 
 // Ensure print_jobs table exists
 try {
@@ -42,8 +62,8 @@ try {
     )");
 } catch (Exception $e) {}
 
+// GET: Return pending jobs
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Return pending print jobs
     $stmt = $pdo->prepare("SELECT * FROM print_jobs WHERE status = 'pending' ORDER BY created_at ASC");
     $stmt->execute();
     $jobs = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -51,26 +71,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     exit();
 }
 
+// POST: Mark job as printed
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $action = $_POST['action'] ?? '';
-    
-    if ($action === 'mark_printed') {
-        $id = $_POST['job_id'] ?? 0;
+    $id = $_POST['job_id'] ?? 0;
+    if ($id) {
         $stmt = $pdo->prepare("UPDATE print_jobs SET status = 'printed' WHERE id = ?");
         $stmt->execute([$id]);
         echo json_encode(['success' => true]);
-        exit();
+    } else {
+        echo json_encode(['error' => 'Falta job_id']);
     }
-
-    if ($action === 'generate_key') {
-        // Generate a new API key for the printer client
-        $new_key = bin2hex(random_bytes(16));
-        $stmt = $pdo->prepare("INSERT INTO settings (setting_key, setting_value) VALUES ('printer_api_key', ?) 
-                               ON DUPLICATE KEY UPDATE setting_value = ?");
-        $stmt->execute([$new_key, $new_key]);
-        echo json_encode(['success' => true, 'key' => $new_key]);
-        exit();
-    }
+    exit();
 }
-
-echo json_encode(['error' => 'Acción no válida']);
