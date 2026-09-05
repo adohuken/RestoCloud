@@ -17,16 +17,32 @@ import sys
 import time
 import json
 import os
+import socket
 
 try:
     import requests
 except ImportError:
     print("=" * 50)
     print("ERROR: Falta la librería 'requests'")
-    print("Ejecuta: pip install requests")
+    print("Ejecuta: pip install requests pywin32 pycryptodome")
     print("=" * 50)
     input("Presiona Enter para salir...")
     sys.exit(1)
+
+try:
+    from Crypto.Cipher import AES
+except ImportError:
+    try:
+        from Cryptodome.Cipher import AES
+    except ImportError:
+        print("=" * 50)
+        print("ERROR: Falta la librería 'pycryptodome'")
+        print("Ejecuta: pip install pycryptodome")
+        print("=" * 50)
+        input("Presiona Enter para salir...")
+        sys.exit(1)
+
+import re
 
 try:
     import win32print
@@ -55,6 +71,39 @@ def load_config():
 def save_config(config):
     with open(CONFIG_FILE, 'w') as f:
         json.dump(config, f, indent=2)
+
+
+def solve_infinityfree_challenge(session, url):
+    """
+    InfinityFree usa un desafío JavaScript con AES para verificar que
+    el cliente no es un bot. Esta función resuelve ese desafío.
+    """
+    resp = session.get(url, timeout=15)
+    html = resp.text
+
+    # Check if this is the AES challenge page
+    if '__test' not in html or 'slowAES' not in html:
+        return True  # No challenge, we're good
+
+    # Extract the three hex values: a (key), b (IV), c (ciphertext)
+    matches = re.findall(r'toNumbers\("([a-f0-9]+)"\)', html)
+    if len(matches) < 3:
+        print("  ⚠ No se pudo resolver el desafío de seguridad")
+        return False
+
+    key = bytes.fromhex(matches[0])
+    iv = bytes.fromhex(matches[1])
+    ciphertext = bytes.fromhex(matches[2])
+
+    # Decrypt using AES-CBC
+    cipher = AES.new(key, AES.MODE_CBC, iv)
+    decrypted = cipher.decrypt(ciphertext)
+    cookie_value = decrypted.hex()
+
+    # Set the cookie
+    session.cookies.set('__test', cookie_value, domain=url.split('//')[1].split('/')[0])
+    print("  ✓ Desafío de seguridad resuelto")
+    return True
 
 
 def list_printers():
@@ -96,10 +145,11 @@ def select_printer():
     return selected
 
 
-def print_ticket_raw(printer_name, ticket_data):
+def print_ticket_raw(config, ticket_data):
     """
     Envía el ticket a la impresora usando RAW mode (ESC/POS).
     Compatible con impresoras térmicas de recibos.
+    Soporta conexión USB (win32print) y Red (TCP socket).
     """
     try:
         items = json.loads(ticket_data.get('items_json', '[]'))
@@ -146,21 +196,39 @@ def print_ticket_raw(printer_name, ticket_data):
     data += center + bold_on + b'FIN DE ORDEN' + bold_off + LF
     data += cut
 
-    # Send to printer via Windows RAW mode
-    try:
-        hprinter = win32print.OpenPrinter(printer_name)
+    connection_type = config.get('connection_type', 'usb')
+
+    if connection_type == 'network':
+        # Send via TCP socket (port 9100)
         try:
-            win32print.StartDocPrinter(hprinter, 1, ("Comanda Cocina", None, "RAW"))
-            win32print.StartPagePrinter(hprinter)
-            win32print.WritePrinter(hprinter, data)
-            win32print.EndPagePrinter(hprinter)
-            win32print.EndDocPrinter(hprinter)
+            printer_ip = config['printer_ip']
+            printer_port = int(config.get('printer_port', 9100))
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect((printer_ip, printer_port))
+            sock.sendall(data)
+            sock.close()
             return True
-        finally:
-            win32print.ClosePrinter(hprinter)
-    except Exception as e:
-        print(f"  ✗ Error al imprimir: {e}")
-        return False
+        except Exception as e:
+            print(f"  ✗ Error de red al imprimir: {e}")
+            return False
+    else:
+        # Send via Windows RAW mode (USB)
+        try:
+            printer_name = config['printer']
+            hprinter = win32print.OpenPrinter(printer_name)
+            try:
+                win32print.StartDocPrinter(hprinter, 1, ("Comanda Cocina", None, "RAW"))
+                win32print.StartPagePrinter(hprinter)
+                win32print.WritePrinter(hprinter, data)
+                win32print.EndPagePrinter(hprinter)
+                win32print.EndDocPrinter(hprinter)
+                return True
+            finally:
+                win32print.ClosePrinter(hprinter)
+        except Exception as e:
+            print(f"  ✗ Error al imprimir: {e}")
+            return False
 
 
 def encode_safe(text):
@@ -190,27 +258,56 @@ def setup_wizard():
         url = 'https://' + url
 
     # API Key
-    print("\n  Para obtener tu API Key:")
-    print("  1. Abre tu sistema en el navegador")
-    print("  2. Ve a la consola del navegador (F12)")
-    print(f"  3. Ejecuta: fetch('{url}/api_print_jobs.php', {{method:'POST',body:new URLSearchParams({{action:'generate_key'}})}}).then(r=>r.json()).then(d=>console.log('TU KEY:',d.key))")
+    print("\n  El Token de Impresora lo encuentras en:")
+    print("  Configuración → Operativa de Cocina → Token de Impresora")
     print()
-    api_key = input("  Pega tu API Key aquí: ").strip()
+    api_key = input("  Pega tu Token aquí: ").strip()
 
-    # Printer
-    printer = select_printer()
+    # Connection type
+    print("\n" + "=" * 50)
+    print("  TIPO DE CONEXIÓN")
+    print("=" * 50)
+    print("  [1] 🔌 USB (impresora conectada por cable)")
+    print("  [2] 🌐 Red (impresora conectada por WiFi/Ethernet)")
+    print()
+    conn_choice = input("  Selecciona (1-2) [Enter = USB]: ").strip()
 
     config = {
         'url': url,
         'api_key': api_key,
-        'printer': printer,
         'poll_interval': 3
     }
+
+    if conn_choice == '2':
+        # Network printer
+        config['connection_type'] = 'network'
+        printer_ip = input("\n  IP de la impresora (ej: 192.168.1.100): ").strip()
+        printer_port = input("  Puerto [Enter = 9100]: ").strip()
+        config['printer_ip'] = printer_ip
+        config['printer_port'] = int(printer_port) if printer_port else 9100
+        config['printer'] = f"{printer_ip}:{config['printer_port']}"
+
+        print(f"\n  Probando conexión a {printer_ip}:{config['printer_port']}...")
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(3)
+            sock.connect((printer_ip, config['printer_port']))
+            sock.close()
+            print("  ✓ ¡Impresora encontrada!")
+        except Exception:
+            print("  ⚠ No se pudo conectar. Verifica la IP y que esté encendida.")
+            print("  (Se guardará la config de todas formas, podrás cambiarla después)")
+    else:
+        # USB printer
+        config['connection_type'] = 'usb'
+        config['printer'] = select_printer()
+
     save_config(config)
 
     print("\n  ✓ Configuración guardada!")
     print(f"  ✓ URL: {url}")
-    print(f"  ✓ Impresora: {printer}")
+    print(f"  ✓ Conexión: {'Red' if config['connection_type'] == 'network' else 'USB'}")
+    print(f"  ✓ Impresora: {config['printer']}")
     print()
     return config
 
@@ -241,19 +338,37 @@ def main():
 
     print("=" * 50)
     print(f"  Servidor:   {url}")
-    print(f"  Impresora:  {printer}")
+    conn_type = config.get('connection_type', 'usb')
+    if conn_type == 'network':
+        print(f"  Impresora:  {config.get('printer_ip')}:{config.get('printer_port', 9100)} (Red)")
+    else:
+        print(f"  Impresora:  {printer} (USB)")
     print(f"  Intervalo:  {interval}s")
     print("=" * 50)
     print()
     print("  Escuchando pedidos... (Ctrl+C para detener)")
     print()
 
+    # Create session with browser headers
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+    })
+
+    # Solve InfinityFree's security challenge
+    print("  Conectando al servidor...")
+    if not solve_infinityfree_challenge(session, f"{url}/api_print_jobs.php?token={api_key}"):
+        print("  ✗ No se pudo conectar al servidor")
+        input("Presiona Enter para salir...")
+        return
+
     error_count = 0
 
     while True:
         try:
             # Poll for pending jobs
-            resp = requests.get(
+            resp = session.get(
                 f"{url}/api_print_jobs.php",
                 params={'token': api_key},
                 timeout=10
@@ -273,11 +388,11 @@ def main():
                 print(f"  🖨️  Nuevo pedido! Mesa: {table} (ID: {job_id})")
 
                 # Print the ticket
-                success = print_ticket_raw(printer, job)
+                success = print_ticket_raw(config, job)
 
                 if success:
                     # Mark as printed
-                    requests.post(
+                    session.post(
                         f"{url}/api_print_jobs.php",
                         data={'token': api_key, 'action': 'mark_printed', 'job_id': job_id},
                         timeout=10
