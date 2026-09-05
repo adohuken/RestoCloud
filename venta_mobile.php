@@ -467,8 +467,24 @@
                 return;
             }
 
-            document.getElementById('btnKitchen').style.opacity = data.has_pending_items ? '1' : '0.5';
-            document.getElementById('btnKitchen').disabled = !data.has_pending_items;
+            const draftItems = data.items.filter(i => i.item_status === 'draft');
+            let allBebidas = draftItems.length > 0;
+            for (let i of draftItems) {
+                if (i.category_name !== 'Bebidas') {
+                    allBebidas = false;
+                    break;
+                }
+            }
+
+            const btnKitchen = document.getElementById('btnKitchen');
+            if (allBebidas) {
+                btnKitchen.innerHTML = "<i class='bx bx-check-double'></i> Confirmar Pedido";
+            } else {
+                btnKitchen.innerHTML = "<i class='bx bx-send'></i> Enviar a Cocina";
+            }
+
+            btnKitchen.style.opacity = data.has_pending_items ? '1' : '0.5';
+            btnKitchen.disabled = !data.has_pending_items;
 
             data.items.forEach(item => {
                 const isDraft = item.item_status === 'draft';
@@ -501,7 +517,7 @@
             const data = await res.json();
 
             if (data.success) {
-                Swal.fire('¡Enviado!', 'El pedido fue enviado a la cocina', 'success');
+                Swal.fire('¡Listo!', data.message || 'El pedido fue procesado', 'success');
                 toggleOrderSheet();
                 loadOrder();
             } else {

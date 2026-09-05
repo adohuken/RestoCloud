@@ -223,9 +223,10 @@ if (isset($_GET['ajax'])) {
         $items = [];
         if ($order) {
             $stmt = $pdo->prepare('
-                SELECT od.*, p.name as product_name, o.user_id, u.name as waiter_name
+                SELECT od.*, p.name as product_name, c.name as category_name, o.user_id, u.name as waiter_name
                 FROM order_details od
                 JOIN products p ON od.product_id = p.id
+                LEFT JOIN categories c ON p.category_id = c.id
                 JOIN orders o ON od.order_id = o.id
                 JOIN users u ON o.user_id = u.id
                 WHERE od.order_id = ?
@@ -276,10 +277,20 @@ if (isset($_GET['ajax'])) {
                 $stmt->execute([$order['id']]);
             }
 
+            // Check if all draft items are beverages
+            $stmt = $pdo->prepare('
+                SELECT COUNT(*) FROM order_details od
+                JOIN products p ON od.product_id = p.id
+                LEFT JOIN categories c ON p.category_id = c.id
+                WHERE od.order_id = ? AND od.item_status = "draft" AND (c.name IS NULL OR c.name != "Bebidas")
+            ');
+            $stmt->execute([$order['id']]);
+            $only_beverages_drafts = ($stmt->fetchColumn() == 0);
+
             // Print to Comandera if configured
             if ($workflow === 'comandera') {
-                // Fetch items to print
-                $stmt = $pdo->prepare('SELECT p.name as product_name, od.quantity, od.notes FROM order_details od JOIN products p ON od.product_id = p.id WHERE od.order_id = ? AND od.item_status = "draft"');
+                // Fetch items to print (exclude "Bebidas")
+                $stmt = $pdo->prepare('SELECT p.name as product_name, od.quantity, od.notes FROM order_details od JOIN products p ON od.product_id = p.id LEFT JOIN categories c ON p.category_id = c.id WHERE od.order_id = ? AND od.item_status = "draft" AND (c.name IS NULL OR c.name != "Bebidas")');
                 $stmt->execute([$order['id']]);
                 $items_to_print = $stmt->fetchAll();
 
@@ -300,15 +311,30 @@ if (isset($_GET['ajax'])) {
                 }
             }
 
-            // Mark all draft items as pending (this makes them visible to the kitchen or locks them in comandera mode)
-            $stmt = $pdo->prepare('UPDATE order_details SET item_status = "pending" WHERE order_id = ? AND item_status = "draft"');
+            // Mark draft items. Bebidas skip the kitchen screen ("ready"), others go to "pending"
+            $stmt = $pdo->prepare('
+                UPDATE order_details od
+                JOIN products p ON od.product_id = p.id
+                LEFT JOIN categories c ON p.category_id = c.id
+                SET od.item_status = IF(c.name = "Bebidas", "ready", "pending")
+                WHERE od.order_id = ? AND od.item_status = "draft"
+            ');
             $stmt->execute([$order['id']]);
+
+            // If the order now has NO pending/preparing items (e.g. it was only beverages), update order status to ready
+            $stmt = $pdo->prepare('SELECT COUNT(*) FROM order_details WHERE order_id = ? AND item_status IN ("pending", "preparing")');
+            $stmt->execute([$order['id']]);
+            if ($stmt->fetchColumn() == 0) {
+                $stmt = $pdo->prepare('UPDATE orders SET status = "ready" WHERE id = ?');
+                $stmt->execute([$order['id']]);
+            }
 
             // Deduct stock for all undeducted items (which includes the ones we just sent to kitchen)
             require_once __DIR__ . '/includes/inventory_helper.php';
             InventoryManager::processOrderStock($order['id'], $_SESSION['user_id']);
 
-            echo json_encode(['success' => true, 'message' => 'Pedido enviado a cocina']);
+            $success_msg = $only_beverages_drafts ? 'Pedido confirmado' : 'Pedido enviado a cocina';
+            echo json_encode(['success' => true, 'message' => $success_msg]);
         } else {
             echo json_encode(['success' => false, 'message' => 'No hay pedido para enviar']);
         }
@@ -1100,6 +1126,23 @@ if (!$clean_mode) {
             } else {
                 draftContainer.innerHTML = newItems.map(item => renderOrderItem(item, false)).join('');
                 document.getElementById('draft-actions').style.display = 'block';
+                
+                // Change button text if only beverages are selected
+                const sendBtn = document.getElementById('sendToKitchenBtn');
+                if (sendBtn) {
+                    let allBebidas = newItems.length > 0;
+                    for (let i of newItems) {
+                        if (i.category_name !== 'Bebidas') {
+                            allBebidas = false;
+                            break;
+                        }
+                    }
+                    if (allBebidas) {
+                        sendBtn.innerHTML = '<i class="bx bx-check-double"></i> Confirmar Pedido';
+                    } else {
+                        sendBtn.innerHTML = '<i class="bx bx-restaurant"></i> Enviar a Cocina';
+                    }
+                }
             }
 
             // Render Kitchen Tab
@@ -1232,7 +1275,7 @@ if (!$clean_mode) {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
-                showToast('Pedido enviado a cocina');
+                showToast(data.message || 'Pedido enviado a cocina');
                 updateOrder();
                 switchTab('tab-kitchen');
                 btn.disabled = false;
