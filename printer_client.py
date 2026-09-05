@@ -191,7 +191,9 @@ def print_ticket_raw(config, ticket_data):
         data += bold_off + normal_size
 
         if notes:
-            data += LF + encode_safe(f"  * {notes} *") + LF
+            # Forzamos una linea en blanco con un espacio para que la impresora no la ignore
+            data += b' ' + LF
+            data += encode_safe(f"  * {notes} *") + LF
 
     data += b'-' * 32 + LF
     data += center + bold_on + b'FIN DE ORDEN' + bold_off + LF
