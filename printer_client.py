@@ -18,6 +18,7 @@ import time
 import json
 import os
 import socket
+import msvcrt
 
 try:
     import requests
@@ -246,6 +247,23 @@ def encode_safe(text):
         return text.encode('ascii', errors='replace')
 
 
+def add_to_startup():
+    """Crea un acceso directo en la carpeta de inicio de Windows."""
+    try:
+        startup_dir = os.path.expandvars(r'%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup')
+        bat_path = os.path.join(startup_dir, "RestoCloud_Impresora.bat")
+        script_path = os.path.abspath(__file__)
+        
+        with open(bat_path, "w") as f:
+            f.write('@echo off\n')
+            f.write('title RestoCloud - Cliente de Impresion\n')
+            f.write(f'python "{script_path}"\n')
+        return True
+    except Exception as e:
+        print(f"  ✗ Error al agregar a inicio: {e}")
+        return False
+
+
 def setup_wizard():
     """Asistente de configuración inicial."""
     print("\n" + "=" * 50)
@@ -302,6 +320,12 @@ def setup_wizard():
         config['connection_type'] = 'usb'
         config['printer'] = select_printer()
 
+    print("\n" + "=" * 50)
+    auto_start = input("  ¿Deseas que este script inicie automáticamente\n  al encender la computadora? (s/n) [Enter = s]: ").strip().lower()
+    if auto_start in ['', 's', 'si', 'y', 'yes']:
+        if add_to_startup():
+            print("  ✓ Configurado para iniciar con Windows")
+
     save_config(config)
 
     print("\n  ✓ Configuración guardada!")
@@ -315,11 +339,6 @@ def setup_wizard():
 def main():
     os.system('title RestoCloud - Cliente de Impresion')
     os.system('cls' if os.name == 'nt' else 'clear')
-
-    if '--reset' in sys.argv:
-        if os.path.exists(CONFIG_FILE):
-            os.remove(CONFIG_FILE)
-            print("\n  ✓ Configuración anterior borrada correctamente.\n")
 
     print()
     print("  ██████╗ ███████╗███████╗████████╗ ██████╗ ")
@@ -351,7 +370,8 @@ def main():
     print(f"  Intervalo:  {interval}s")
     print("=" * 50)
     print()
-    print("  Escuchando pedidos... (Ctrl+C para detener)")
+    print("  Escuchando pedidos...")
+    print("  (Presiona 'C' para reconfigurar, 'Ctrl+C' para salir)")
     print()
 
     # Create session with browser headers
@@ -371,6 +391,16 @@ def main():
     error_count = 0
 
     while True:
+        # Check for key presses (like 'C' to configure)
+        if msvcrt.kbhit():
+            key = msvcrt.getch().lower()
+            if key == b'c':
+                print("\n  [!] Solicitud para cambiar configuración...")
+                if os.path.exists(CONFIG_FILE):
+                    os.remove(CONFIG_FILE)
+                print("  Reiniciando para configurar...\n")
+                os.execl(sys.executable, sys.executable, *sys.argv)
+
         try:
             # Poll for pending jobs
             resp = session.get(
