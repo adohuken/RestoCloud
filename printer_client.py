@@ -316,6 +316,11 @@ def main():
     os.system('title RestoCloud - Cliente de Impresion')
     os.system('cls' if os.name == 'nt' else 'clear')
 
+    if '--reset' in sys.argv:
+        if os.path.exists(CONFIG_FILE):
+            os.remove(CONFIG_FILE)
+            print("\n  ✓ Configuración anterior borrada correctamente.\n")
+
     print()
     print("  ██████╗ ███████╗███████╗████████╗ ██████╗ ")
     print("  ██╔══██╗██╔════╝██╔════╝╚══██╔══╝██╔═══██╗")
